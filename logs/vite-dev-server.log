@@ -2,13 +2,12 @@
 > web-ui@0.0.0 dev
 > vite
 
-11:05:35 AM [vite] (client) Re-optimizing dependencies because vite config has changed
 
-  VITE v7.2.2  ready in 616 ms
+  VITE v7.2.2  ready in 149 ms
 
   ➜  Local:   http://localhost:6173/
   ➜  Network: use --host to expose
-11:05:38 AM [vite] (client) warning: Duplicate key "border" in object literal
+6:57:07 PM [vite] (client) warning: Duplicate key "border" in object literal
 201 |              color: selectedStageFilter === stage ? 'white' : 'var(--color-text-primary, #111827)',
 202 |              boxShadow: selectedStageFilter === stage ? 'none' : '0 1px 2px rgba(0,0,0,0.05)',
 203 |              border: selectedStageFilter === stage ? 'none' : '1px solid var(--color-border, #e5e7eb)'
@@ -18,3 +17,87 @@
 
   Plugin: vite:esbuild
   File: /Users/jamesreynolds/Documents/Development/UbeCode/web-ui/src/pages/ApprovalQueue.tsx
+6:57:55 PM [vite] (client) hmr update /src/pages/UIStyles.tsx, /src/styles/main.css, /src/index.css
+6:57:55 PM [vite] (client) hmr invalidate /src/pages/UIStyles.tsx Could not Fast Refresh ("applyUIStyleToDOM" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+6:57:55 PM [vite] (client) hmr update /src/App.tsx
+6:58:12 PM [vite] (client) hmr update /src/pages/UIStyles.tsx, /src/styles/main.css, /src/index.css
+6:58:12 PM [vite] (client) hmr invalidate /src/pages/UIStyles.tsx Could not Fast Refresh ("applyUIStyleToDOM" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+6:58:12 PM [vite] (client) hmr update /src/App.tsx
+6:58:29 PM [vite] (client) hmr update /src/pages/UIStyles.tsx, /src/styles/main.css, /src/index.css
+6:58:30 PM [vite] (client) hmr invalidate /src/pages/UIStyles.tsx Could not Fast Refresh ("applyUIStyleToDOM" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+6:58:30 PM [vite] (client) hmr update /src/App.tsx
+6:58:35 PM [vite] (client) hmr update /src/pages/UIStyles.tsx, /src/styles/main.css, /src/index.css
+6:58:35 PM [vite] (client) hmr invalidate /src/pages/UIStyles.tsx Could not Fast Refresh ("applyUIStyleToDOM" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+6:58:35 PM [vite] (client) hmr update /src/App.tsx
+6:58:39 PM [vite] (client) hmr update /src/pages/UIStyles.tsx, /src/styles/main.css, /src/index.css
+6:58:39 PM [vite] (client) hmr invalidate /src/pages/UIStyles.tsx Could not Fast Refresh ("applyUIStyleToDOM" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+6:58:39 PM [vite] (client) hmr update /src/App.tsx
+6:58:44 PM [vite] (client) hmr update /src/pages/UIStyles.tsx, /src/styles/main.css, /src/index.css
+6:58:44 PM [vite] (client) hmr invalidate /src/pages/UIStyles.tsx Could not Fast Refresh ("applyUIStyleToDOM" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+6:58:44 PM [vite] (client) hmr update /src/App.tsx
+6:58:48 PM [vite] (client) hmr update /src/pages/UIStyles.tsx, /src/styles/main.css, /src/index.css
+6:58:48 PM [vite] (client) hmr invalidate /src/pages/UIStyles.tsx Could not Fast Refresh ("applyUIStyleToDOM" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+6:58:48 PM [vite] (client) hmr update /src/App.tsx
+6:58:54 PM [vite] (client) hmr update /src/pages/UIStyles.tsx, /src/styles/main.css, /src/index.css
+6:58:54 PM [vite] (client) hmr invalidate /src/pages/UIStyles.tsx Could not Fast Refresh ("applyUIStyleToDOM" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+6:58:54 PM [vite] (client) hmr update /src/App.tsx
+6:58:58 PM [vite] (client) hmr update /src/pages/UIStyles.tsx, /src/styles/main.css, /src/index.css
+6:58:58 PM [vite] (client) hmr invalidate /src/pages/UIStyles.tsx Could not Fast Refresh ("applyUIStyleToDOM" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+6:58:58 PM [vite] (client) hmr update /src/App.tsx
+6:59:04 PM [vite] (client) hmr update /src/pages/UIStyles.tsx, /src/styles/main.css, /src/index.css
+6:59:04 PM [vite] (client) hmr invalidate /src/pages/UIStyles.tsx Could not Fast Refresh ("applyUIStyleToDOM" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+6:59:04 PM [vite] (client) hmr update /src/App.tsx
+6:59:20 PM [vite] (client) hmr update /src/pages/UIStyles.tsx, /src/styles/main.css, /src/index.css
+6:59:21 PM [vite] (client) hmr invalidate /src/pages/UIStyles.tsx Could not Fast Refresh ("applyUIStyleToDOM" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+6:59:21 PM [vite] (client) hmr update /src/App.tsx
+6:59:30 PM [vite] (client) hmr update /src/pages/UIStyles.tsx, /src/styles/main.css, /src/index.css
+6:59:30 PM [vite] (client) hmr invalidate /src/pages/UIStyles.tsx Could not Fast Refresh ("applyUIStyleToDOM" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+6:59:30 PM [vite] (client) hmr update /src/App.tsx
+6:59:55 PM [vite] (client) hmr update /src/pages/UIStyles.tsx, /src/styles/main.css, /src/index.css
+6:59:56 PM [vite] (client) hmr invalidate /src/pages/UIStyles.tsx Could not Fast Refresh ("applyUIStyleToDOM" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+6:59:56 PM [vite] (client) hmr update /src/App.tsx
+7:00:20 PM [vite] (client) hmr update /src/pages/UIStyles.tsx, /src/styles/main.css, /src/index.css
+7:00:21 PM [vite] (client) hmr invalidate /src/pages/UIStyles.tsx Could not Fast Refresh ("applyUIStyleToDOM" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+7:00:21 PM [vite] (client) hmr update /src/App.tsx
+7:01:40 PM [vite] (client) hmr update /src/pages/UIStyles.tsx, /src/styles/main.css, /src/index.css
+7:01:40 PM [vite] (client) hmr invalidate /src/pages/UIStyles.tsx Could not Fast Refresh ("applyUIStyleToDOM" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+7:01:40 PM [vite] (client) hmr update /src/App.tsx
+7:04:07 PM [vite] (client) hmr update /src/pages/UIStyles.tsx, /src/styles/main.css, /src/index.css
+7:04:07 PM [vite] (client) hmr invalidate /src/pages/UIStyles.tsx Could not Fast Refresh ("applyUIStyleToDOM" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+7:04:07 PM [vite] (client) hmr update /src/App.tsx
+7:04:18 PM [vite] (client) hmr update /src/pages/UIStyles.tsx, /src/styles/main.css, /src/index.css
+7:04:18 PM [vite] (client) hmr invalidate /src/pages/UIStyles.tsx Could not Fast Refresh ("applyUIStyleToDOM" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+7:04:18 PM [vite] (client) hmr update /src/App.tsx
+7:04:30 PM [vite] (client) hmr update /src/pages/UIStyles.tsx, /src/styles/main.css, /src/index.css
+7:04:30 PM [vite] (client) hmr invalidate /src/pages/UIStyles.tsx Could not Fast Refresh ("applyUIStyleToDOM" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+7:04:30 PM [vite] (client) hmr update /src/App.tsx
+7:04:36 PM [vite] (client) hmr update /src/pages/UIStyles.tsx, /src/styles/main.css, /src/index.css
+7:04:36 PM [vite] (client) hmr invalidate /src/pages/UIStyles.tsx Could not Fast Refresh ("applyUIStyleToDOM" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+7:04:36 PM [vite] (client) hmr update /src/App.tsx
+7:05:15 PM [vite] (client) hmr update /src/pages/UIStyles.tsx, /src/styles/main.css, /src/index.css
+7:05:15 PM [vite] (client) hmr invalidate /src/pages/UIStyles.tsx Could not Fast Refresh ("applyUIStyleToDOM" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+7:05:15 PM [vite] (client) hmr update /src/App.tsx
+7:05:30 PM [vite] (client) hmr update /src/pages/UIStyles.tsx, /src/styles/main.css, /src/index.css
+7:05:30 PM [vite] (client) hmr invalidate /src/pages/UIStyles.tsx Could not Fast Refresh ("applyUIStyleToDOM" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+7:05:30 PM [vite] (client) hmr update /src/App.tsx
+7:05:44 PM [vite] (client) hmr update /src/pages/UIStyles.tsx, /src/styles/main.css, /src/index.css
+7:05:44 PM [vite] (client) hmr invalidate /src/pages/UIStyles.tsx Could not Fast Refresh ("applyUIStyleToDOM" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+7:05:44 PM [vite] (client) hmr update /src/App.tsx
+7:05:56 PM [vite] (client) hmr update /src/pages/UIStyles.tsx, /src/styles/main.css, /src/index.css
+7:05:57 PM [vite] (client) hmr invalidate /src/pages/UIStyles.tsx Could not Fast Refresh ("applyUIStyleToDOM" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+7:05:57 PM [vite] (client) hmr update /src/App.tsx
+7:06:09 PM [vite] (client) hmr update /src/pages/UIStyles.tsx, /src/styles/main.css, /src/index.css
+7:06:10 PM [vite] (client) hmr invalidate /src/pages/UIStyles.tsx Could not Fast Refresh ("applyUIStyleToDOM" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+7:06:10 PM [vite] (client) hmr update /src/App.tsx
+7:06:38 PM [vite] (client) hmr update /src/pages/UIStyles.tsx, /src/styles/main.css, /src/index.css
+7:06:38 PM [vite] (client) hmr invalidate /src/pages/UIStyles.tsx Could not Fast Refresh ("applyUIStyleToDOM" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+7:06:38 PM [vite] (client) hmr update /src/App.tsx
+7:06:50 PM [vite] (client) hmr update /src/pages/UIStyles.tsx, /src/styles/main.css, /src/index.css
+7:06:50 PM [vite] (client) hmr invalidate /src/pages/UIStyles.tsx Could not Fast Refresh ("applyUIStyleToDOM" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+7:06:50 PM [vite] (client) hmr update /src/App.tsx
+7:13:04 PM [vite] (client) hmr update /src/pages/UIStyles.tsx, /src/styles/main.css, /src/index.css
+7:13:05 PM [vite] (client) hmr invalidate /src/pages/UIStyles.tsx Could not Fast Refresh ("applyUIStyleToDOM" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+7:13:05 PM [vite] (client) hmr update /src/App.tsx
+7:13:23 PM [vite] (client) hmr update /src/pages/UIStyles.tsx, /src/styles/main.css, /src/index.css
+7:13:23 PM [vite] (client) hmr invalidate /src/pages/UIStyles.tsx Could not Fast Refresh ("applyUIStyleToDOM" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+7:13:23 PM [vite] (client) hmr update /src/App.tsx

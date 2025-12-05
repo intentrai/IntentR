@@ -15,7 +15,7 @@
 
 ## Technical Overview
 ### Purpose
-Implement client-side routing using React Router to enable navigation between different pages and views within the Balut web application.
+Implement client-side routing using React Router to enable navigation between different pages and views within the UbeCode web application.
 
 ## Functional Requirements
 

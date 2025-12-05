@@ -1,9 +1,9 @@
 #!/bin/bash
 
 ################################################################################
-# Balut Microservices Environment Setup Script for AWS EC2 Linux
+# UbeCode Microservices Environment Setup Script for AWS EC2 Linux
 ################################################################################
-# This script sets up the complete environment for running Balut microservices
+# This script sets up the complete environment for running UbeCode microservices
 # on an AWS EC2 Linux instance (Amazon Linux 2 or Ubuntu).
 #
 # Usage:
@@ -16,7 +16,7 @@
 #   4. Installs Go 1.21+
 #   5. Installs development tools (git, make, wget)
 #   6. Configures user permissions for Docker
-#   7. Sets up the Balut project
+#   7. Sets up the UbeCode project
 #   8. Validates the installation
 ################################################################################
 
@@ -32,8 +32,8 @@ NC='\033[0m' # No Color
 # Configuration
 GO_VERSION="1.21.6"
 DOCKER_COMPOSE_VERSION="2.24.5"
-PROJECT_DIR="/opt/balut"
-LOG_FILE="/var/log/balut-setup.log"
+PROJECT_DIR="/opt/ubecode"
+LOG_FILE="/var/log/ubecode-setup.log"
 
 ################################################################################
 # Helper Functions
@@ -260,7 +260,7 @@ configure_docker_permissions() {
     info "Or run: newgrp docker"
 }
 
-# Setup Balut project directory
+# Setup UbeCode project directory
 setup_project_directory() {
     log "Setting up project directory..."
 
@@ -358,17 +358,17 @@ validate_installation() {
 display_next_steps() {
     echo ""
     log "=================================================="
-    log "  Balut Microservices Setup Complete!"
+    log "  UbeCode Microservices Setup Complete!"
     log "=================================================="
     echo ""
     info "Next steps:"
     echo ""
     echo "  1. Log out and log back in (or run: newgrp docker)"
     echo ""
-    echo "  2. Clone the Balut repository:"
+    echo "  2. Clone the UbeCode repository:"
     echo "     cd $PROJECT_DIR"
-    echo "     git clone https://github.com/jareynolds/balut.git"
-    echo "     cd balut"
+    echo "     git clone https://github.com/jareynolds/ubecode.git"
+    echo "     cd ubecode"
     echo ""
     echo "  3. Create environment configuration:"
     echo "     cp .env.example .env  # if exists"
@@ -398,7 +398,7 @@ display_next_steps() {
 ################################################################################
 
 main() {
-    log "Starting Balut Microservices Environment Setup"
+    log "Starting UbeCode Microservices Environment Setup"
     log "=================================================="
 
     check_root

@@ -15,7 +15,7 @@
 
 ## Technical Overview
 ### Purpose
-Integrate the Ford Design System (balut-design-system.html) into the React application, providing branded UI components and styling.
+Integrate the Ford Design System (ubecode-design-system.html) into the React application, providing branded UI components and styling.
 
 ## Functional Requirements
 

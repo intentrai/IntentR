@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document provides comprehensive guidance for Claude Code to design, analyze, implement, test, refactor, reverse-to-design, and retire software applications using SAWai (Scaled Agile With AI) methodology. SAWai is optimized for AI-assisted development, emphasizing high-quality specifications over heavy process ceremony. This serves as the single source of truth for all software development activities in the Balut project.
+This document provides comprehensive guidance for Claude Code to design, analyze, implement, test, refactor, reverse-to-design, and retire software applications using SAWai (Scaled Agile With AI) methodology. SAWai is optimized for AI-assisted development, emphasizing high-quality specifications over heavy process ceremony. This serves as the single source of truth for all software development activities in the UbeCode project.
 
 **For SAWai framework reference, see: [SAWai.md](./SAWai.md)**
 
@@ -73,7 +73,7 @@ Use **WSJF (Weighted Shortest Job First)** scoring to prioritize epics. Since AI
 
 ### Microservices Architecture
 
-The Balut application follows a microservices architecture pattern with the following characteristics:
+The UbeCode application follows a microservices architecture pattern with the following characteristics:
 
 - **Service Independence** - Each microservice operates independently
 - **Technology Flexibility** - Services can use different technologies as needed
@@ -298,7 +298,7 @@ Create a risk register:
 1. **Project Structure**
 
 ```
-balut/
+ubecode/
 ├── cmd/                    # Main applications
 │   ├── design-service/
 │   ├── capability-service/
@@ -1104,7 +1104,7 @@ Track development metrics:
 
 ## Conclusion
 
-This guide provides a comprehensive framework for developing the Balut application using SAWai (Scaled Agile With AI) methodology. It should be treated as a living document, updated as the project evolves and new patterns emerge.
+This guide provides a comprehensive framework for developing the UbeCode application using SAWai (Scaled Agile With AI) methodology. It should be treated as a living document, updated as the project evolves and new patterns emerge.
 
 ### Key Takeaways
 

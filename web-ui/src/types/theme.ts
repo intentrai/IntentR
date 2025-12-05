@@ -128,7 +128,7 @@ export const figmaTheme: Theme = {
   id: 'figma-design-system',
   name: 'Figma Design System',
   description: 'Official design system from Figma - Grey foundations, blue interactions, vibrant orange accents',
-  designSystemUrl: '/design-systems/balut-default-reverse-engineered.html',
+  designSystemUrl: '/design-systems/ubecode-default-reverse-engineered.html',
   colors: {
     grey: {
       50: '#f9fafb',
@@ -407,4 +407,103 @@ export const appleTheme: Theme = {
   },
 };
 
-export const availableThemes: Theme[] = [defaultTheme, figmaTheme, fordTheme, appleTheme];
+// Fifth theme - Ube Design System
+// Named after the Filipino purple yam - vibrant purple as primary interaction color
+export const ubeTheme: Theme = {
+  id: 'ube-design-system',
+  name: 'Ube',
+  description: 'Vibrant purple design system - Purple foundations with purple interactions inspired by the Ube yam',
+  designSystemUrl: '/design-systems/ube-design-system.html',
+  colors: {
+    grey: {
+      50: '#faf8fc',   // Subtle purple tint
+      100: '#f3f0f7',
+      200: '#e9e4f0',
+      300: '#d8d0e5',
+      400: '#a89cc4',
+      500: '#7a6b9e',
+      600: '#5c4f7a',
+      700: '#453a5c',
+      800: '#2d2640',
+      900: '#1a1528',
+    },
+    blue: {
+      // Using purple as the primary interaction color (replacing blue's role)
+      50: '#f5f3ff',
+      100: '#ede9fe',
+      200: '#ddd6fe',
+      300: '#c4b5fd',
+      400: '#a78bfa',
+      500: '#8b5cf6',  // Primary - matches logo outer ring
+      600: '#7c3aed',  // Primary hover
+      700: '#6d28d9',
+      800: '#5b21b6',
+      900: '#4c1d95',
+    },
+    indigo: {
+      50: '#eef2ff',
+      100: '#e0e7ff',
+      200: '#c7d2fe',
+      300: '#a5b4fc',
+      400: '#818cf8',
+      500: '#6366f1',
+      600: '#4f46e5',
+      700: '#4338ca',
+      800: '#3730a3',
+      900: '#312e81',
+    },
+    purple: {
+      // Deep Ube purple palette
+      50: '#faf5ff',
+      100: '#f3e8ff',
+      200: '#e9d5ff',
+      300: '#d8b4fe',
+      400: '#c084fc',
+      500: '#a855f7',
+      600: '#9333ea',
+      700: '#7e22ce',
+      800: '#6b21a8',
+      900: '#581c87',
+    },
+    orange: {
+      // Complementary accent - golden/amber tones
+      50: '#fffbeb',
+      100: '#fef3c7',
+      200: '#fde68a',
+      300: '#fcd34d',
+      400: '#fbbf24',
+      500: '#f59e0b',
+      600: '#d97706',
+      700: '#b45309',
+      800: '#92400e',
+      900: '#78350f',
+    },
+    green: {
+      50: '#ecfdf5',
+      100: '#d1fae5',
+      200: '#a7f3d0',
+      300: '#6ee7b7',
+      400: '#34d399',
+      500: '#10b981',
+      600: '#059669',
+      700: '#047857',
+      800: '#065f46',
+      900: '#064e3b',
+    },
+    red: {
+      50: '#fef2f2',
+      100: '#fee2e2',
+      200: '#fecaca',
+      300: '#fca5a5',
+      400: '#f87171',
+      500: '#ef4444',
+      600: '#dc2626',
+      700: '#b91c1c',
+      800: '#991b1b',
+      900: '#7f1d1d',
+    },
+  },
+};
+
+// Ube is the default theme
+export const availableThemes: Theme[] = [ubeTheme, defaultTheme, figmaTheme, fordTheme, appleTheme];

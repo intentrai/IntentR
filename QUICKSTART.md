@@ -61,7 +61,7 @@ FIGMA_TOKEN=your_figma_personal_access_token
 2. Go to Settings → Account
 3. Scroll to "Personal access tokens"
 4. Click "Generate new token"
-5. Give it a name (e.g., "Balut Development")
+5. Give it a name (e.g., "UbeCode Development")
 6. Copy the token and paste it in your `.env` file
 
 **Note**: Keep your token secret and never commit it to version control!

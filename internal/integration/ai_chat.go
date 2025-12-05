@@ -1,9 +1,9 @@
-// Balut — Copyright © 2025 James Reynolds
+// UbeCode — Copyright © 2025 James Reynolds
 //
-// This file is part of Balut.
+// This file is part of UbeCode.
 // You may use this file under either:
 //   • The AGPLv3 Open Source License, OR
-//   • The Balut Commercial License
+//   • The UbeCode Commercial License
 // See the LICENSE.AGPL and LICENSE.COMMERCIAL files for details.
 
 package integration
@@ -170,7 +170,7 @@ func (h *Handler) HandleAIChat(w http.ResponseWriter, r *http.Request) {
 func buildSystemPrompt(workspacePath string, files []string) string {
 	fileList := strings.Join(files, "\n  - ")
 
-	return fmt.Sprintf(`You are an AI assistant for the Balut design-driven development platform. You help users with their software projects.
+	return fmt.Sprintf(`You are an AI assistant for the UbeCode design-driven development platform. You help users with their software projects.
 
 IMPORTANT: You are STRICTLY scoped to work only within this workspace folder:
 %s
@@ -505,7 +505,7 @@ func (h *Handler) HandleRunApp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Translate host path to container path if running in Docker
-	// Host: .../balut/workspaces/project -> Container: /root/workspaces/project
+	// Host: .../ubecode/workspaces/project -> Container: /root/workspaces/project
 	if idx := strings.Index(workspacePath, "/workspaces/"); idx != -1 {
 		workspacePath = "/root" + workspacePath[idx:]
 	}
@@ -605,14 +605,14 @@ func (h *Handler) HandleStopApp(w http.ResponseWriter, r *http.Request) {
 }
 
 // detectProjectType determines the project type and returns the run command
-// Uses ports 4000+ to avoid conflicts with Balut app (5173) and other services
+// Uses ports 4000+ to avoid conflicts with UbeCode app (5173) and other services
 func detectProjectType(codePath string) (string, *exec.Cmd, int) {
 	// Check for Node.js (package.json)
 	if _, err := os.Stat(filepath.Join(codePath, "package.json")); err == nil {
 		// Check if it's a Vite or other modern project
 		packageJSON, _ := os.ReadFile(filepath.Join(codePath, "package.json"))
 		if strings.Contains(string(packageJSON), "vite") {
-			// Use port 4173 to avoid conflict with Balut's 5173
+			// Use port 4173 to avoid conflict with UbeCode's 5173
 			return "Node.js (Vite)", exec.Command("npm", "run", "dev", "--", "--port", "4173"), 4173
 		}
 		if strings.Contains(string(packageJSON), "next") {

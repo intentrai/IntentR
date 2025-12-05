@@ -15,7 +15,7 @@
 
 ## Technical Overview
 ### Purpose
-Implement user authentication with login page, session management, and protected routes for the Balut application.
+Implement user authentication with login page, session management, and protected routes for the UbeCode application.
 
 ## Functional Requirements
 

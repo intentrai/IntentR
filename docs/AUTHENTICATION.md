@@ -117,7 +117,7 @@ FIGMA_TOKEN=your-figma-token
 ```bash
 curl -X POST http://localhost:8083/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"admin@balut.local","password":"admin123"}'
+  -d '{"email":"admin@ubecode.local","password":"admin123"}'
 ```
 
 Response:
@@ -126,7 +126,7 @@ Response:
   "token": "eyJhbGciOiJIUzI1NiIs...",
   "user": {
     "id": 1,
-    "email": "admin@balut.local",
+    "email": "admin@ubecode.local",
     "name": "System Administrator",
     "role": "admin",
     "isActive": true,
@@ -245,7 +245,7 @@ function AdminFeature() {
 - Check database initialization: `docker-compose logs postgres`
 - Connect to database and verify user exists:
   ```bash
-  docker-compose exec postgres psql -U balut_user -d balut_db -c "SELECT * FROM users;"
+  docker-compose exec postgres psql -U ubecode_user -d ubecode_db -c "SELECT * FROM users;"
   ```
 
 ### Permission denied errors
@@ -259,7 +259,7 @@ Before deploying to production:
 
 1. **Change default admin password** immediately after first login
 2. **Set strong JWT_SECRET** environment variable (use a long random string)
-3. **Use strong database password** (change from default `balut_password`)
+3. **Use strong database password** (change from default `ubecode_password`)
 4. **Enable SSL/TLS** for database connections
 5. **Use HTTPS** for the frontend
 6. **Configure proper CORS** settings (don't use `*` in production)

@@ -58,7 +58,7 @@ Capabilities are higher-level solution behaviors that typically span multiple AR
 
 ### Microservices Architecture
 
-The Balut application follows a microservices architecture pattern with the following characteristics:
+The UbeCode application follows a microservices architecture pattern with the following characteristics:
 
 - **Service Independence** - Each microservice operates independently
 - **Technology Flexibility** - Services can use different technologies as needed
@@ -276,7 +276,7 @@ Create a risk register:
 1. **Project Structure**
 
 ```
-balut/
+ubecode/
 ├── cmd/                    # Main applications
 │   ├── design-service/
 │   ├── capability-service/
@@ -927,7 +927,7 @@ Track development metrics:
 
 ## Conclusion
 
-This guide provides a comprehensive framework for developing the Balut application using SAFe capability-driven principles. It should be treated as a living document, updated as the project evolves and new patterns emerge.
+This guide provides a comprehensive framework for developing the UbeCode application using SAFe capability-driven principles. It should be treated as a living document, updated as the project evolves and new patterns emerge.
 
 ### Key Takeaways
 

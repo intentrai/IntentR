@@ -8,6 +8,13 @@
   box-sizing: border-box;
 }
 
+/* Theme-aware background - applies to entire page */
+html, body {
+  background-color: var(--color-grey-50, #faf8fc);
+  color: var(--color-text-primary, #1a1528);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
 #root {
   width: 100%;
   min-height: 100vh;

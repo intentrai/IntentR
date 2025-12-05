@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ################################################################################
-# Balut Setup Verification Script
+# UbeCode Setup Verification Script
 ################################################################################
 # This script verifies that all components are properly installed and configured
 #
@@ -238,7 +238,7 @@ check_ports() {
         return 0
     else
         warning "Ports already in use: ${occupied_ports[*]}"
-        info "These ports are needed for Balut services"
+        info "These ports are needed for UbeCode services"
         return 2
     fi
 }
@@ -298,7 +298,7 @@ display_next_steps() {
 ################################################################################
 
 main() {
-    log "Starting Balut setup verification..."
+    log "Starting UbeCode setup verification..."
     echo ""
 
     log "Checking system dependencies..."

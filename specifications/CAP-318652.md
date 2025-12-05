@@ -3,7 +3,7 @@
 ## Metadata
 - **Name**: Capability Tracking
 - **Type**: Capability
-- **System**: Balut
+- **System**: UbeCode
 - **Component**: Capability Service
 - **ID**: CAP-318652
 - **Owner**: Product Team
@@ -61,7 +61,7 @@ flowchart TD
     class INT1,INT2 internal
 
     %% Capability Grouping
-    subgraph ORG1 ["Balut System"]
+    subgraph ORG1 ["UbeCode System"]
         subgraph DOMAIN1 ["SAFe Framework Domain"]
             CURRENT
         end

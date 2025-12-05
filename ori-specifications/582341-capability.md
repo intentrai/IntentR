@@ -3,7 +3,7 @@
 ## Metadata
 - **Name**: Figma Integration Management
 - **Type**: Capability
-- **System**: Balut
+- **System**: UbeCode
 - **Component**: Integration Service
 - **ID**: CAP-582341
 - **Owner**: Product Team
@@ -69,7 +69,7 @@ flowchart TD
     class EXT1 external
 
     %% Capability Grouping
-    subgraph ORG1 ["Balut System"]
+    subgraph ORG1 ["UbeCode System"]
         subgraph DOMAIN1 ["Integration Domain"]
             CURRENT
         end

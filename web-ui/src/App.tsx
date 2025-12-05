@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Header, Sidebar, ProtectedRoute, ProtectedPage, UIFrameworkProvider, UIFrameworkIndicator } from './components';
 import { Login, GoogleCallback, Dashboard, WorkspaceOverview, Capabilities, Features, Vision, Designs, Integrations, AIChat, Code, Run, Workspaces, Storyboard, Ideation, Analyze, Settings, Admin, System, AIPrinciples, UIFramework, UIStyles, UIDesigner, DataCollection, Enablers, ConceptionApproval, DefinitionApproval, DesignApproval, ImplementationApproval, Testing, TestingApproval } from './pages';
 import { ApprovalQueue } from './pages/ApprovalQueue';
+import { defaultUIFrameworks, applyUIStyleToDOM } from './pages/UIStyles';
 import { AppProvider } from './context/AppContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { WorkspaceProvider, useWorkspace } from './context/WorkspaceContext';
@@ -91,6 +92,23 @@ function AppContent() {
     implementation: false,
     testing: false,
   });
+
+  // Apply saved UI style when workspace changes
+  useEffect(() => {
+    if (currentWorkspace?.selectedUIFramework) {
+      // Include custom frameworks from workspace
+      const allFrameworks = currentWorkspace.customUIFrameworks
+        ? [...defaultUIFrameworks, ...currentWorkspace.customUIFrameworks]
+        : defaultUIFrameworks;
+
+      const savedFramework = allFrameworks.find(
+        f => f.id === currentWorkspace.selectedUIFramework
+      );
+      if (savedFramework) {
+        applyUIStyleToDOM(savedFramework);
+      }
+    }
+  }, [currentWorkspace?.selectedUIFramework, currentWorkspace?.customUIFrameworks]);
 
   // Check for rejections and approvals when workspace changes or on interval
   useEffect(() => {

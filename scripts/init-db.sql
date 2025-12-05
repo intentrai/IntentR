@@ -1,4 +1,4 @@
--- Balut User Authentication Database Schema
+-- UbeCode User Authentication Database Schema
 -- This script initializes the database with user table and admin user
 
 -- Create users table

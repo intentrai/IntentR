@@ -1,4 +1,4 @@
-# Balut Enhanced Specifications Index
+# UbeCode Enhanced Specifications Index
 
 **Generated**: November 24, 2025
 **Version**: 2.0 (Enhanced Organization)
@@ -22,7 +22,7 @@
 
 ## Overview
 
-This index catalogs all reverse-engineered specifications from the Balut application. Files have been reorganized with standardized naming conventions:
+This index catalogs all reverse-engineered specifications from the UbeCode application. Files have been reorganized with standardized naming conventions:
 
 - **CAP-XXXXXX.md** - Business capabilities
 - **ENB-XXXXXX.md** - Technical enablers
@@ -94,7 +94,7 @@ This index catalogs all reverse-engineered specifications from the Balut applica
 
 ### CAP-471395: Container Orchestration
 **File**: [CAP-471395.md](./CAP-471395.md)
-**Component**: Balut Orchestrator
+**Component**: UbeCode Orchestrator
 **Priority**: Medium
 **Status**: Implemented ✅
 **Analysis Review**: Not Required
@@ -752,4 +752,4 @@ UI Integration
 
 ---
 
-*This index was automatically generated during reverse engineering of the Balut application specifications. Files have been reorganized with standardized naming conventions for improved discoverability and maintainability.*
+*This index was automatically generated during reverse engineering of the UbeCode application specifications. Files have been reorganized with standardized naming conventions for improved discoverability and maintainability.*

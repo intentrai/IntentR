@@ -1,9 +1,9 @@
 #!/bin/bash
 
 ################################################################################
-# Balut Environment Configuration Script
+# UbeCode Environment Configuration Script
 ################################################################################
-# This script helps configure the Balut microservices environment
+# This script helps configure the UbeCode microservices environment
 #
 # Usage:
 #   ./configure-environment.sh [options]
@@ -50,7 +50,7 @@ info() {
 # Show help
 show_help() {
     cat << EOF
-Balut Environment Configuration Script
+UbeCode Environment Configuration Script
 
 Usage:
     ./configure-environment.sh [options]
@@ -118,7 +118,7 @@ interactive_config() {
 
     echo ""
     info "==================================================="
-    info "  Balut Environment Configuration"
+    info "  UbeCode Environment Configuration"
     info "==================================================="
     echo ""
 
@@ -157,7 +157,7 @@ create_env_file() {
 
     # Create .env file
     cat > "$ENV_FILE" << EOF
-# Balut Microservices Environment Configuration
+# UbeCode Microservices Environment Configuration
 # Generated on $(date)
 
 # Figma Integration
@@ -170,7 +170,7 @@ DESIGN_SERVICE_PORT=8081
 CAPABILITY_SERVICE_PORT=8082
 
 # Docker Network
-NETWORK_NAME=balut-network
+NETWORK_NAME=ubecode-network
 
 # Logging
 LOG_LEVEL=info
@@ -193,7 +193,7 @@ create_env_example() {
     log "Creating .env.example file..."
 
     cat > "$env_example" << 'EOF'
-# Balut Microservices Environment Configuration Template
+# UbeCode Microservices Environment Configuration Template
 # Copy this file to .env and fill in your actual values
 
 # Figma Integration
@@ -206,7 +206,7 @@ DESIGN_SERVICE_PORT=8081
 CAPABILITY_SERVICE_PORT=8082
 
 # Docker Network
-NETWORK_NAME=balut-network
+NETWORK_NAME=ubecode-network
 
 # Logging
 LOG_LEVEL=info

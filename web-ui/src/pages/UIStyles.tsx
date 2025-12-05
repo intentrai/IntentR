@@ -14,6 +14,8 @@ interface TypographyConfig {
   name: string;
   fontSize: string;
   fontWeight: string;
+  fontStyle: string;
+  fontFamily: string;
   lineHeight: string;
 }
 
@@ -34,7 +36,31 @@ interface BackgroundConfig {
   elevated: string;
 }
 
-interface UIFrameworkConfig {
+interface SidebarConfig {
+  background: string;
+  foreground: string;
+  fontSize: string;
+  fontWeight: string;
+  activeBackground: string;
+  activeForeground: string;
+  hoverBackground: string;
+  borderColor: string;
+}
+
+interface CardConfig {
+  background: string;
+  foreground: string;
+  titleFontSize: string;
+  titleFontWeight: string;
+  bodyFontSize: string;
+  bodyFontWeight: string;
+  borderRadius: string;
+  borderColor: string;
+  shadow: string;
+  hoverShadow: string;
+}
+
+export interface UIFrameworkConfig {
   id: string;
   name: string;
   backgroundColors: BackgroundConfig;
@@ -44,14 +70,252 @@ interface UIFrameworkConfig {
   typography: TypographyConfig[];
   spacing: SpacingConfig[];
   buttonStyles: ButtonStylesConfig;
+  sidebarStyles?: SidebarConfig;
+  cardStyles?: CardConfig;
   isCustom?: boolean;
 }
 
-// Predefined UI Frameworks
-const defaultFrameworks: UIFrameworkConfig[] = [
+// Function to apply UI style colors to DOM - exported for use in App.tsx
+export function applyUIStyleToDOM(framework: UIFrameworkConfig): void {
+  const root = document.documentElement;
+
+  // Apply background colors
+  root.style.setProperty('--color-background', framework.backgroundColors.background);
+  root.style.setProperty('--color-surface', framework.backgroundColors.surface);
+  root.style.setProperty('--color-elevated', framework.backgroundColors.elevated);
+  root.style.setProperty('--color-systemBackground', framework.backgroundColors.background);
+  root.style.setProperty('--color-grey-50', framework.backgroundColors.background);
+  root.style.setProperty('--color-grey-100', framework.backgroundColors.surface);
+
+  // Apply primary colors if available
+  if (framework.primaryColors.length > 0) {
+    root.style.setProperty('--color-primary', framework.primaryColors[0].hex);
+    if (framework.primaryColors.length > 1) {
+      root.style.setProperty('--color-primary-hover', framework.primaryColors[1].hex);
+    }
+  }
+
+  // Apply text colors based on background darkness
+  const isDark = framework.backgroundColors.background === '#000000' ||
+                 framework.backgroundColors.background === '#1a1a1a' ||
+                 framework.backgroundColors.background === '#2d2d2d' ||
+                 framework.backgroundColors.background === '#111111' ||
+                 framework.backgroundColors.background === '#081534' ||
+                 framework.backgroundColors.background === '#1a1528';
+
+  if (isDark) {
+    root.style.setProperty('--color-text-primary', '#FFFFFF');
+    root.style.setProperty('--color-text-secondary', '#E5E5E5');
+    root.style.setProperty('--color-text-tertiary', '#9CA3AF');
+    root.style.setProperty('--color-grey-900', '#FFFFFF');
+    root.style.setProperty('--color-grey-800', '#E5E5E5');
+    root.style.setProperty('--color-grey-600', '#9CA3AF');
+  } else {
+    root.style.setProperty('--color-text-primary', '#1a1528');
+    root.style.setProperty('--color-text-secondary', '#4b5563');
+    root.style.setProperty('--color-text-tertiary', '#9ca3af');
+    root.style.setProperty('--color-grey-900', '#1a1528');
+    root.style.setProperty('--color-grey-800', '#2d2640');
+    root.style.setProperty('--color-grey-600', '#5c4f7a');
+  }
+
+  // Apply border colors
+  root.style.setProperty('--color-border', isDark ? '#374151' : '#e5e7eb');
+  root.style.setProperty('--color-grey-200', isDark ? '#374151' : '#e5e7eb');
+  root.style.setProperty('--color-grey-300', isDark ? '#4b5563' : '#d1d5db');
+
+  // Apply semantic colors
+  framework.semanticColors.forEach(color => {
+    const name = color.name.toLowerCase();
+    root.style.setProperty(`--color-${name}`, color.hex);
+  });
+
+  // Apply button primary color
+  if (framework.buttonStyles) {
+    root.style.setProperty('--color-blue-500', framework.buttonStyles.primary.bg);
+    root.style.setProperty('--color-blue-600', framework.buttonStyles.primary.hover);
+  }
+
+  // Apply sidebar styles
+  if (framework.sidebarStyles) {
+    root.style.setProperty('--sidebar-background', framework.sidebarStyles.background);
+    root.style.setProperty('--sidebar-foreground', framework.sidebarStyles.foreground);
+    root.style.setProperty('--sidebar-font-size', framework.sidebarStyles.fontSize);
+    root.style.setProperty('--sidebar-font-weight', framework.sidebarStyles.fontWeight);
+    root.style.setProperty('--sidebar-active-background', framework.sidebarStyles.activeBackground);
+    root.style.setProperty('--sidebar-active-foreground', framework.sidebarStyles.activeForeground);
+    root.style.setProperty('--sidebar-hover-background', framework.sidebarStyles.hoverBackground);
+    root.style.setProperty('--sidebar-border-color', framework.sidebarStyles.borderColor);
+  }
+
+  // Apply card styles
+  if (framework.cardStyles) {
+    root.style.setProperty('--card-background', framework.cardStyles.background);
+    root.style.setProperty('--card-foreground', framework.cardStyles.foreground);
+    root.style.setProperty('--card-title-font-size', framework.cardStyles.titleFontSize);
+    root.style.setProperty('--card-title-font-weight', framework.cardStyles.titleFontWeight);
+    root.style.setProperty('--card-body-font-size', framework.cardStyles.bodyFontSize);
+    root.style.setProperty('--card-body-font-weight', framework.cardStyles.bodyFontWeight);
+    root.style.setProperty('--card-border-radius', framework.cardStyles.borderRadius);
+    root.style.setProperty('--card-border-color', framework.cardStyles.borderColor);
+    root.style.setProperty('--card-shadow', framework.cardStyles.shadow);
+    root.style.setProperty('--card-hover-shadow', framework.cardStyles.hoverShadow);
+  }
+}
+
+// Predefined UI Frameworks - exported for use in App.tsx
+export const defaultUIFrameworks: UIFrameworkConfig[] = [
+  {
+    id: 'ube',
+    name: 'Ube',
+    isCustom: false,
+    backgroundColors: {
+      background: '#faf8fc',
+      surface: '#f3f0f7',
+      elevated: '#FFFFFF',
+    },
+    primaryColors: [
+      { name: 'Ube Purple', hex: '#8b5cf6', usage: 'Primary brand color, CTAs, buttons' },
+      { name: 'Ube Purple Dark', hex: '#7c3aed', usage: 'Primary hover, active states' },
+      { name: 'Ube Purple Deep', hex: '#6d28d9', usage: 'Headers, key elements' },
+      { name: 'Ube Purple Light', hex: '#a78bfa', usage: 'Accents, highlights, interactive elements' },
+    ],
+    neutralColors: [
+      { name: 'White', hex: '#FFFFFF', usage: 'Backgrounds, cards, contrast' },
+      { name: 'Header Text', hex: '#FFFFFF', usage: 'Header text on dark backgrounds' },
+      { name: 'Purple Gray', hex: '#d8d0e5', usage: 'Borders, dividers, disabled states' },
+      { name: 'Purple Muted', hex: '#7a6b9e', usage: 'Secondary text' },
+      { name: 'Text Primary', hex: '#1a1528', usage: 'Primary body text' },
+    ],
+    semanticColors: [
+      { name: 'Success', hex: '#10b981', usage: 'Success messages, confirmations' },
+      { name: 'Warning', hex: '#f59e0b', usage: 'Warnings, alerts' },
+      { name: 'Error', hex: '#ef4444', usage: 'Errors, destructive actions' },
+      { name: 'Info', hex: '#8b5cf6', usage: 'Information, help text' },
+    ],
+    typography: [
+      { name: 'Display 1', fontSize: '6rem', fontWeight: '300', fontStyle: 'normal', fontFamily: 'Inter, system-ui, sans-serif', lineHeight: '1' },
+      { name: 'Display 2', fontSize: '3.75rem', fontWeight: '300', fontStyle: 'normal', fontFamily: 'Inter, system-ui, sans-serif', lineHeight: '1' },
+      { name: 'Headline', fontSize: '3rem', fontWeight: '400', fontStyle: 'normal', fontFamily: 'Inter, system-ui, sans-serif', lineHeight: '1.2' },
+      { name: 'Title', fontSize: '2.125rem', fontWeight: '500', fontStyle: 'normal', fontFamily: 'Inter, system-ui, sans-serif', lineHeight: '1.3' },
+      { name: 'Subheading', fontSize: '1.5rem', fontWeight: '400', fontStyle: 'normal', fontFamily: 'Inter, system-ui, sans-serif', lineHeight: '1.5' },
+      { name: 'Body 1', fontSize: '1rem', fontWeight: '400', fontStyle: 'normal', fontFamily: 'Inter, system-ui, sans-serif', lineHeight: '1.6' },
+      { name: 'Body 2', fontSize: '0.875rem', fontWeight: '400', fontStyle: 'normal', fontFamily: 'Inter, system-ui, sans-serif', lineHeight: '1.5' },
+      { name: 'Caption', fontSize: '0.75rem', fontWeight: '400', fontStyle: 'normal', fontFamily: 'Inter, system-ui, sans-serif', lineHeight: '1.4' },
+    ],
+    spacing: [
+      { name: 'xs', size: '8px' },
+      { name: 'sm', size: '16px' },
+      { name: 'md', size: '24px' },
+      { name: 'lg', size: '32px' },
+      { name: 'xl', size: '48px' },
+      { name: '2xl', size: '64px' },
+    ],
+    buttonStyles: {
+      primary: { bg: '#8b5cf6', hover: '#7c3aed', color: '#FFFFFF' },
+      secondary: { bg: '#a78bfa', hover: '#8b5cf6', color: '#FFFFFF' },
+      accent: { bg: '#c4b5fd', hover: '#a78bfa', color: '#1a1528' },
+    },
+    sidebarStyles: {
+      background: '#f3f0f7',
+      foreground: '#1a1528',
+      fontSize: '14px',
+      fontWeight: '500',
+      activeBackground: '#8b5cf6',
+      activeForeground: '#FFFFFF',
+      hoverBackground: '#e9e4f0',
+      borderColor: '#d8d0e5',
+    },
+    cardStyles: {
+      background: '#FFFFFF',
+      foreground: '#1a1528',
+      titleFontSize: '1.25rem',
+      titleFontWeight: '600',
+      bodyFontSize: '0.875rem',
+      bodyFontWeight: '400',
+      borderRadius: '12px',
+      borderColor: '#d8d0e5',
+      shadow: '0 2px 8px rgba(139, 92, 246, 0.1)',
+      hoverShadow: '0 4px 16px rgba(139, 92, 246, 0.15)',
+    },
+  },
+  {
+    id: 'ube-dark',
+    name: 'Ube Dark',
+    isCustom: false,
+    backgroundColors: {
+      background: '#1a1528',
+      surface: '#2d2640',
+      elevated: '#453a5c',
+    },
+    primaryColors: [
+      { name: 'Ube Purple', hex: '#a78bfa', usage: 'Primary brand color, CTAs, buttons' },
+      { name: 'Ube Purple Bright', hex: '#c4b5fd', usage: 'Primary hover, highlights' },
+      { name: 'Ube Purple Deep', hex: '#8b5cf6', usage: 'Active states' },
+      { name: 'Ube Purple Light', hex: '#ddd6fe', usage: 'Accents, text highlights' },
+    ],
+    neutralColors: [
+      { name: 'White', hex: '#FFFFFF', usage: 'Primary text, headings' },
+      { name: 'Light Gray', hex: '#E5E5E5', usage: 'Body text' },
+      { name: 'Medium Gray', hex: '#a89cc4', usage: 'Secondary text, placeholders' },
+      { name: 'Dark Border', hex: '#5c4f7a', usage: 'Borders, dividers' },
+      { name: 'Surface', hex: '#2d2640', usage: 'Input backgrounds, subtle surfaces' },
+    ],
+    semanticColors: [
+      { name: 'Success', hex: '#34d399', usage: 'Success messages, confirmations' },
+      { name: 'Warning', hex: '#fbbf24', usage: 'Warnings, alerts' },
+      { name: 'Error', hex: '#f87171', usage: 'Errors, destructive actions' },
+      { name: 'Info', hex: '#a78bfa', usage: 'Information, help text' },
+    ],
+    typography: [
+      { name: 'Display 1', fontSize: '6rem', fontWeight: '300', fontStyle: 'normal', fontFamily: 'Inter, system-ui, sans-serif', lineHeight: '1' },
+      { name: 'Display 2', fontSize: '3.75rem', fontWeight: '300', fontStyle: 'normal', fontFamily: 'Inter, system-ui, sans-serif', lineHeight: '1' },
+      { name: 'Headline', fontSize: '3rem', fontWeight: '400', fontStyle: 'normal', fontFamily: 'Inter, system-ui, sans-serif', lineHeight: '1.2' },
+      { name: 'Title', fontSize: '2.125rem', fontWeight: '500', fontStyle: 'normal', fontFamily: 'Inter, system-ui, sans-serif', lineHeight: '1.3' },
+      { name: 'Subheading', fontSize: '1.5rem', fontWeight: '400', fontStyle: 'normal', fontFamily: 'Inter, system-ui, sans-serif', lineHeight: '1.5' },
+      { name: 'Body 1', fontSize: '1rem', fontWeight: '400', fontStyle: 'normal', fontFamily: 'Inter, system-ui, sans-serif', lineHeight: '1.6' },
+      { name: 'Body 2', fontSize: '0.875rem', fontWeight: '400', fontStyle: 'normal', fontFamily: 'Inter, system-ui, sans-serif', lineHeight: '1.5' },
+      { name: 'Caption', fontSize: '0.75rem', fontWeight: '400', fontStyle: 'normal', fontFamily: 'Inter, system-ui, sans-serif', lineHeight: '1.4' },
+    ],
+    spacing: [
+      { name: 'xs', size: '8px' },
+      { name: 'sm', size: '16px' },
+      { name: 'md', size: '24px' },
+      { name: 'lg', size: '32px' },
+      { name: 'xl', size: '48px' },
+      { name: '2xl', size: '64px' },
+    ],
+    buttonStyles: {
+      primary: { bg: '#8b5cf6', hover: '#a78bfa', color: '#FFFFFF' },
+      secondary: { bg: '#5c4f7a', hover: '#7a6b9e', color: '#FFFFFF' },
+      accent: { bg: '#c4b5fd', hover: '#ddd6fe', color: '#1a1528' },
+    },
+    sidebarStyles: {
+      background: '#2d2640',
+      foreground: '#E5E5E5',
+      fontSize: '14px',
+      fontWeight: '500',
+      activeBackground: '#8b5cf6',
+      activeForeground: '#FFFFFF',
+      hoverBackground: '#453a5c',
+      borderColor: '#5c4f7a',
+    },
+    cardStyles: {
+      background: '#2d2640',
+      foreground: '#E5E5E5',
+      titleFontSize: '1.25rem',
+      titleFontWeight: '600',
+      bodyFontSize: '0.875rem',
+      bodyFontWeight: '400',
+      borderRadius: '12px',
+      borderColor: '#5c4f7a',
+      shadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+      hoverShadow: '0 4px 16px rgba(139, 92, 246, 0.2)',
+    },
+  },
   {
     id: 'darkblue',
-    name: 'Dark Blue (Default)',
+    name: 'Dark Blue',
     isCustom: false,
     backgroundColors: {
       background: '#FFFFFF',
@@ -78,14 +342,14 @@ const defaultFrameworks: UIFrameworkConfig[] = [
       { name: 'Info', hex: '#47A8E5', usage: 'Information, help text' },
     ],
     typography: [
-      { name: 'Display 1', fontSize: '6rem', fontWeight: '300', lineHeight: '1' },
-      { name: 'Display 2', fontSize: '3.75rem', fontWeight: '300', lineHeight: '1' },
-      { name: 'Headline', fontSize: '3rem', fontWeight: '400', lineHeight: '1.2' },
-      { name: 'Title', fontSize: '2.125rem', fontWeight: '500', lineHeight: '1.3' },
-      { name: 'Subheading', fontSize: '1.5rem', fontWeight: '400', lineHeight: '1.5' },
-      { name: 'Body 1', fontSize: '1rem', fontWeight: '400', lineHeight: '1.6' },
-      { name: 'Body 2', fontSize: '0.875rem', fontWeight: '400', lineHeight: '1.5' },
-      { name: 'Caption', fontSize: '0.75rem', fontWeight: '400', lineHeight: '1.4' },
+      { name: 'Display 1', fontSize: '6rem', fontWeight: '300', fontStyle: 'normal', fontFamily: 'Inter, system-ui, sans-serif', lineHeight: '1' },
+      { name: 'Display 2', fontSize: '3.75rem', fontWeight: '300', fontStyle: 'normal', fontFamily: 'Inter, system-ui, sans-serif', lineHeight: '1' },
+      { name: 'Headline', fontSize: '3rem', fontWeight: '400', fontStyle: 'normal', fontFamily: 'Inter, system-ui, sans-serif', lineHeight: '1.2' },
+      { name: 'Title', fontSize: '2.125rem', fontWeight: '500', fontStyle: 'normal', fontFamily: 'Inter, system-ui, sans-serif', lineHeight: '1.3' },
+      { name: 'Subheading', fontSize: '1.5rem', fontWeight: '400', fontStyle: 'normal', fontFamily: 'Inter, system-ui, sans-serif', lineHeight: '1.5' },
+      { name: 'Body 1', fontSize: '1rem', fontWeight: '400', fontStyle: 'normal', fontFamily: 'Inter, system-ui, sans-serif', lineHeight: '1.6' },
+      { name: 'Body 2', fontSize: '0.875rem', fontWeight: '400', fontStyle: 'normal', fontFamily: 'Inter, system-ui, sans-serif', lineHeight: '1.5' },
+      { name: 'Caption', fontSize: '0.75rem', fontWeight: '400', fontStyle: 'normal', fontFamily: 'Inter, system-ui, sans-serif', lineHeight: '1.4' },
     ],
     spacing: [
       { name: 'xs', size: '8px' },
@@ -99,6 +363,28 @@ const defaultFrameworks: UIFrameworkConfig[] = [
       primary: { bg: '#133A7C', hover: '#081534', color: '#FFFFFF' },
       secondary: { bg: '#2A6BAC', hover: '#133A7C', color: '#FFFFFF' },
       accent: { bg: '#47A8E5', hover: '#2A6BAC', color: '#FFFFFF' },
+    },
+    sidebarStyles: {
+      background: '#081534',
+      foreground: '#FFFFFF',
+      fontSize: '14px',
+      fontWeight: '500',
+      activeBackground: '#133A7C',
+      activeForeground: '#FFFFFF',
+      hoverBackground: '#0d2654',
+      borderColor: '#133A7C',
+    },
+    cardStyles: {
+      background: '#FFFFFF',
+      foreground: '#212121',
+      titleFontSize: '1.25rem',
+      titleFontWeight: '600',
+      bodyFontSize: '0.875rem',
+      bodyFontWeight: '400',
+      borderRadius: '8px',
+      borderColor: '#C6C6C6',
+      shadow: '0 2px 8px rgba(8, 21, 52, 0.1)',
+      hoverShadow: '0 4px 16px rgba(8, 21, 52, 0.15)',
     },
   },
   {
@@ -130,14 +416,14 @@ const defaultFrameworks: UIFrameworkConfig[] = [
       { name: 'Blue 500', hex: '#2196F3', usage: 'Info' },
     ],
     typography: [
-      { name: 'H1', fontSize: '6rem', fontWeight: '300', lineHeight: '1.167' },
-      { name: 'H2', fontSize: '3.75rem', fontWeight: '300', lineHeight: '1.2' },
-      { name: 'H3', fontSize: '3rem', fontWeight: '400', lineHeight: '1.167' },
-      { name: 'H4', fontSize: '2.125rem', fontWeight: '400', lineHeight: '1.235' },
-      { name: 'H5', fontSize: '1.5rem', fontWeight: '400', lineHeight: '1.334' },
-      { name: 'H6', fontSize: '1.25rem', fontWeight: '500', lineHeight: '1.6' },
-      { name: 'Body 1', fontSize: '1rem', fontWeight: '400', lineHeight: '1.5' },
-      { name: 'Body 2', fontSize: '0.875rem', fontWeight: '400', lineHeight: '1.43' },
+      { name: 'H1', fontSize: '6rem', fontWeight: '300', fontStyle: 'normal', fontFamily: 'Roboto, sans-serif', lineHeight: '1.167' },
+      { name: 'H2', fontSize: '3.75rem', fontWeight: '300', fontStyle: 'normal', fontFamily: 'Roboto, sans-serif', lineHeight: '1.2' },
+      { name: 'H3', fontSize: '3rem', fontWeight: '400', fontStyle: 'normal', fontFamily: 'Roboto, sans-serif', lineHeight: '1.167' },
+      { name: 'H4', fontSize: '2.125rem', fontWeight: '400', fontStyle: 'normal', fontFamily: 'Roboto, sans-serif', lineHeight: '1.235' },
+      { name: 'H5', fontSize: '1.5rem', fontWeight: '400', fontStyle: 'normal', fontFamily: 'Roboto, sans-serif', lineHeight: '1.334' },
+      { name: 'H6', fontSize: '1.25rem', fontWeight: '500', fontStyle: 'normal', fontFamily: 'Roboto, sans-serif', lineHeight: '1.6' },
+      { name: 'Body 1', fontSize: '1rem', fontWeight: '400', fontStyle: 'normal', fontFamily: 'Roboto, sans-serif', lineHeight: '1.5' },
+      { name: 'Body 2', fontSize: '0.875rem', fontWeight: '400', fontStyle: 'normal', fontFamily: 'Roboto, sans-serif', lineHeight: '1.43' },
     ],
     spacing: [
       { name: 'xs', size: '8px' },
@@ -151,6 +437,28 @@ const defaultFrameworks: UIFrameworkConfig[] = [
       primary: { bg: '#3F51B5', hover: '#303F9F', color: '#FFFFFF' },
       secondary: { bg: '#E0E0E0', hover: '#BDBDBD', color: '#212121' },
       accent: { bg: '#FF4081', hover: '#F50057', color: '#FFFFFF' },
+    },
+    sidebarStyles: {
+      background: '#3F51B5',
+      foreground: '#FFFFFF',
+      fontSize: '14px',
+      fontWeight: '500',
+      activeBackground: '#303F9F',
+      activeForeground: '#FFFFFF',
+      hoverBackground: 'rgba(255,255,255,0.1)',
+      borderColor: '#303F9F',
+    },
+    cardStyles: {
+      background: '#FFFFFF',
+      foreground: '#212121',
+      titleFontSize: '1.25rem',
+      titleFontWeight: '500',
+      bodyFontSize: '0.875rem',
+      bodyFontWeight: '400',
+      borderRadius: '4px',
+      borderColor: '#E0E0E0',
+      shadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+      hoverShadow: '0 4px 8px rgba(0, 0, 0, 0.15)',
     },
   },
   {
@@ -182,14 +490,14 @@ const defaultFrameworks: UIFrameworkConfig[] = [
       { name: 'Info', hex: '#0dcaf0', usage: 'Information' },
     ],
     typography: [
-      { name: 'H1', fontSize: '2.5rem', fontWeight: '500', lineHeight: '1.2' },
-      { name: 'H2', fontSize: '2rem', fontWeight: '500', lineHeight: '1.2' },
-      { name: 'H3', fontSize: '1.75rem', fontWeight: '500', lineHeight: '1.2' },
-      { name: 'H4', fontSize: '1.5rem', fontWeight: '500', lineHeight: '1.2' },
-      { name: 'H5', fontSize: '1.25rem', fontWeight: '500', lineHeight: '1.2' },
-      { name: 'H6', fontSize: '1rem', fontWeight: '500', lineHeight: '1.2' },
-      { name: 'Body', fontSize: '1rem', fontWeight: '400', lineHeight: '1.5' },
-      { name: 'Small', fontSize: '0.875rem', fontWeight: '400', lineHeight: '1.5' },
+      { name: 'H1', fontSize: '2.5rem', fontWeight: '500', fontStyle: 'normal', fontFamily: 'Inter, system-ui, sans-serif', lineHeight: '1.2' },
+      { name: 'H2', fontSize: '2rem', fontWeight: '500', fontStyle: 'normal', fontFamily: 'Inter, system-ui, sans-serif', lineHeight: '1.2' },
+      { name: 'H3', fontSize: '1.75rem', fontWeight: '500', fontStyle: 'normal', fontFamily: 'Inter, system-ui, sans-serif', lineHeight: '1.2' },
+      { name: 'H4', fontSize: '1.5rem', fontWeight: '500', fontStyle: 'normal', fontFamily: 'Inter, system-ui, sans-serif', lineHeight: '1.2' },
+      { name: 'H5', fontSize: '1.25rem', fontWeight: '500', fontStyle: 'normal', fontFamily: 'Inter, system-ui, sans-serif', lineHeight: '1.2' },
+      { name: 'H6', fontSize: '1rem', fontWeight: '500', fontStyle: 'normal', fontFamily: 'Inter, system-ui, sans-serif', lineHeight: '1.2' },
+      { name: 'Body', fontSize: '1rem', fontWeight: '400', fontStyle: 'normal', fontFamily: 'Inter, system-ui, sans-serif', lineHeight: '1.5' },
+      { name: 'Small', fontSize: '0.875rem', fontWeight: '400', fontStyle: 'normal', fontFamily: 'Inter, system-ui, sans-serif', lineHeight: '1.5' },
     ],
     spacing: [
       { name: 'xs', size: '8px' },
@@ -203,6 +511,28 @@ const defaultFrameworks: UIFrameworkConfig[] = [
       primary: { bg: '#0d6efd', hover: '#0b5ed7', color: '#FFFFFF' },
       secondary: { bg: '#6c757d', hover: '#5c636a', color: '#FFFFFF' },
       accent: { bg: '#0dcaf0', hover: '#0aa2c0', color: '#000000' },
+    },
+    sidebarStyles: {
+      background: '#212529',
+      foreground: '#FFFFFF',
+      fontSize: '14px',
+      fontWeight: '500',
+      activeBackground: '#0d6efd',
+      activeForeground: '#FFFFFF',
+      hoverBackground: '#343a40',
+      borderColor: '#343a40',
+    },
+    cardStyles: {
+      background: '#FFFFFF',
+      foreground: '#212529',
+      titleFontSize: '1.25rem',
+      titleFontWeight: '500',
+      bodyFontSize: '1rem',
+      bodyFontWeight: '400',
+      borderRadius: '0.375rem',
+      borderColor: '#dee2e6',
+      shadow: '0 0.125rem 0.25rem rgba(0, 0, 0, 0.075)',
+      hoverShadow: '0 0.5rem 1rem rgba(0, 0, 0, 0.15)',
     },
   },
   {
@@ -234,14 +564,14 @@ const defaultFrameworks: UIFrameworkConfig[] = [
       { name: 'Blue 500', hex: '#3b82f6', usage: 'Info' },
     ],
     typography: [
-      { name: 'text-6xl', fontSize: '3.75rem', fontWeight: '700', lineHeight: '1' },
-      { name: 'text-5xl', fontSize: '3rem', fontWeight: '700', lineHeight: '1' },
-      { name: 'text-4xl', fontSize: '2.25rem', fontWeight: '700', lineHeight: '2.5rem' },
-      { name: 'text-3xl', fontSize: '1.875rem', fontWeight: '700', lineHeight: '2.25rem' },
-      { name: 'text-2xl', fontSize: '1.5rem', fontWeight: '700', lineHeight: '2rem' },
-      { name: 'text-xl', fontSize: '1.25rem', fontWeight: '600', lineHeight: '1.75rem' },
-      { name: 'text-base', fontSize: '1rem', fontWeight: '400', lineHeight: '1.5rem' },
-      { name: 'text-sm', fontSize: '0.875rem', fontWeight: '400', lineHeight: '1.25rem' },
+      { name: 'text-6xl', fontSize: '3.75rem', fontWeight: '700', fontStyle: 'normal', fontFamily: 'Inter, system-ui, sans-serif', lineHeight: '1' },
+      { name: 'text-5xl', fontSize: '3rem', fontWeight: '700', fontStyle: 'normal', fontFamily: 'Inter, system-ui, sans-serif', lineHeight: '1' },
+      { name: 'text-4xl', fontSize: '2.25rem', fontWeight: '700', fontStyle: 'normal', fontFamily: 'Inter, system-ui, sans-serif', lineHeight: '2.5rem' },
+      { name: 'text-3xl', fontSize: '1.875rem', fontWeight: '700', fontStyle: 'normal', fontFamily: 'Inter, system-ui, sans-serif', lineHeight: '2.25rem' },
+      { name: 'text-2xl', fontSize: '1.5rem', fontWeight: '700', fontStyle: 'normal', fontFamily: 'Inter, system-ui, sans-serif', lineHeight: '2rem' },
+      { name: 'text-xl', fontSize: '1.25rem', fontWeight: '600', fontStyle: 'normal', fontFamily: 'Inter, system-ui, sans-serif', lineHeight: '1.75rem' },
+      { name: 'text-base', fontSize: '1rem', fontWeight: '400', fontStyle: 'normal', fontFamily: 'Inter, system-ui, sans-serif', lineHeight: '1.5rem' },
+      { name: 'text-sm', fontSize: '0.875rem', fontWeight: '400', fontStyle: 'normal', fontFamily: 'Inter, system-ui, sans-serif', lineHeight: '1.25rem' },
     ],
     spacing: [
       { name: '2', size: '8px' },
@@ -255,6 +585,28 @@ const defaultFrameworks: UIFrameworkConfig[] = [
       primary: { bg: '#2563eb', hover: '#1d4ed8', color: '#FFFFFF' },
       secondary: { bg: '#6b7280', hover: '#4b5563', color: '#FFFFFF' },
       accent: { bg: '#0ea5e9', hover: '#0284c7', color: '#FFFFFF' },
+    },
+    sidebarStyles: {
+      background: '#111827',
+      foreground: '#F9FAFB',
+      fontSize: '14px',
+      fontWeight: '500',
+      activeBackground: '#2563eb',
+      activeForeground: '#FFFFFF',
+      hoverBackground: '#1f2937',
+      borderColor: '#374151',
+    },
+    cardStyles: {
+      background: '#FFFFFF',
+      foreground: '#111827',
+      titleFontSize: '1.25rem',
+      titleFontWeight: '600',
+      bodyFontSize: '0.875rem',
+      bodyFontWeight: '400',
+      borderRadius: '0.5rem',
+      borderColor: '#e5e7eb',
+      shadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+      hoverShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
     },
   },
   {
@@ -286,14 +638,14 @@ const defaultFrameworks: UIFrameworkConfig[] = [
       { name: 'Info', hex: '#3b82f6', usage: 'Information, help text' },
     ],
     typography: [
-      { name: 'Display 1', fontSize: '6rem', fontWeight: '300', lineHeight: '1' },
-      { name: 'Display 2', fontSize: '3.75rem', fontWeight: '300', lineHeight: '1' },
-      { name: 'Headline', fontSize: '3rem', fontWeight: '400', lineHeight: '1.2' },
-      { name: 'Title', fontSize: '2.125rem', fontWeight: '500', lineHeight: '1.3' },
-      { name: 'Subheading', fontSize: '1.5rem', fontWeight: '400', lineHeight: '1.5' },
-      { name: 'Body 1', fontSize: '1rem', fontWeight: '400', lineHeight: '1.6' },
-      { name: 'Body 2', fontSize: '0.875rem', fontWeight: '400', lineHeight: '1.5' },
-      { name: 'Caption', fontSize: '0.75rem', fontWeight: '400', lineHeight: '1.4' },
+      { name: 'Display 1', fontSize: '6rem', fontWeight: '300', fontStyle: 'normal', fontFamily: 'Inter, system-ui, sans-serif', lineHeight: '1' },
+      { name: 'Display 2', fontSize: '3.75rem', fontWeight: '300', fontStyle: 'normal', fontFamily: 'Inter, system-ui, sans-serif', lineHeight: '1' },
+      { name: 'Headline', fontSize: '3rem', fontWeight: '400', fontStyle: 'normal', fontFamily: 'Inter, system-ui, sans-serif', lineHeight: '1.2' },
+      { name: 'Title', fontSize: '2.125rem', fontWeight: '500', fontStyle: 'normal', fontFamily: 'Inter, system-ui, sans-serif', lineHeight: '1.3' },
+      { name: 'Subheading', fontSize: '1.5rem', fontWeight: '400', fontStyle: 'normal', fontFamily: 'Inter, system-ui, sans-serif', lineHeight: '1.5' },
+      { name: 'Body 1', fontSize: '1rem', fontWeight: '400', fontStyle: 'normal', fontFamily: 'Inter, system-ui, sans-serif', lineHeight: '1.6' },
+      { name: 'Body 2', fontSize: '0.875rem', fontWeight: '400', fontStyle: 'normal', fontFamily: 'Inter, system-ui, sans-serif', lineHeight: '1.5' },
+      { name: 'Caption', fontSize: '0.75rem', fontWeight: '400', fontStyle: 'normal', fontFamily: 'Inter, system-ui, sans-serif', lineHeight: '1.4' },
     ],
     spacing: [
       { name: 'xs', size: '8px' },
@@ -308,20 +660,111 @@ const defaultFrameworks: UIFrameworkConfig[] = [
       secondary: { bg: '#374151', hover: '#4b5563', color: '#FFFFFF' },
       accent: { bg: '#8b5cf6', hover: '#7c3aed', color: '#FFFFFF' },
     },
+    sidebarStyles: {
+      background: '#1a1a1a',
+      foreground: '#E5E5E5',
+      fontSize: '14px',
+      fontWeight: '500',
+      activeBackground: '#3b82f6',
+      activeForeground: '#FFFFFF',
+      hoverBackground: '#2d2d2d',
+      borderColor: '#374151',
+    },
+    cardStyles: {
+      background: '#1a1a1a',
+      foreground: '#E5E5E5',
+      titleFontSize: '1.25rem',
+      titleFontWeight: '600',
+      bodyFontSize: '0.875rem',
+      bodyFontWeight: '400',
+      borderRadius: '8px',
+      borderColor: '#374151',
+      shadow: '0 2px 8px rgba(0, 0, 0, 0.4)',
+      hoverShadow: '0 4px 16px rgba(59, 130, 246, 0.2)',
+    },
+  },
+];
+
+// Tab types for navigation
+type MainTab = 'foundations' | 'surfaces' | 'components' | 'layout' | 'states';
+
+interface TabConfig {
+  id: MainTab;
+  label: string;
+  icon: string;
+  subTabs: { id: string; label: string }[];
+}
+
+const tabConfigs: TabConfig[] = [
+  {
+    id: 'foundations',
+    label: 'Foundations',
+    icon: '🎨',
+    subTabs: [
+      { id: 'colors', label: 'Colors' },
+      { id: 'typography', label: 'Typography' },
+      { id: 'spacing', label: 'Spacing' },
+    ]
+  },
+  {
+    id: 'surfaces',
+    label: 'Surfaces',
+    icon: '📐',
+    subTabs: [
+      { id: 'backgrounds', label: 'Backgrounds' },
+    ]
+  },
+  {
+    id: 'components',
+    label: 'Components',
+    icon: '🧩',
+    subTabs: [
+      { id: 'buttons', label: 'Buttons' },
+      { id: 'cards', label: 'Cards' },
+    ]
+  },
+  {
+    id: 'layout',
+    label: 'Layout',
+    icon: '📱',
+    subTabs: [
+      { id: 'sidebar', label: 'Sidebar' },
+    ]
+  },
+  {
+    id: 'states',
+    label: 'States',
+    icon: '🔔',
+    subTabs: [
+      { id: 'semantic', label: 'Semantic Colors' },
+    ]
   },
 ];
 
 export const UIStyles: React.FC = () => {
   const { currentWorkspace, updateWorkspace } = useWorkspace();
 
+  // Tab navigation state
+  const [activeTab, setActiveTab] = useState<MainTab>('foundations');
+  const [activeSubTab, setActiveSubTab] = useState<string>('colors');
+
   // Available frameworks (default + custom)
-  const [frameworks, setFrameworks] = useState<UIFrameworkConfig[]>(defaultFrameworks);
+  const [frameworks, setFrameworks] = useState<UIFrameworkConfig[]>(defaultUIFrameworks);
   const [selectedFrameworkId, setSelectedFrameworkId] = useState<string>('bootstrap');
   const [activatedFrameworkId, setActivatedFrameworkId] = useState<string | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [newFrameworkName, setNewFrameworkName] = useState('');
   const [showActivationSuccess, setShowActivationSuccess] = useState(false);
+
+  // Update sub-tab when main tab changes
+  const handleTabChange = (tab: MainTab) => {
+    setActiveTab(tab);
+    const tabConfig = tabConfigs.find(t => t.id === tab);
+    if (tabConfig && tabConfig.subTabs.length > 0) {
+      setActiveSubTab(tabConfig.subTabs[0].id);
+    }
+  };
 
   // Current editing state
   const [backgroundColors, setBackgroundColors] = useState<BackgroundConfig>({
@@ -340,16 +783,50 @@ export const UIStyles: React.FC = () => {
     accent: { bg: '#47A8E5', hover: '#2A6BAC', color: '#FFFFFF' },
   });
 
+  const [sidebarStyles, setSidebarStyles] = useState<SidebarConfig>({
+    background: '#081534',
+    foreground: '#FFFFFF',
+    fontSize: '14px',
+    fontWeight: '500',
+    activeBackground: '#133A7C',
+    activeForeground: '#FFFFFF',
+    hoverBackground: '#0d2654',
+    borderColor: '#133A7C',
+  });
+
+  const [cardStyles, setCardStyles] = useState<CardConfig>({
+    background: '#FFFFFF',
+    foreground: '#212121',
+    titleFontSize: '1.25rem',
+    titleFontWeight: '600',
+    bodyFontSize: '0.875rem',
+    bodyFontWeight: '400',
+    borderRadius: '8px',
+    borderColor: '#C6C6C6',
+    shadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+    hoverShadow: '0 4px 16px rgba(0, 0, 0, 0.15)',
+  });
+
   // Load custom frameworks and selected framework from workspace
   useEffect(() => {
+    const allFrameworks = currentWorkspace?.customUIFrameworks
+      ? [...defaultUIFrameworks, ...currentWorkspace.customUIFrameworks]
+      : defaultUIFrameworks;
+
     if (currentWorkspace?.customUIFrameworks) {
-      setFrameworks([...defaultFrameworks, ...currentWorkspace.customUIFrameworks]);
+      setFrameworks(allFrameworks);
     }
     // Load the saved framework selection and activated framework
     if (currentWorkspace?.selectedUIFramework) {
       setSelectedFrameworkId(currentWorkspace.selectedUIFramework);
       // Set as activated if it exists
       setActivatedFrameworkId(currentWorkspace.selectedUIFramework);
+
+      // Apply the saved UI style to the DOM on load
+      const savedFramework = allFrameworks.find(f => f.id === currentWorkspace.selectedUIFramework);
+      if (savedFramework) {
+        applyUIStyleToDOM(savedFramework);
+      }
     }
   }, [currentWorkspace]);
 
@@ -361,9 +838,21 @@ export const UIStyles: React.FC = () => {
       setPrimaryColors([...framework.primaryColors]);
       setNeutralColors([...framework.neutralColors]);
       setSemanticColors([...framework.semanticColors]);
-      setTypography([...framework.typography]);
+      // Ensure typography entries have fontStyle and fontFamily defaults
+      const typographyWithDefaults = framework.typography.map(t => ({
+        ...t,
+        fontStyle: t.fontStyle || 'normal',
+        fontFamily: t.fontFamily || 'Inter, system-ui, sans-serif',
+      }));
+      setTypography(typographyWithDefaults);
       setSpacing([...framework.spacing]);
       setButtonStyles({ ...framework.buttonStyles });
+      if (framework.sidebarStyles) {
+        setSidebarStyles({ ...framework.sidebarStyles });
+      }
+      if (framework.cardStyles) {
+        setCardStyles({ ...framework.cardStyles });
+      }
       setHasChanges(false);
     }
   }, [selectedFrameworkId, frameworks]);
@@ -380,9 +869,41 @@ export const UIStyles: React.FC = () => {
   ];
 
   const fontWeightOptions = ['300', '400', '500', '600', '700'];
+  const fontStyleOptions = ['normal', 'italic', 'oblique'];
+  const fontFamilyOptions = [
+    'Inter, system-ui, sans-serif',
+    'Roboto, sans-serif',
+    'Open Sans, sans-serif',
+    'Lato, sans-serif',
+    'Poppins, sans-serif',
+    'Montserrat, sans-serif',
+    'Source Sans Pro, sans-serif',
+    'Nunito, sans-serif',
+    'Raleway, sans-serif',
+    'Work Sans, sans-serif',
+    'Georgia, serif',
+    'Times New Roman, serif',
+    'Merriweather, serif',
+    'Playfair Display, serif',
+    'Fira Code, monospace',
+    'JetBrains Mono, monospace',
+    'SF Mono, monospace',
+    'Consolas, monospace',
+  ];
   const fontSizeOptions = ['0.75rem', '0.875rem', '1rem', '1.125rem', '1.25rem', '1.5rem', '1.75rem', '2rem', '2.125rem', '2.5rem', '3rem', '3.75rem', '4rem', '5rem', '6rem'];
   const lineHeightOptions = ['1', '1.2', '1.3', '1.4', '1.5', '1.6'];
   const spacingOptions = ['4px', '8px', '12px', '16px', '20px', '24px', '32px', '40px', '48px', '56px', '64px', '80px', '96px'];
+  const borderRadiusOptions = ['0px', '2px', '4px', '6px', '8px', '10px', '12px', '16px', '20px', '24px'];
+  const shadowOptions = [
+    'none',
+    '0 1px 2px rgba(0, 0, 0, 0.05)',
+    '0 2px 4px rgba(0, 0, 0, 0.1)',
+    '0 2px 8px rgba(0, 0, 0, 0.1)',
+    '0 4px 12px rgba(0, 0, 0, 0.15)',
+    '0 4px 16px rgba(0, 0, 0, 0.15)',
+    '0 8px 24px rgba(0, 0, 0, 0.2)',
+    '0 12px 32px rgba(0, 0, 0, 0.25)',
+  ];
 
   const updateBackgroundColor = (field: 'background' | 'surface' | 'elevated', value: string) => {
     setBackgroundColors(prev => ({ ...prev, [field]: value }));
@@ -410,7 +931,7 @@ export const UIStyles: React.FC = () => {
     setHasChanges(true);
   };
 
-  const updateTypography = (index: number, field: 'fontSize' | 'fontWeight' | 'lineHeight', value: string) => {
+  const updateTypography = (index: number, field: 'fontSize' | 'fontWeight' | 'fontStyle' | 'fontFamily' | 'lineHeight', value: string) => {
     const updated = [...typography];
     updated[index] = { ...updated[index], [field]: value };
     setTypography(updated);
@@ -432,6 +953,16 @@ export const UIStyles: React.FC = () => {
     setHasChanges(true);
   };
 
+  const updateSidebarStyle = (field: keyof SidebarConfig, value: string) => {
+    setSidebarStyles(prev => ({ ...prev, [field]: value }));
+    setHasChanges(true);
+  };
+
+  const updateCardStyle = (field: keyof CardConfig, value: string) => {
+    setCardStyles(prev => ({ ...prev, [field]: value }));
+    setHasChanges(true);
+  };
+
   const handleSaveAsNew = async () => {
     if (!currentWorkspace || !newFrameworkName.trim()) {
       alert('Please enter a framework name');
@@ -449,20 +980,41 @@ export const UIStyles: React.FC = () => {
       typography: [...typography],
       spacing: [...spacing],
       buttonStyles: { ...buttonStyles },
+      sidebarStyles: { ...sidebarStyles },
+      cardStyles: { ...cardStyles },
     };
 
     const customFrameworks = currentWorkspace.customUIFrameworks || [];
     const updatedCustomFrameworks = [...customFrameworks, newFramework];
 
-    await updateWorkspace(currentWorkspace.id, {
-      customUIFrameworks: updatedCustomFrameworks,
-    });
+    try {
+      // Save the new framework to workspace
+      await updateWorkspace(currentWorkspace.id, {
+        customUIFrameworks: updatedCustomFrameworks,
+        selectedUIFramework: newFramework.id,
+      });
 
-    setFrameworks([...defaultFrameworks, ...updatedCustomFrameworks]);
-    setSelectedFrameworkId(newFramework.id);
-    setShowSaveModal(false);
-    setNewFrameworkName('');
-    setHasChanges(false);
+      // Update local state
+      setFrameworks([...defaultUIFrameworks, ...updatedCustomFrameworks]);
+      setSelectedFrameworkId(newFramework.id);
+      setShowSaveModal(false);
+      setNewFrameworkName('');
+      setHasChanges(false);
+
+      // Apply the UI style to DOM and activate it
+      applyUIStyleToDOM(newFramework);
+      setActivatedFrameworkId(newFramework.id);
+
+      // Save specification file
+      await saveUIStyleSpecification(newFramework);
+
+      // Show success message
+      setShowActivationSuccess(true);
+      setTimeout(() => setShowActivationSuccess(false), 3000);
+    } catch (error) {
+      console.error('Failed to save and activate UI style:', error);
+      alert('Failed to save UI style. Please try again.');
+    }
   };
 
   const handleUpdateExisting = async () => {
@@ -483,6 +1035,8 @@ export const UIStyles: React.FC = () => {
       typography: [...typography],
       spacing: [...spacing],
       buttonStyles: { ...buttonStyles },
+      sidebarStyles: { ...sidebarStyles },
+      cardStyles: { ...cardStyles },
     };
 
     const customFrameworks = currentWorkspace.customUIFrameworks || [];
@@ -490,12 +1044,27 @@ export const UIStyles: React.FC = () => {
       f.id === selectedFrameworkId ? updatedFramework : f
     );
 
-    await updateWorkspace(currentWorkspace.id, {
-      customUIFrameworks: updatedCustomFrameworks,
-    });
+    try {
+      await updateWorkspace(currentWorkspace.id, {
+        customUIFrameworks: updatedCustomFrameworks,
+      });
 
-    setFrameworks([...defaultFrameworks, ...updatedCustomFrameworks]);
-    setHasChanges(false);
+      setFrameworks([...defaultUIFrameworks, ...updatedCustomFrameworks]);
+      setHasChanges(false);
+
+      // If this framework is currently activated, apply the updates to DOM
+      if (activatedFrameworkId === selectedFrameworkId) {
+        applyUIStyleToDOM(updatedFramework);
+        await saveUIStyleSpecification(updatedFramework);
+      }
+
+      // Show success message
+      setShowActivationSuccess(true);
+      setTimeout(() => setShowActivationSuccess(false), 3000);
+    } catch (error) {
+      console.error('Failed to update UI style:', error);
+      alert('Failed to update UI style. Please try again.');
+    }
   };
 
   const handleDeleteCustom = async () => {
@@ -518,7 +1087,7 @@ export const UIStyles: React.FC = () => {
       customUIFrameworks: updatedCustomFrameworks,
     });
 
-    setFrameworks([...defaultFrameworks, ...updatedCustomFrameworks]);
+    setFrameworks([...defaultUIFrameworks, ...updatedCustomFrameworks]);
     setSelectedFrameworkId('darkblue');
   };
 
@@ -637,15 +1206,19 @@ ${framework.semanticColors.map(color => `
 
 ${framework.typography.map(typo => `
 **${typo.name}**
+- **Font Family:** ${typo.fontFamily || 'Inter, system-ui, sans-serif'}
 - **Font Size:** ${typo.fontSize}
 - **Font Weight:** ${typo.fontWeight}
+- **Font Style:** ${typo.fontStyle || 'normal'}
 - **Line Height:** ${typo.lineHeight}
 - **CSS Class:** \`.text-${typo.name.toLowerCase().replace(/\s+/g, '-')}\`
 
 \`\`\`css
 .text-${typo.name.toLowerCase().replace(/\s+/g, '-')} {
+  font-family: ${typo.fontFamily || 'Inter, system-ui, sans-serif'};
   font-size: ${typo.fontSize};
   font-weight: ${typo.fontWeight};
+  font-style: ${typo.fontStyle || 'normal'};
   line-height: ${typo.lineHeight};
 }
 \`\`\`
@@ -830,8 +1403,10 @@ ${framework.semanticColors.map(color => `  --color-${color.name.toLowerCase()}: 
 ${framework.spacing.map(space => `  --spacing-${space.name}: ${space.size};`).join('\n')}
 
   /* Typography */
-${framework.typography.map(typo => `  --font-size-${typo.name.toLowerCase().replace(/\s+/g, '-')}: ${typo.fontSize};
+${framework.typography.map(typo => `  --font-family-${typo.name.toLowerCase().replace(/\s+/g, '-')}: ${typo.fontFamily || 'Inter, system-ui, sans-serif'};
+  --font-size-${typo.name.toLowerCase().replace(/\s+/g, '-')}: ${typo.fontSize};
   --font-weight-${typo.name.toLowerCase().replace(/\s+/g, '-')}: ${typo.fontWeight};
+  --font-style-${typo.name.toLowerCase().replace(/\s+/g, '-')}: ${typo.fontStyle || 'normal'};
   --line-height-${typo.name.toLowerCase().replace(/\s+/g, '-')}: ${typo.lineHeight};`).join('\n')}
 
   /* Button Styles */
@@ -1047,6 +1622,9 @@ This UI Style specification should be used in conjunction with the active UI Fra
     if (!framework || !currentWorkspace) return;
 
     try {
+      // Apply the UI style colors to the DOM immediately
+      applyUIStyleToDOM(framework);
+
       // Update workspace with selected framework
       await updateWorkspace(currentWorkspace.id, { selectedUIFramework: selectedFrameworkId });
 
@@ -1078,140 +1656,208 @@ This UI Style specification should be used in conjunction with the active UI Fra
 
   const selectedFramework = frameworks.find(f => f.id === selectedFrameworkId);
 
-  return (
-    <div className="max-w-7xl mx-auto" style={{ padding: '16px' }}>
-      <AIPresetIndicator />
-      {/* Workspace Header */}
-      {currentWorkspace && (
-        <div style={{
-          backgroundColor: 'var(--color-primary)',
-          padding: '12px 16px',
-          borderRadius: '8px',
-          marginBottom: '16px'
-        }}>
-          <h4 className="text-title3" style={{ margin: 0, color: 'white' }}>
-            Workspace: {currentWorkspace.name}
-          </h4>
-        </div>
-      )}
+  // Get current tab config
+  const currentTabConfig = tabConfigs.find(t => t.id === activeTab);
 
-      {/* Header with Framework Selector */}
-      <div style={{ marginBottom: '32px', backgroundColor: '#081534', padding: '32px', borderRadius: '12px', color: 'white' }}>
-        <h1 style={{ fontSize: '2.5rem', fontWeight: '400', marginBottom: '10px', letterSpacing: '2px', color: 'white' }}>
-          UI Styles Editor
-        </h1>
-        <p style={{ fontSize: '1.1rem', opacity: 0.9, color: 'white', marginBottom: '24px' }}>
-          Customize your design system elements
-        </p>
+  // Render content based on active tab and sub-tab
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'foundations':
+        return renderFoundationsContent();
+      case 'surfaces':
+        return renderSurfacesContent();
+      case 'components':
+        return renderComponentsContent();
+      case 'layout':
+        return renderLayoutContent();
+      case 'states':
+        return renderStatesContent();
+      default:
+        return null;
+    }
+  };
 
-        {/* Framework Selector */}
-        <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
-          <label style={{ color: 'white', fontWeight: '500', fontSize: '15px' }}>
-            Select UI Style:
-          </label>
-          <select
-            value={selectedFrameworkId}
-            onChange={(e) => {
-              const newFrameworkId = e.target.value;
-              if (hasChanges) {
-                if (confirm('You have unsaved changes. Switch style anyway?')) {
-                  setSelectedFrameworkId(newFrameworkId);
-                }
-              } else {
-                setSelectedFrameworkId(newFrameworkId);
-              }
-            }}
-            style={{
-              padding: '10px 16px',
-              fontSize: '15px',
-              borderRadius: '6px',
-              border: '1px solid rgba(255,255,255,0.3)',
-              backgroundColor: 'rgba(255,255,255,0.1)',
-              color: 'white',
-              minWidth: '250px',
-            }}
-          >
-            <optgroup label="Default Frameworks">
-              {frameworks.filter(f => !f.isCustom).map(f => (
-                <option key={f.id} value={f.id}>{f.name}</option>
-              ))}
-            </optgroup>
-            {frameworks.some(f => f.isCustom) && (
-              <optgroup label="Custom Frameworks">
-                {frameworks.filter(f => f.isCustom).map(f => (
-                  <option key={f.id} value={f.id}>{f.name}</option>
+  // Foundations Tab Content
+  const renderFoundationsContent = () => {
+    switch (activeSubTab) {
+      case 'colors':
+        return (
+          <>
+            {/* Primary Colors */}
+            <div style={{ marginBottom: '32px' }}>
+              <h3 style={{ fontSize: '1.25rem', marginBottom: '16px', color: '#133A7C' }}>Primary Colors</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>
+                {primaryColors.map((color, index) => (
+                  <div key={index} style={{ padding: '16px', border: '1px solid #e0e0e0', borderRadius: '8px', backgroundColor: 'white' }}>
+                    <div style={{ display: 'flex', gap: '12px', marginBottom: '12px', alignItems: 'center' }}>
+                      <div style={{ width: '48px', height: '48px', backgroundColor: color.hex, borderRadius: '8px', border: '2px solid #ccc' }} />
+                      <div style={{ flex: 1 }}>
+                        <input
+                          type="text"
+                          value={color.name}
+                          onChange={(e) => updatePrimaryColor(index, 'name', e.target.value)}
+                          style={{ width: '100%', padding: '6px', marginBottom: '4px', border: '1px solid #ccc', borderRadius: '4px' }}
+                          placeholder="Color name"
+                        />
+                        <select
+                          value={color.hex}
+                          onChange={(e) => updatePrimaryColor(index, 'hex', e.target.value)}
+                          style={{ width: '100%', padding: '6px', border: '1px solid #ccc', borderRadius: '4px' }}
+                        >
+                          {colorOptions.map(c => <option key={c} value={c}>{c}</option>)}
+                        </select>
+                      </div>
+                    </div>
+                    <input
+                      type="text"
+                      value={color.usage}
+                      onChange={(e) => updatePrimaryColor(index, 'usage', e.target.value)}
+                      style={{ width: '100%', padding: '6px', border: '1px solid #ccc', borderRadius: '4px' }}
+                      placeholder="Usage description"
+                    />
+                  </div>
                 ))}
-              </optgroup>
-            )}
-          </select>
-
-          <Button
-            variant="primary"
-            onClick={handleActivateStyle}
-            disabled={!selectedFrameworkId || activatedFrameworkId === selectedFrameworkId}
-            style={{
-              padding: '10px 20px',
-              fontSize: '15px',
-              fontWeight: '600',
-              backgroundColor: activatedFrameworkId === selectedFrameworkId ? 'rgba(76, 175, 80, 0.3)' : '#4caf50',
-              cursor: activatedFrameworkId === selectedFrameworkId ? 'not-allowed' : 'pointer',
-              border: 'none',
-              color: 'white',
-            }}
-          >
-            {activatedFrameworkId === selectedFrameworkId ? '✓ Activated' : 'Activate'}
-          </Button>
-
-          {selectedFramework?.isCustom && (
-            <Button
-              variant="outline"
-              onClick={handleDeleteCustom}
-              style={{ backgroundColor: 'rgba(255,59,48,0.1)', borderColor: 'rgba(255,59,48,0.5)', color: 'white' }}
-            >
-              🗑️ Delete Framework
-            </Button>
-          )}
-
-          {hasChanges && (
-            <div style={{ display: 'flex', gap: '12px', marginLeft: 'auto' }}>
-              {selectedFramework?.isCustom && (
-                <Button
-                  variant="primary"
-                  onClick={handleUpdateExisting}
-                  style={{ backgroundColor: '#47A8E5' }}
-                >
-                  💾 Update Current
-                </Button>
-              )}
-              <Button
-                variant="primary"
-                onClick={() => setShowSaveModal(true)}
-                style={{ backgroundColor: '#4caf50' }}
-              >
-                ➕ Save as New
-              </Button>
+              </div>
             </div>
-          )}
-        </div>
 
-        {hasChanges && (
-          <div style={{ marginTop: '16px', padding: '12px', backgroundColor: 'rgba(255,204,0,0.2)', borderRadius: '6px', border: '1px solid rgba(255,204,0,0.5)' }}>
-            <p style={{ color: 'white', fontSize: '14px', margin: 0 }}>
-              ⚠️ You have unsaved changes. Save as a new custom framework or update the current one.
-            </p>
+            {/* Neutral Colors */}
+            <div style={{ marginBottom: '32px' }}>
+              <h3 style={{ fontSize: '1.25rem', marginBottom: '16px', color: '#133A7C' }}>Neutral Colors</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>
+                {neutralColors.map((color, index) => (
+                  <div key={index} style={{ padding: '16px', border: '1px solid #e0e0e0', borderRadius: '8px', backgroundColor: 'white' }}>
+                    <div style={{ display: 'flex', gap: '12px', marginBottom: '12px', alignItems: 'center' }}>
+                      <div style={{ width: '48px', height: '48px', backgroundColor: color.hex, borderRadius: '8px', border: '2px solid #ccc' }} />
+                      <div style={{ flex: 1 }}>
+                        <input
+                          type="text"
+                          value={color.name}
+                          onChange={(e) => updateNeutralColor(index, 'name', e.target.value)}
+                          style={{ width: '100%', padding: '6px', marginBottom: '4px', border: '1px solid #ccc', borderRadius: '4px' }}
+                          placeholder="Color name"
+                        />
+                        <select
+                          value={color.hex}
+                          onChange={(e) => updateNeutralColor(index, 'hex', e.target.value)}
+                          style={{ width: '100%', padding: '6px', border: '1px solid #ccc', borderRadius: '4px' }}
+                        >
+                          {colorOptions.map(c => <option key={c} value={c}>{c}</option>)}
+                        </select>
+                      </div>
+                    </div>
+                    <input
+                      type="text"
+                      value={color.usage}
+                      onChange={(e) => updateNeutralColor(index, 'usage', e.target.value)}
+                      style={{ width: '100%', padding: '6px', border: '1px solid #ccc', borderRadius: '4px' }}
+                      placeholder="Usage description"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        );
+      case 'typography':
+        return (
+          <div style={{ display: 'grid', gap: '16px' }}>
+            {typography.map((typo, index) => (
+              <div key={index} style={{ display: 'flex', gap: '16px', alignItems: 'center', padding: '16px', border: '1px solid #e0e0e0', borderRadius: '8px', backgroundColor: 'white' }}>
+                <div style={{ flex: 1, minWidth: '200px' }}>
+                  <strong>{typo.name}</strong>
+                  <div style={{ fontSize: typo.fontSize, fontWeight: typo.fontWeight, fontStyle: typo.fontStyle, fontFamily: typo.fontFamily, lineHeight: typo.lineHeight }}>
+                    Sample Text
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', color: '#666', marginBottom: '4px' }}>Family</label>
+                    <select
+                      value={typo.fontFamily}
+                      onChange={(e) => updateTypography(index, 'fontFamily', e.target.value)}
+                      style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px', maxWidth: '180px' }}
+                    >
+                      {fontFamilyOptions.map(f => <option key={f} value={f}>{f.split(',')[0]}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', color: '#666', marginBottom: '4px' }}>Size</label>
+                    <select
+                      value={typo.fontSize}
+                      onChange={(e) => updateTypography(index, 'fontSize', e.target.value)}
+                      style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+                    >
+                      {fontSizeOptions.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', color: '#666', marginBottom: '4px' }}>Weight</label>
+                    <select
+                      value={typo.fontWeight}
+                      onChange={(e) => updateTypography(index, 'fontWeight', e.target.value)}
+                      style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+                    >
+                      {fontWeightOptions.map(w => <option key={w} value={w}>{w}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', color: '#666', marginBottom: '4px' }}>Style</label>
+                    <select
+                      value={typo.fontStyle}
+                      onChange={(e) => updateTypography(index, 'fontStyle', e.target.value)}
+                      style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+                    >
+                      {fontStyleOptions.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', color: '#666', marginBottom: '4px' }}>Line Height</label>
+                    <select
+                      value={typo.lineHeight}
+                      onChange={(e) => updateTypography(index, 'lineHeight', e.target.value)}
+                      style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+                    >
+                      {lineHeightOptions.map(l => <option key={l} value={l}>{l}</option>)}
+                    </select>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
-        )}
-      </div>
+        );
+      case 'spacing':
+        return (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
+            {spacing.map((space, index) => (
+              <div key={index} style={{ padding: '16px', border: '1px solid #e0e0e0', borderRadius: '8px', backgroundColor: 'white' }}>
+                <strong>{space.name}</strong>
+                <div style={{ width: space.size, height: '24px', backgroundColor: '#47A8E5', marginTop: '8px', marginBottom: '8px', borderRadius: '4px' }} />
+                <select
+                  value={space.size}
+                  onChange={(e) => updateSpacing(index, e.target.value)}
+                  style={{ width: '100%', padding: '6px', border: '1px solid #ccc', borderRadius: '4px' }}
+                >
+                  {spacingOptions.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+            ))}
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
 
-      {/* Background Colors */}
-      <div style={{ marginBottom: '48px', padding: '32px', backgroundColor: 'white', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-        <h2 style={{ fontSize: '1.75rem', marginBottom: '24px', color: '#081534' }}>Background Colors</h2>
-        <p style={{ marginBottom: '20px', color: '#666' }}>
+  // Surfaces Tab Content
+  const renderSurfacesContent = () => {
+    return (
+      <>
+        <p style={{ marginBottom: '24px', color: '#666' }}>
           Define the main background colors for your application. These are applied to the body, cards, and elevated elements.
         </p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px', marginBottom: '32px' }}>
           {/* Main Background */}
-          <div style={{ padding: '16px', border: '1px solid #e0e0e0', borderRadius: '8px' }}>
+          <div style={{ padding: '16px', border: '1px solid #e0e0e0', borderRadius: '8px', backgroundColor: 'white' }}>
             <div style={{ display: 'flex', gap: '12px', marginBottom: '12px', alignItems: 'center' }}>
               <div style={{ width: '48px', height: '48px', backgroundColor: backgroundColors.background, borderRadius: '8px', border: '2px solid #ccc' }} />
               <div style={{ flex: 1 }}>
@@ -1229,7 +1875,7 @@ This UI Style specification should be used in conjunction with the active UI Fra
           </div>
 
           {/* Surface */}
-          <div style={{ padding: '16px', border: '1px solid #e0e0e0', borderRadius: '8px' }}>
+          <div style={{ padding: '16px', border: '1px solid #e0e0e0', borderRadius: '8px', backgroundColor: 'white' }}>
             <div style={{ display: 'flex', gap: '12px', marginBottom: '12px', alignItems: 'center' }}>
               <div style={{ width: '48px', height: '48px', backgroundColor: backgroundColors.surface, borderRadius: '8px', border: '2px solid #ccc' }} />
               <div style={{ flex: 1 }}>
@@ -1247,7 +1893,7 @@ This UI Style specification should be used in conjunction with the active UI Fra
           </div>
 
           {/* Elevated */}
-          <div style={{ padding: '16px', border: '1px solid #e0e0e0', borderRadius: '8px' }}>
+          <div style={{ padding: '16px', border: '1px solid #e0e0e0', borderRadius: '8px', backgroundColor: 'white' }}>
             <div style={{ display: 'flex', gap: '12px', marginBottom: '12px', alignItems: 'center' }}>
               <div style={{ width: '48px', height: '48px', backgroundColor: backgroundColors.elevated, borderRadius: '8px', border: '2px solid #ccc' }} />
               <div style={{ flex: 1 }}>
@@ -1266,7 +1912,7 @@ This UI Style specification should be used in conjunction with the active UI Fra
         </div>
 
         {/* Preview */}
-        <div style={{ marginTop: '24px' }}>
+        <div>
           <h4 style={{ fontSize: '1rem', marginBottom: '12px', color: '#133A7C' }}>Preview</h4>
           <div style={{
             backgroundColor: backgroundColors.background,
@@ -1296,84 +1942,399 @@ This UI Style specification should be used in conjunction with the active UI Fra
             </div>
           </div>
         </div>
+      </>
+    );
+  };
+
+  // Components Tab Content
+  const renderComponentsContent = () => {
+    switch (activeSubTab) {
+      case 'buttons':
+        return (
+          <div style={{ display: 'grid', gap: '24px' }}>
+            {(['primary', 'secondary', 'accent'] as const).map((type) => (
+              <div key={type} style={{ padding: '20px', border: '1px solid #e0e0e0', borderRadius: '8px', backgroundColor: 'white' }}>
+                <h3 style={{ textTransform: 'capitalize', marginBottom: '16px', color: '#081534' }}>{type} Button</h3>
+                <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <button
+                    style={{
+                      padding: '12px 24px',
+                      backgroundColor: buttonStyles[type].bg,
+                      color: buttonStyles[type].color,
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontSize: '15px',
+                      fontWeight: '500',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {type.charAt(0).toUpperCase() + type.slice(1)} Button
+                  </button>
+                  <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px' }}>Background</label>
+                      <select
+                        value={buttonStyles[type].bg}
+                        onChange={(e) => updateButtonStyle(type, 'bg', e.target.value)}
+                        style={{ padding: '6px', border: '1px solid #ccc', borderRadius: '4px' }}
+                      >
+                        {colorOptions.map(c => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px' }}>Hover</label>
+                      <select
+                        value={buttonStyles[type].hover}
+                        onChange={(e) => updateButtonStyle(type, 'hover', e.target.value)}
+                        style={{ padding: '6px', border: '1px solid #ccc', borderRadius: '4px' }}
+                      >
+                        {colorOptions.map(c => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px' }}>Text Color</label>
+                      <select
+                        value={buttonStyles[type].color}
+                        onChange={(e) => updateButtonStyle(type, 'color', e.target.value)}
+                        style={{ padding: '6px', border: '1px solid #ccc', borderRadius: '4px' }}
+                      >
+                        {colorOptions.map(c => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+      case 'cards':
+        return (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
+            {/* Preview Panel */}
+            <div style={{
+              padding: '32px',
+              backgroundColor: '#f5f5f5',
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+              <div
+                style={{
+                  backgroundColor: cardStyles.background,
+                  color: cardStyles.foreground,
+                  borderRadius: cardStyles.borderRadius,
+                  border: `1px solid ${cardStyles.borderColor}`,
+                  boxShadow: cardStyles.shadow,
+                  padding: '24px',
+                  width: '280px',
+                  transition: 'box-shadow 0.2s',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.boxShadow = cardStyles.hoverShadow;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.boxShadow = cardStyles.shadow;
+                }}
+              >
+                <h3 style={{
+                  fontSize: cardStyles.titleFontSize,
+                  fontWeight: cardStyles.titleFontWeight,
+                  marginBottom: '12px',
+                  color: cardStyles.foreground,
+                }}>
+                  Card Title
+                </h3>
+                <p style={{
+                  fontSize: cardStyles.bodyFontSize,
+                  fontWeight: cardStyles.bodyFontWeight,
+                  color: cardStyles.foreground,
+                  opacity: 0.8,
+                  margin: 0,
+                  lineHeight: 1.6,
+                }}>
+                  This is a preview of how cards will appear with your selected styles. Hover to see the hover shadow effect.
+                </p>
+              </div>
+            </div>
+
+            {/* Controls */}
+            <div style={{ display: 'grid', gap: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px', fontWeight: '500' }}>Background</label>
+                  <select
+                    value={cardStyles.background}
+                    onChange={(e) => updateCardStyle('background', e.target.value)}
+                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+                  >
+                    {colorOptions.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px', fontWeight: '500' }}>Text Color</label>
+                  <select
+                    value={cardStyles.foreground}
+                    onChange={(e) => updateCardStyle('foreground', e.target.value)}
+                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+                  >
+                    {colorOptions.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px', fontWeight: '500' }}>Title Font Size</label>
+                  <select
+                    value={cardStyles.titleFontSize}
+                    onChange={(e) => updateCardStyle('titleFontSize', e.target.value)}
+                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+                  >
+                    {fontSizeOptions.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px', fontWeight: '500' }}>Title Font Weight</label>
+                  <select
+                    value={cardStyles.titleFontWeight}
+                    onChange={(e) => updateCardStyle('titleFontWeight', e.target.value)}
+                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+                  >
+                    {fontWeightOptions.map(w => <option key={w} value={w}>{w}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px', fontWeight: '500' }}>Body Font Size</label>
+                  <select
+                    value={cardStyles.bodyFontSize}
+                    onChange={(e) => updateCardStyle('bodyFontSize', e.target.value)}
+                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+                  >
+                    {fontSizeOptions.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px', fontWeight: '500' }}>Body Font Weight</label>
+                  <select
+                    value={cardStyles.bodyFontWeight}
+                    onChange={(e) => updateCardStyle('bodyFontWeight', e.target.value)}
+                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+                  >
+                    {fontWeightOptions.map(w => <option key={w} value={w}>{w}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px', fontWeight: '500' }}>Border Radius</label>
+                  <select
+                    value={cardStyles.borderRadius}
+                    onChange={(e) => updateCardStyle('borderRadius', e.target.value)}
+                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+                  >
+                    {borderRadiusOptions.map(r => <option key={r} value={r}>{r}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px', fontWeight: '500' }}>Border Color</label>
+                  <select
+                    value={cardStyles.borderColor}
+                    onChange={(e) => updateCardStyle('borderColor', e.target.value)}
+                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+                  >
+                    {colorOptions.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px', fontWeight: '500' }}>Shadow</label>
+                  <select
+                    value={cardStyles.shadow}
+                    onChange={(e) => updateCardStyle('shadow', e.target.value)}
+                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+                  >
+                    {shadowOptions.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px', fontWeight: '500' }}>Hover Shadow</label>
+                  <select
+                    value={cardStyles.hoverShadow}
+                    onChange={(e) => updateCardStyle('hoverShadow', e.target.value)}
+                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+                  >
+                    {shadowOptions.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
+  // Layout Tab Content
+  const renderLayoutContent = () => {
+    return (
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
+        {/* Preview Panel */}
+        <div style={{
+          border: '1px solid #e0e0e0',
+          borderRadius: '8px',
+          overflow: 'hidden',
+          height: '400px'
+        }}>
+          <div style={{
+            backgroundColor: sidebarStyles.background,
+            borderRight: `1px solid ${sidebarStyles.borderColor}`,
+            height: '100%',
+            padding: '16px 0',
+          }}>
+            <div style={{ padding: '0 16px', marginBottom: '16px' }}>
+              <span style={{
+                color: sidebarStyles.foreground,
+                fontSize: sidebarStyles.fontSize,
+                fontWeight: sidebarStyles.fontWeight,
+                opacity: 0.7
+              }}>
+                NAVIGATION
+              </span>
+            </div>
+            {['Dashboard', 'Workspaces', 'Settings'].map((item, idx) => (
+              <div
+                key={item}
+                style={{
+                  padding: '12px 16px',
+                  backgroundColor: idx === 0 ? sidebarStyles.activeBackground : 'transparent',
+                  color: idx === 0 ? sidebarStyles.activeForeground : sidebarStyles.foreground,
+                  fontSize: sidebarStyles.fontSize,
+                  fontWeight: sidebarStyles.fontWeight,
+                  cursor: 'pointer',
+                  transition: 'background-color 0.2s',
+                }}
+                onMouseEnter={(e) => {
+                  if (idx !== 0) e.currentTarget.style.backgroundColor = sidebarStyles.hoverBackground;
+                }}
+                onMouseLeave={(e) => {
+                  if (idx !== 0) e.currentTarget.style.backgroundColor = 'transparent';
+                }}
+              >
+                {item}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Controls */}
+        <div style={{ display: 'grid', gap: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px', fontWeight: '500' }}>Background</label>
+              <select
+                value={sidebarStyles.background}
+                onChange={(e) => updateSidebarStyle('background', e.target.value)}
+                style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+              >
+                {colorOptions.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px', fontWeight: '500' }}>Text Color</label>
+              <select
+                value={sidebarStyles.foreground}
+                onChange={(e) => updateSidebarStyle('foreground', e.target.value)}
+                style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+              >
+                {colorOptions.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px', fontWeight: '500' }}>Active Background</label>
+              <select
+                value={sidebarStyles.activeBackground}
+                onChange={(e) => updateSidebarStyle('activeBackground', e.target.value)}
+                style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+              >
+                {colorOptions.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px', fontWeight: '500' }}>Active Text</label>
+              <select
+                value={sidebarStyles.activeForeground}
+                onChange={(e) => updateSidebarStyle('activeForeground', e.target.value)}
+                style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+              >
+                {colorOptions.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px', fontWeight: '500' }}>Hover Background</label>
+              <select
+                value={sidebarStyles.hoverBackground}
+                onChange={(e) => updateSidebarStyle('hoverBackground', e.target.value)}
+                style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+              >
+                {colorOptions.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px', fontWeight: '500' }}>Border Color</label>
+              <select
+                value={sidebarStyles.borderColor}
+                onChange={(e) => updateSidebarStyle('borderColor', e.target.value)}
+                style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+              >
+                {colorOptions.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px', fontWeight: '500' }}>Font Size</label>
+              <select
+                value={sidebarStyles.fontSize}
+                onChange={(e) => updateSidebarStyle('fontSize', e.target.value)}
+                style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+              >
+                {fontSizeOptions.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px', fontWeight: '500' }}>Font Weight</label>
+              <select
+                value={sidebarStyles.fontWeight}
+                onChange={(e) => updateSidebarStyle('fontWeight', e.target.value)}
+                style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+              >
+                {fontWeightOptions.map(w => <option key={w} value={w}>{w}</option>)}
+              </select>
+            </div>
+          </div>
+        </div>
       </div>
+    );
+  };
 
-      {/* Color Palette */}
-      <div style={{ marginBottom: '48px', padding: '32px', backgroundColor: 'white', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-        <h2 style={{ fontSize: '1.75rem', marginBottom: '24px', color: '#081534' }}>Color Palette</h2>
-
-        <h3 style={{ fontSize: '1.25rem', marginBottom: '16px', color: '#133A7C' }}>Primary Colors</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px', marginBottom: '32px' }}>
-          {primaryColors.map((color, index) => (
-            <div key={index} style={{ padding: '16px', border: '1px solid #e0e0e0', borderRadius: '8px' }}>
-              <div style={{ display: 'flex', gap: '12px', marginBottom: '12px', alignItems: 'center' }}>
-                <div style={{ width: '48px', height: '48px', backgroundColor: color.hex, borderRadius: '8px', border: '2px solid #ccc' }} />
-                <div style={{ flex: 1 }}>
-                  <input
-                    type="text"
-                    value={color.name}
-                    onChange={(e) => updatePrimaryColor(index, 'name', e.target.value)}
-                    style={{ width: '100%', padding: '6px', marginBottom: '4px', border: '1px solid #ccc', borderRadius: '4px' }}
-                    placeholder="Color name"
-                  />
-                  <select
-                    value={color.hex}
-                    onChange={(e) => updatePrimaryColor(index, 'hex', e.target.value)}
-                    style={{ width: '100%', padding: '6px', border: '1px solid #ccc', borderRadius: '4px' }}
-                  >
-                    {colorOptions.map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                </div>
-              </div>
-              <input
-                type="text"
-                value={color.usage}
-                onChange={(e) => updatePrimaryColor(index, 'usage', e.target.value)}
-                style={{ width: '100%', padding: '6px', border: '1px solid #ccc', borderRadius: '4px' }}
-                placeholder="Usage description"
-              />
-            </div>
-          ))}
-        </div>
-
-        <h3 style={{ fontSize: '1.25rem', marginBottom: '16px', color: '#133A7C' }}>Neutral Colors</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px', marginBottom: '32px' }}>
-          {neutralColors.map((color, index) => (
-            <div key={index} style={{ padding: '16px', border: '1px solid #e0e0e0', borderRadius: '8px' }}>
-              <div style={{ display: 'flex', gap: '12px', marginBottom: '12px', alignItems: 'center' }}>
-                <div style={{ width: '48px', height: '48px', backgroundColor: color.hex, borderRadius: '8px', border: '2px solid #ccc' }} />
-                <div style={{ flex: 1 }}>
-                  <input
-                    type="text"
-                    value={color.name}
-                    onChange={(e) => updateNeutralColor(index, 'name', e.target.value)}
-                    style={{ width: '100%', padding: '6px', marginBottom: '4px', border: '1px solid #ccc', borderRadius: '4px' }}
-                    placeholder="Color name"
-                  />
-                  <select
-                    value={color.hex}
-                    onChange={(e) => updateNeutralColor(index, 'hex', e.target.value)}
-                    style={{ width: '100%', padding: '6px', border: '1px solid #ccc', borderRadius: '4px' }}
-                  >
-                    {colorOptions.map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                </div>
-              </div>
-              <input
-                type="text"
-                value={color.usage}
-                onChange={(e) => updateNeutralColor(index, 'usage', e.target.value)}
-                style={{ width: '100%', padding: '6px', border: '1px solid #ccc', borderRadius: '4px' }}
-                placeholder="Usage description"
-              />
-            </div>
-          ))}
-        </div>
-
-        <h3 style={{ fontSize: '1.25rem', marginBottom: '16px', color: '#133A7C' }}>Semantic Colors</h3>
+  // States Tab Content
+  const renderStatesContent = () => {
+    return (
+      <>
+        <p style={{ marginBottom: '24px', color: '#666' }}>
+          Define semantic colors for different states and feedback in your application.
+        </p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>
           {semanticColors.map((color, index) => (
-            <div key={index} style={{ padding: '16px', border: '1px solid #e0e0e0', borderRadius: '8px' }}>
+            <div key={index} style={{ padding: '16px', border: '1px solid #e0e0e0', borderRadius: '8px', backgroundColor: 'white' }}>
               <div style={{ display: 'flex', gap: '12px', marginBottom: '12px', alignItems: 'center' }}>
                 <div style={{ width: '48px', height: '48px', backgroundColor: color.hex, borderRadius: '8px', border: '2px solid #ccc' }} />
                 <div style={{ flex: 1 }}>
@@ -1403,123 +2364,210 @@ This UI Style specification should be used in conjunction with the active UI Fra
             </div>
           ))}
         </div>
-      </div>
+      </>
+    );
+  };
 
-      {/* Typography */}
-      <div style={{ marginBottom: '48px', padding: '32px', backgroundColor: 'white', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-        <h2 style={{ fontSize: '1.75rem', marginBottom: '24px', color: '#081534' }}>Typography Scale</h2>
-        <div style={{ display: 'grid', gap: '16px' }}>
-          {typography.map((typo, index) => (
-            <div key={index} style={{ display: 'flex', gap: '16px', alignItems: 'center', padding: '16px', border: '1px solid #e0e0e0', borderRadius: '8px' }}>
-              <div style={{ flex: 1 }}>
-                <strong>{typo.name}</strong>
-                <div style={{ fontSize: typo.fontSize, fontWeight: typo.fontWeight, lineHeight: typo.lineHeight }}>
-                  Sample Text
-                </div>
-              </div>
-              <select
-                value={typo.fontSize}
-                onChange={(e) => updateTypography(index, 'fontSize', e.target.value)}
-                style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
-              >
-                {fontSizeOptions.map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
-              <select
-                value={typo.fontWeight}
-                onChange={(e) => updateTypography(index, 'fontWeight', e.target.value)}
-                style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
-              >
-                {fontWeightOptions.map(w => <option key={w} value={w}>{w}</option>)}
-              </select>
-              <select
-                value={typo.lineHeight}
-                onChange={(e) => updateTypography(index, 'lineHeight', e.target.value)}
-                style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
-              >
-                {lineHeightOptions.map(l => <option key={l} value={l}>{l}</option>)}
-              </select>
-            </div>
-          ))}
+  return (
+    <div className="max-w-7xl mx-auto" style={{ padding: '16px' }}>
+      <AIPresetIndicator />
+      {/* Workspace Header */}
+      {currentWorkspace && (
+        <div style={{
+          backgroundColor: 'var(--color-primary)',
+          padding: '12px 16px',
+          borderRadius: '8px',
+          marginBottom: '16px'
+        }}>
+          <h4 className="text-title3" style={{ margin: 0, color: 'white' }}>
+            Workspace: {currentWorkspace.name}
+          </h4>
         </div>
-      </div>
+      )}
 
-      {/* Spacing */}
-      <div style={{ marginBottom: '48px', padding: '32px', backgroundColor: 'white', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-        <h2 style={{ fontSize: '1.75rem', marginBottom: '24px', color: '#081534' }}>Spacing System</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
-          {spacing.map((space, index) => (
-            <div key={index} style={{ padding: '16px', border: '1px solid #e0e0e0', borderRadius: '8px' }}>
-              <strong>{space.name}</strong>
-              <div style={{ width: space.size, height: '24px', backgroundColor: '#47A8E5', marginTop: '8px', marginBottom: '8px' }} />
-              <select
-                value={space.size}
-                onChange={(e) => updateSpacing(index, e.target.value)}
-                style={{ width: '100%', padding: '6px', border: '1px solid #ccc', borderRadius: '4px' }}
+      {/* Header with Framework Selector */}
+      <div style={{ marginBottom: '24px', backgroundColor: '#081534', padding: '24px 32px', borderRadius: '12px', color: 'white' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
+          <div>
+            <h1 style={{ fontSize: '2rem', fontWeight: '500', marginBottom: '8px', letterSpacing: '1px', color: 'white' }}>
+              UI Styles Editor
+            </h1>
+            <p style={{ fontSize: '1rem', opacity: 0.9, color: 'white', margin: 0 }}>
+              Customize your design system elements
+            </p>
+          </div>
+
+          {/* Framework Selector */}
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <select
+              value={selectedFrameworkId}
+              onChange={(e) => {
+                const newFrameworkId = e.target.value;
+                if (hasChanges) {
+                  if (confirm('You have unsaved changes. Switch style anyway?')) {
+                    setSelectedFrameworkId(newFrameworkId);
+                  }
+                } else {
+                  setSelectedFrameworkId(newFrameworkId);
+                }
+              }}
+              style={{
+                padding: '10px 16px',
+                fontSize: '14px',
+                borderRadius: '6px',
+                border: '1px solid rgba(255,255,255,0.3)',
+                backgroundColor: 'rgba(255,255,255,0.1)',
+                color: 'white',
+                minWidth: '200px',
+              }}
+            >
+              <optgroup label="Default Frameworks">
+                {frameworks.filter(f => !f.isCustom).map(f => (
+                  <option key={f.id} value={f.id}>{f.name}</option>
+                ))}
+              </optgroup>
+              {frameworks.some(f => f.isCustom) && (
+                <optgroup label="Custom Frameworks">
+                  {frameworks.filter(f => f.isCustom).map(f => (
+                    <option key={f.id} value={f.id}>{f.name}</option>
+                  ))}
+                </optgroup>
+              )}
+            </select>
+
+            <Button
+              variant="primary"
+              onClick={handleActivateStyle}
+              disabled={!selectedFrameworkId || activatedFrameworkId === selectedFrameworkId}
+              style={{
+                padding: '10px 20px',
+                fontSize: '14px',
+                fontWeight: '600',
+                backgroundColor: activatedFrameworkId === selectedFrameworkId ? 'rgba(76, 175, 80, 0.3)' : '#4caf50',
+                cursor: activatedFrameworkId === selectedFrameworkId ? 'not-allowed' : 'pointer',
+                border: 'none',
+                color: 'white',
+              }}
+            >
+              {activatedFrameworkId === selectedFrameworkId ? 'Activated' : 'Activate'}
+            </Button>
+
+            {selectedFramework?.isCustom && (
+              <Button
+                variant="outline"
+                onClick={handleDeleteCustom}
+                style={{ backgroundColor: 'rgba(255,59,48,0.1)', borderColor: 'rgba(255,59,48,0.5)', color: 'white', padding: '10px 16px' }}
               >
-                {spacingOptions.map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
-            </div>
-          ))}
-        </div>
-      </div>
+                Delete
+              </Button>
+            )}
 
-      {/* Buttons */}
-      <div style={{ marginBottom: '48px', padding: '32px', backgroundColor: 'white', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-        <h2 style={{ fontSize: '1.75rem', marginBottom: '24px', color: '#081534' }}>Button Styles</h2>
-        <div style={{ display: 'grid', gap: '24px' }}>
-          {(['primary', 'secondary', 'accent'] as const).map((type) => (
-            <div key={type} style={{ padding: '20px', border: '1px solid #e0e0e0', borderRadius: '8px' }}>
-              <h3 style={{ textTransform: 'capitalize', marginBottom: '16px' }}>{type} Button</h3>
-              <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
-                <button
-                  style={{
-                    padding: '12px 24px',
-                    backgroundColor: buttonStyles[type].bg,
-                    color: buttonStyles[type].color,
-                    border: 'none',
-                    borderRadius: '6px',
-                    fontSize: '15px',
-                    fontWeight: '500',
-                    cursor: 'pointer',
-                  }}
+            {hasChanges && (
+              <>
+                {selectedFramework?.isCustom && (
+                  <Button
+                    variant="primary"
+                    onClick={handleUpdateExisting}
+                    style={{ backgroundColor: '#47A8E5', padding: '10px 16px' }}
+                  >
+                    Update
+                  </Button>
+                )}
+                <Button
+                  variant="primary"
+                  onClick={() => setShowSaveModal(true)}
+                  style={{ backgroundColor: '#4caf50', padding: '10px 16px' }}
                 >
-                  {type.charAt(0).toUpperCase() + type.slice(1)} Button
-                </button>
-                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px' }}>Background</label>
-                    <select
-                      value={buttonStyles[type].bg}
-                      onChange={(e) => updateButtonStyle(type, 'bg', e.target.value)}
-                      style={{ padding: '6px', border: '1px solid #ccc', borderRadius: '4px' }}
-                    >
-                      {colorOptions.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px' }}>Hover</label>
-                    <select
-                      value={buttonStyles[type].hover}
-                      onChange={(e) => updateButtonStyle(type, 'hover', e.target.value)}
-                      style={{ padding: '6px', border: '1px solid #ccc', borderRadius: '4px' }}
-                    >
-                      {colorOptions.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px' }}>Text Color</label>
-                    <select
-                      value={buttonStyles[type].color}
-                      onChange={(e) => updateButtonStyle(type, 'color', e.target.value)}
-                      style={{ padding: '6px', border: '1px solid #ccc', borderRadius: '4px' }}
-                    >
-                      {colorOptions.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
+                  Save New
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
+
+        {hasChanges && (
+          <div style={{ marginTop: '16px', padding: '10px 16px', backgroundColor: 'rgba(255,204,0,0.2)', borderRadius: '6px', border: '1px solid rgba(255,204,0,0.5)' }}>
+            <p style={{ color: 'white', fontSize: '13px', margin: 0 }}>
+              You have unsaved changes. Save as a new custom framework or update the current one.
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Main Tab Navigation */}
+      <div style={{
+        display: 'flex',
+        gap: '4px',
+        marginBottom: '0',
+        backgroundColor: '#f5f5f5',
+        padding: '8px 8px 0 8px',
+        borderRadius: '12px 12px 0 0',
+      }}>
+        {tabConfigs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => handleTabChange(tab.id)}
+            style={{
+              padding: '14px 24px',
+              fontSize: '15px',
+              fontWeight: activeTab === tab.id ? '600' : '500',
+              backgroundColor: activeTab === tab.id ? 'white' : 'transparent',
+              color: activeTab === tab.id ? '#081534' : '#666',
+              border: 'none',
+              borderRadius: '8px 8px 0 0',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+            }}
+          >
+            <span>{tab.icon}</span>
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Content Area */}
+      <div style={{
+        backgroundColor: 'white',
+        borderRadius: '0 0 12px 12px',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+        minHeight: '500px',
+      }}>
+        {/* Sub-Tab Navigation */}
+        {currentTabConfig && currentTabConfig.subTabs.length > 1 && (
+          <div style={{
+            display: 'flex',
+            gap: '8px',
+            padding: '16px 24px',
+            borderBottom: '1px solid #e5e5e5',
+          }}>
+            {currentTabConfig.subTabs.map((subTab) => (
+              <button
+                key={subTab.id}
+                onClick={() => setActiveSubTab(subTab.id)}
+                style={{
+                  padding: '8px 16px',
+                  fontSize: '14px',
+                  fontWeight: activeSubTab === subTab.id ? '600' : '400',
+                  backgroundColor: activeSubTab === subTab.id ? '#081534' : '#f0f0f0',
+                  color: activeSubTab === subTab.id ? 'white' : '#333',
+                  border: 'none',
+                  borderRadius: '20px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+              >
+                {subTab.label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Tab Content */}
+        <div style={{ padding: '24px 32px' }}>
+          {renderTabContent()}
         </div>
       </div>
 

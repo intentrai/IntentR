@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
-import { defaultTheme, availableThemes } from '../types/theme';
+import { ubeTheme, availableThemes } from '../types/theme';
 import type { Theme } from '../types/theme';
 
 interface ThemeContextType {
@@ -31,7 +31,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
       const savedTheme = availableThemes.find(t => t.id === savedThemeId);
       if (savedTheme) return savedTheme;
     }
-    return defaultTheme;
+    return ubeTheme;
   });
 
   useEffect(() => {
@@ -92,4 +92,26 @@ function applyThemeToDOM(theme: Theme): void {
   Object.entries(theme.colors.red).forEach(([shade, color]) => {
     root.style.setProperty(`--color-red-${shade}`, color);
   });
+
+  // Apply semantic background variables for theme responsiveness
+  root.style.setProperty('--color-systemBackground', theme.colors.grey['50']);
+  root.style.setProperty('--color-systemBackground-secondary', theme.colors.grey['100']);
+  root.style.setProperty('--color-background', theme.colors.grey['50']);
+  root.style.setProperty('--color-background-secondary', theme.colors.grey['100']);
+  root.style.setProperty('--color-surface', theme.colors.grey['50']);
+  root.style.setProperty('--color-surface-secondary', theme.colors.grey['100']);
+
+  // Apply semantic text colors
+  root.style.setProperty('--color-text-primary', theme.colors.grey['900']);
+  root.style.setProperty('--color-text-secondary', theme.colors.grey['600']);
+  root.style.setProperty('--color-text-tertiary', theme.colors.grey['400']);
+
+  // Apply semantic border colors
+  root.style.setProperty('--color-border', theme.colors.grey['200']);
+  root.style.setProperty('--color-border-secondary', theme.colors.grey['300']);
+
+  // Apply primary action colors (using blue as primary)
+  root.style.setProperty('--color-primary', theme.colors.blue['500']);
+  root.style.setProperty('--color-primary-hover', theme.colors.blue['600']);
+  root.style.setProperty('--color-primary-light', theme.colors.blue['100']);
 }

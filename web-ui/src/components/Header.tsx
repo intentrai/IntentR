@@ -23,12 +23,12 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle }) => {
       <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '16px 24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ width: '8px', height: '8px', backgroundColor: 'var(--color-accent, #f97316)', borderRadius: '50%' }}></div>
-              <div style={{ width: '8px', height: '8px', backgroundColor: 'var(--color-secondary, #3b82f6)', borderRadius: '50%' }}></div>
-              <div style={{ width: '8px', height: '8px', backgroundColor: 'var(--color-primary, #1e3a8a)', borderRadius: '50%', border: '1px solid rgba(255,255,255,0.3)' }}></div>
-            </div>
-            <div style={{ marginLeft: '8px' }}>
+            <img
+              src="/ube-logo.svg"
+              alt="UbeCode Logo"
+              style={{ width: '48px', height: '48px' }}
+            />
+            <div>
               <h1 style={{ color: '#FFFFFF', fontSize: '32px', fontWeight: 600, margin: 0 }}>{title}</h1>
               {subtitle && (
                 <p style={{ fontSize: '12px', color: 'var(--color-accent, #f97316)', margin: 0 }}>{subtitle}</p>

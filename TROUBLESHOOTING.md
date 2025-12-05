@@ -118,7 +118,7 @@ docker-compose build --no-cache
 
 **Error:**
 ```
-pq: password authentication failed for user "balut_user"
+pq: password authentication failed for user "ubecode_user"
 ```
 
 **Solution:**
@@ -258,8 +258,8 @@ cd /path/to/instance2
 ./scripts/change-ports.sh  # Choose option 2 (7000 range)
 
 # Set unique Docker project names
-export COMPOSE_PROJECT_NAME=balut-instance1  # In instance 1
-export COMPOSE_PROJECT_NAME=balut-instance2  # In instance 2
+export COMPOSE_PROJECT_NAME=ubecode-instance1  # In instance 1
+export COMPOSE_PROJECT_NAME=ubecode-instance2  # In instance 2
 
 # Start each separately
 ./start.sh --build
@@ -288,7 +288,7 @@ docker-compose logs -f integration-service
 
 ### Check Ports
 ```bash
-# All Balut ports
+# All UbeCode ports
 lsof -i :6173 -i :9080 -i :9081 -i :9082 -i :9083 -i :9084 -i :4001 -i :4002
 
 # Specific port
@@ -318,10 +318,10 @@ tail -f logs/*.log
 ### Check Database
 ```bash
 # Connect to PostgreSQL
-docker-compose exec postgres psql -U balut_user -d balut_db
+docker-compose exec postgres psql -U ubecode_user -d ubecode_db
 
 # Check if database is ready
-docker-compose exec postgres pg_isready -U balut_user
+docker-compose exec postgres pg_isready -U ubecode_user
 
 # View database logs
 docker-compose logs postgres

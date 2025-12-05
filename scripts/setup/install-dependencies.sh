@@ -3,7 +3,7 @@
 ################################################################################
 # System Dependencies Installation Script
 ################################################################################
-# This script installs system dependencies required for Balut microservices
+# This script installs system dependencies required for UbeCode microservices
 #
 # Usage:
 #   sudo ./install-dependencies.sh

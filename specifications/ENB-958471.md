@@ -19,7 +19,7 @@
 
 ### Purpose
 
-This enabler provides integration between the Balut web application and the DELM (Design Element Language Model) service for AI-powered image generation. It enables the UI Designer capability to generate UI mockups, icons, logos, illustrations, and AI images through a REST API interface.
+This enabler provides integration between the UbeCode web application and the DELM (Design Element Language Model) service for AI-powered image generation. It enables the UI Designer capability to generate UI mockups, icons, logos, illustrations, and AI images through a REST API interface.
 
 ---
 
@@ -61,7 +61,7 @@ This enabler provides integration between the Balut web application and the DELM
 
 ```mermaid
 flowchart TD
-    subgraph Balut["Balut Web UI"]
+    subgraph UbeCode["UbeCode Web UI"]
         UID[UIDesigner Component]
         FETCH[Fetch API]
         STATE[React State]

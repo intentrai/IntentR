@@ -1,9 +1,9 @@
-// Balut — Copyright © 2025 James Reynolds
+// UbeCode — Copyright © 2025 James Reynolds
 //
-// This file is part of Balut.
+// This file is part of UbeCode.
 // You may use this file under either:
 //   • The AGPLv3 Open Source License, OR
-//   • The Balut Commercial License
+//   • The UbeCode Commercial License
 // See the LICENSE.AGPL and LICENSE.COMMERCIAL files for details.
 
 package models

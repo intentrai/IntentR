@@ -53,7 +53,7 @@ INTEGRATION_SERVICE_PORT=9080
 DESIGN_SERVICE_PORT=9081
 CAPABILITY_SERVICE_PORT=9082
 AUTH_SERVICE_PORT=9083
-NETWORK_NAME=balut-network-primary
+NETWORK_NAME=ubecode-network-primary
 EOF
 
 # 4. Start instance
@@ -64,8 +64,8 @@ EOF
 
 ```bash
 # 1. Copy to new directory
-cp -r /path/to/balut /path/to/balut-instance2
-cd /path/to/balut-instance2
+cp -r /path/to/ubecode /path/to/ubecode-instance2
+cd /path/to/ubecode-instance2
 
 # 2. Configure ports (use 7000 range to avoid conflicts)
 ./scripts/change-ports.sh
@@ -81,22 +81,22 @@ cd /path/to/balut-instance2
 #   PostgreSQL: 7432
 
 # 3. Set unique Docker Compose project name
-export COMPOSE_PROJECT_NAME=balut-secondary
+export COMPOSE_PROJECT_NAME=ubecode-secondary
 
 # 4. Configure environment
 cat > .env << 'EOF'
-COMPOSE_PROJECT_NAME=balut-secondary
+COMPOSE_PROJECT_NAME=ubecode-secondary
 FIGMA_TOKEN=your_figma_token_2
 ANTHROPIC_API_KEY=your_api_key_2
 INTEGRATION_SERVICE_PORT=7080
 DESIGN_SERVICE_PORT=7081
 CAPABILITY_SERVICE_PORT=7082
 AUTH_SERVICE_PORT=7083
-NETWORK_NAME=balut-network-secondary
+NETWORK_NAME=ubecode-network-secondary
 EOF
 
 # 5. Update docker-compose.yml network name
-sed -i.bak 's/balut-network:/balut-network-secondary:/' docker-compose.yml
+sed -i.bak 's/ubecode-network:/ubecode-network-secondary:/' docker-compose.yml
 
 # 6. Start instance
 ./start.sh --build
@@ -115,7 +115,7 @@ curl http://localhost:6173         # Frontend
 # Check Instance 2
 curl http://localhost:7080/health  # Integration Service
 curl http://localhost:7173         # Frontend
-cd /path/to/balut-instance2
+cd /path/to/ubecode-instance2
 ./status.sh                        # In instance 2 directory
 
 # Check all ports
@@ -171,25 +171,25 @@ lsof -i :6173 -i :7173 -i :9080 -i :7080 -i :9081 -i :7081
 **Why This Matters:**
 Docker Compose uses the project name as a prefix for:
 - Container names: `{project}_integration-service_1`
-- Network names: `{project}_balut-network`
+- Network names: `{project}_ubecode-network`
 - Volume names: `{project}_postgres_data`
 
 **Setting Project Names:**
 
 Method 1: Environment variable (recommended):
 ```bash
-export COMPOSE_PROJECT_NAME=balut-instance1
+export COMPOSE_PROJECT_NAME=ubecode-instance1
 ./start.sh
 ```
 
 Method 2: Add to .env file:
 ```bash
-echo "COMPOSE_PROJECT_NAME=balut-instance1" >> .env
+echo "COMPOSE_PROJECT_NAME=ubecode-instance1" >> .env
 ```
 
 Method 3: Use -p flag:
 ```bash
-docker-compose -p balut-instance1 up -d
+docker-compose -p ubecode-instance1 up -d
 ```
 
 ## Managing Multiple Instances
@@ -198,13 +198,13 @@ docker-compose -p balut-instance1 up -d
 
 ```bash
 # Start Instance 1
-cd /path/to/balut-instance1
-export COMPOSE_PROJECT_NAME=balut-primary
+cd /path/to/ubecode-instance1
+export COMPOSE_PROJECT_NAME=ubecode-primary
 ./start.sh
 
 # Start Instance 2
-cd /path/to/balut-instance2
-export COMPOSE_PROJECT_NAME=balut-secondary
+cd /path/to/ubecode-instance2
+export COMPOSE_PROJECT_NAME=ubecode-secondary
 ./start.sh
 ```
 
@@ -212,11 +212,11 @@ export COMPOSE_PROJECT_NAME=balut-secondary
 
 ```bash
 # Instance 1 status
-cd /path/to/balut-instance1
+cd /path/to/ubecode-instance1
 ./status.sh
 
 # Instance 2 status
-cd /path/to/balut-instance2
+cd /path/to/ubecode-instance2
 ./status.sh
 
 # Or check all Docker containers
@@ -227,11 +227,11 @@ docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 
 ```bash
 # Stop Instance 1
-cd /path/to/balut-instance1
+cd /path/to/ubecode-instance1
 ./stop.sh
 
 # Stop Instance 2
-cd /path/to/balut-instance2
+cd /path/to/ubecode-instance2
 ./stop.sh
 ```
 
@@ -239,12 +239,12 @@ cd /path/to/balut-instance2
 
 ```bash
 # Instance 1 logs
-cd /path/to/balut-instance1
+cd /path/to/ubecode-instance1
 tail -f logs/vite-dev-server.log
 docker-compose logs -f integration-service
 
 # Instance 2 logs
-cd /path/to/balut-instance2
+cd /path/to/ubecode-instance2
 tail -f logs/vite-dev-server.log
 docker-compose logs -f integration-service
 ```
@@ -319,8 +319,8 @@ docker volume ls
 ```bash
 docker volume ls | grep postgres_data
 # Should show:
-# balut-primary_postgres_data
-# balut-secondary_postgres_data
+# ubecode-primary_postgres_data
+# ubecode-secondary_postgres_data
 ```
 
 ## Best Practices
@@ -329,9 +329,9 @@ docker volume ls | grep postgres_data
 
 ```bash
 # Good
-export COMPOSE_PROJECT_NAME=balut-production
-export COMPOSE_PROJECT_NAME=balut-staging
-export COMPOSE_PROJECT_NAME=balut-development
+export COMPOSE_PROJECT_NAME=ubecode-production
+export COMPOSE_PROJECT_NAME=ubecode-staging
+export COMPOSE_PROJECT_NAME=ubecode-development
 
 # Avoid
 export COMPOSE_PROJECT_NAME=instance1
@@ -343,17 +343,17 @@ export COMPOSE_PROJECT_NAME=instance2
 Create a port allocation file for your server:
 
 ```bash
-cat > /etc/balut-ports.conf << 'EOF'
-# Balut Instance Port Allocations
+cat > /etc/ubecode-ports.conf << 'EOF'
+# UbeCode Instance Port Allocations
 
 # Production (9000 range)
-balut-production: 6173, 9080-9084, 4001-4002, 6432
+ubecode-production: 6173, 9080-9084, 4001-4002, 6432
 
 # Staging (7000 range)
-balut-staging: 7173, 7080-7084, 7001-7002, 7432
+ubecode-staging: 7173, 7080-7084, 7001-7002, 7432
 
 # Development (10000 range)
-balut-development: 11173, 10080-10084, 11001-11002, 15432
+ubecode-development: 11173, 10080-10084, 11001-11002, 15432
 EOF
 ```
 
@@ -362,15 +362,15 @@ EOF
 Add to your `.bashrc` or `.zshrc`:
 
 ```bash
-# Balut instance management
-alias balut-prod='cd /path/to/balut-production && export COMPOSE_PROJECT_NAME=balut-production'
-alias balut-staging='cd /path/to/balut-staging && export COMPOSE_PROJECT_NAME=balut-staging'
-alias balut-dev='cd /path/to/balut-development && export COMPOSE_PROJECT_NAME=balut-development'
+# UbeCode instance management
+alias ubecode-prod='cd /path/to/ubecode-production && export COMPOSE_PROJECT_NAME=ubecode-production'
+alias ubecode-staging='cd /path/to/ubecode-staging && export COMPOSE_PROJECT_NAME=ubecode-staging'
+alias ubecode-dev='cd /path/to/ubecode-development && export COMPOSE_PROJECT_NAME=ubecode-development'
 
 # Quick commands
-alias balut-prod-start='balut-prod && ./start.sh'
-alias balut-prod-stop='balut-prod && ./stop.sh'
-alias balut-prod-status='balut-prod && ./status.sh'
+alias ubecode-prod-start='ubecode-prod && ./start.sh'
+alias ubecode-prod-stop='ubecode-prod && ./stop.sh'
+alias ubecode-prod-status='ubecode-prod && ./status.sh'
 ```
 
 ### 4. Automate Instance Startup
@@ -378,17 +378,17 @@ alias balut-prod-status='balut-prod && ./status.sh'
 Create systemd services for production:
 
 ```bash
-# /etc/systemd/system/balut-production.service
+# /etc/systemd/system/ubecode-production.service
 [Unit]
-Description=Balut Production Instance
+Description=UbeCode Production Instance
 After=docker.service
 
 [Service]
 Type=forking
-WorkingDirectory=/path/to/balut-production
-Environment="COMPOSE_PROJECT_NAME=balut-production"
-ExecStart=/path/to/balut-production/start.sh
-ExecStop=/path/to/balut-production/stop.sh
+WorkingDirectory=/path/to/ubecode-production
+Environment="COMPOSE_PROJECT_NAME=ubecode-production"
+ExecStart=/path/to/ubecode-production/start.sh
+ExecStop=/path/to/ubecode-production/stop.sh
 Restart=on-failure
 
 [Install]
@@ -403,13 +403,13 @@ Use a monitoring script:
 #!/bin/bash
 # monitor-all-instances.sh
 
-echo "=== Balut Instance Status ==="
+echo "=== UbeCode Instance Status ==="
 echo ""
 
 for instance in production staging development; do
     echo "[$instance]"
-    cd /path/to/balut-$instance
-    export COMPOSE_PROJECT_NAME=balut-$instance
+    cd /path/to/ubecode-$instance
+    export COMPOSE_PROJECT_NAME=ubecode-$instance
     ./status.sh
     echo ""
 done
@@ -428,7 +428,7 @@ done
 ```bash
 # Stop all Docker containers for an instance
 cd /path/to/instance
-export COMPOSE_PROJECT_NAME=balut-instancename
+export COMPOSE_PROJECT_NAME=ubecode-instancename
 docker-compose down
 
 # Check for port conflicts
@@ -442,10 +442,10 @@ docker-compose down
 
 **Solution:**
 ```bash
-# Check all Balut containers
-docker ps --filter "name=balut" --format "table {{.Names}}\t{{.Ports}}"
+# Check all UbeCode containers
+docker ps --filter "name=ubecode" --format "table {{.Names}}\t{{.Ports}}"
 
-# Check all Balut ports
+# Check all UbeCode ports
 lsof -i :6173 -i :7173 -i :11173 | grep LISTEN
 ```
 
@@ -459,13 +459,13 @@ lsof -i :6173 -i :7173 -i :11173 | grep LISTEN
 **Verify isolation:**
 ```bash
 # Check containers
-docker ps --format "{{.Names}}" | grep balut
+docker ps --format "{{.Names}}" | grep ubecode
 
 # Check networks
-docker network ls | grep balut
+docker network ls | grep ubecode
 
 # Check volumes
-docker volume ls | grep balut
+docker volume ls | grep ubecode
 ```
 
 ## Production Deployment
@@ -477,7 +477,7 @@ For production multi-instance deployment, consider:
    # nginx config
    server {
        listen 80;
-       server_name production.balut.com;
+       server_name production.ubecode.com;
        location / {
            proxy_pass http://localhost:6173;
        }
@@ -485,7 +485,7 @@ For production multi-instance deployment, consider:
 
    server {
        listen 80;
-       server_name staging.balut.com;
+       server_name staging.ubecode.com;
        location / {
            proxy_pass http://localhost:7173;
        }
@@ -530,17 +530,17 @@ The port configuration system and startup scripts are fully compatible with runn
 
 ```bash
 # Instance 1 (Production)
-cd /opt/balut-prod
-export COMPOSE_PROJECT_NAME=balut-prod
+cd /opt/ubecode-prod
+export COMPOSE_PROJECT_NAME=ubecode-prod
 ./start.sh
 # Access: http://localhost:6173
 
 # Instance 2 (Staging)
-cd /opt/balut-staging
-export COMPOSE_PROJECT_NAME=balut-staging
+cd /opt/ubecode-staging
+export COMPOSE_PROJECT_NAME=ubecode-staging
 ./start.sh
 # Access: http://localhost:7173
 
 # Check both
-docker ps --filter "name=balut" --format "table {{.Names}}\t{{.Status}}"
+docker ps --filter "name=ubecode" --format "table {{.Names}}\t{{.Status}}"
 ```

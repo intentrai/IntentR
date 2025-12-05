@@ -1,8 +1,8 @@
-# Balut Manual Approval Workflow - Analysis Complete
+# UbeCode Manual Approval Workflow - Analysis Complete
 
 ## Overview
 
-This analysis explores implementing a manual approval workflow system for the Balut SAWai microservices platform. The codebase has solid foundations (auth, RBAC, database) and is ready for approval workflow integration.
+This analysis explores implementing a manual approval workflow system for the UbeCode SAWai microservices platform. The codebase has solid foundations (auth, RBAC, database) and is ready for approval workflow integration.
 
 ## Documents Created
 
@@ -100,7 +100,7 @@ devops             YES          NO           NO
 
 ## Files to Review
 
-In Balut repository:
+In UbeCode repository:
 - `cmd/capability-service/main.go` - HTTP handler pattern
 - `pkg/repository/capability_repository.go` - Repository pattern
 - `web-ui/src/context/AuthContext.tsx` - Context API pattern
@@ -161,7 +161,7 @@ In Balut repository:
 
 ## Conclusion
 
-The Balut codebase is **well-architected and ready** for approval workflow implementation. With existing auth, RBAC, and data patterns established, adding approval workflow is **straightforward and low-risk**.
+The UbeCode codebase is **well-architected and ready** for approval workflow implementation. With existing auth, RBAC, and data patterns established, adding approval workflow is **straightforward and low-risk**.
 
 **Estimated delivery time**: 2-3 weeks with standard development practices (design, code, test, review).
 

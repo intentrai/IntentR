@@ -1,9 +1,9 @@
 #!/bin/bash
 
 ################################################################################
-# Balut Services Management Script
+# UbeCode Services Management Script
 ################################################################################
-# This script provides convenient commands for managing Balut microservices
+# This script provides convenient commands for managing UbeCode microservices
 #
 # Usage:
 #   ./manage-services.sh [command]
@@ -51,7 +51,7 @@ info() {
 # Show usage
 show_usage() {
     cat << EOF
-Balut Services Management Script
+UbeCode Services Management Script
 
 Usage:
     ./manage-services.sh [command]
@@ -94,7 +94,7 @@ check_project_dir() {
 
 # Start services
 start_services() {
-    log "Starting Balut microservices..."
+    log "Starting UbeCode microservices..."
     docker-compose up -d
     log "Services started!"
     echo ""
@@ -103,14 +103,14 @@ start_services() {
 
 # Stop services
 stop_services() {
-    log "Stopping Balut microservices..."
+    log "Stopping UbeCode microservices..."
     docker-compose down
     log "Services stopped!"
 }
 
 # Restart services
 restart_services() {
-    log "Restarting Balut microservices..."
+    log "Restarting UbeCode microservices..."
     docker-compose restart
     log "Services restarted!"
     echo ""

@@ -15,7 +15,7 @@
 
 ## Technical Overview
 ### Purpose
-Initialize and configure a modern React application with TypeScript, build tooling (Vite), and essential dependencies to serve as the foundation for the Balut web UI.
+Initialize and configure a modern React application with TypeScript, build tooling (Vite), and essential dependencies to serve as the foundation for the UbeCode web UI.
 
 ## Functional Requirements
 

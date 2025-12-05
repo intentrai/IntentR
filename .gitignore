@@ -40,7 +40,7 @@ bin/
 # .vscode/
 
 # Built binaries
-/balut
+/ubecode
 
 # Web UI runtime files
 web-ui.pid

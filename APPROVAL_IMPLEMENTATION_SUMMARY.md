@@ -1,4 +1,4 @@
-# Balut Manual Approval Workflow - Implementation Summary
+# UbeCode Manual Approval Workflow - Implementation Summary
 
 ## Quick Reference
 
@@ -375,10 +375,10 @@ Project is complete when:
 
 ## Resources
 
-**Within Balut Project**:
-- `/Users/jamesreynolds/Documents/Development/balut/APPROVAL_WORKFLOW_ANALYSIS.md` - Detailed analysis
-- `/Users/jamesreynolds/Documents/Development/balut/CLAUDE.md` - Project overview
-- `/Users/jamesreynolds/Documents/Development/balut/CODE_COMPLETE/SOFTWARE_DEVELOPMENT_PLAN.md` - Development guidelines
+**Within UbeCode Project**:
+- `/Users/jamesreynolds/Documents/Development/ubecode/APPROVAL_WORKFLOW_ANALYSIS.md` - Detailed analysis
+- `/Users/jamesreynolds/Documents/Development/ubecode/CLAUDE.md` - Project overview
+- `/Users/jamesreynolds/Documents/Development/ubecode/CODE_COMPLETE/SOFTWARE_DEVELOPMENT_PLAN.md` - Development guidelines
 
 **Code References**:
 - Existing repository pattern: `pkg/repository/capability_repository.go`

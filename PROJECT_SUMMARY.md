@@ -153,7 +153,7 @@ PASS: TestFigmaModels
 ### 5. Project Structure
 
 ```
-balut/
+ubecode/
 ├── cmd/                          # Service entry points
 │   ├── capability-service/
 │   ├── design-service/
@@ -365,7 +365,7 @@ docker-compose up -d
 
 ## Conclusion
 
-The Balut project successfully delivers a comprehensive foundation for SAFe capability-driven development with GoLang microservices and Figma integration. All core requirements have been met:
+The UbeCode project successfully delivers a comprehensive foundation for SAFe capability-driven development with GoLang microservices and Figma integration. All core requirements have been met:
 
 ✅ Comprehensive guidance document for Claude Code
 ✅ GoLang-based microservices architecture

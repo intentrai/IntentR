@@ -6,7 +6,7 @@
 |-------|-------|
 | **Name** | UI Designer |
 | **Type** | Capability |
-| **System** | Balut |
+| **System** | UbeCode |
 | **Component** | Web UI |
 | **ID** | CAP-847293 |
 | **Owner** | Development Team |

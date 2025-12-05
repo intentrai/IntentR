@@ -9,7 +9,7 @@
 
 ## EXECUTIVE SUMMARY
 
-This document summarizes the discovery and documentation of the **Balut** project, a GoLang-based microservices application for SAFe capability-driven development with Figma integration. This discovery phase involved reverse-engineering the existing codebase into structured Anvil framework specifications **without any code implementation or modification**.
+This document summarizes the discovery and documentation of the **UbeCode** project, a GoLang-based microservices application for SAFe capability-driven development with Figma integration. This discovery phase involved reverse-engineering the existing codebase into structured Anvil framework specifications **without any code implementation or modification**.
 
 ### Discovery Scope
 - **4 Capabilities** identified and documented
@@ -28,7 +28,7 @@ This document summarizes the discovery and documentation of the **Balut** projec
 
 **Purpose**: Enable external design tool connectivity and synchronization with Figma API
 
-**Business Value**: Connects Balut to Figma's ecosystem for design artifact retrieval and collaboration
+**Business Value**: Connects UbeCode to Figma's ecosystem for design artifact retrieval and collaboration
 
 **Enablers**:
 - ENB-748192: Figma API Client
@@ -121,7 +121,7 @@ This document summarizes the discovery and documentation of the **Balut** projec
 **Implementation Files**:
 - `pkg/container/container.go` (48 lines)
 - `pkg/container/orchestrator.go`
-- `cmd/balut/main.go` (56 lines)
+- `cmd/ubecode/main.go` (56 lines)
 
 **Status**: ✅ Fully implemented framework (ready for container registration)
 
@@ -132,13 +132,13 @@ This document summarizes the discovery and documentation of the **Balut** projec
 ### System Architecture
 ```
 ┌─────────────────────────────────────────┐
-│         Balut Application               │
+│         UbeCode Application               │
 ├─────────────────────────────────────────┤
 │                                         │
 │  ┌──────────────────────────────────┐  │
 │  │  CAP-471395                      │  │
 │  │  Container Orchestration         │  │
-│  │  (Balut Orchestrator)            │  │
+│  │  (UbeCode Orchestrator)            │  │
 │  └────────────┬─────────────────────┘  │
 │               │                         │
 │    ┌──────────┼──────────┐             │
@@ -174,7 +174,7 @@ This document summarizes the discovery and documentation of the **Balut** projec
 - **Integration Service**: Port 8080
 - **Design Service**: Port 8081
 - **Capability Service**: Port 8082
-- **Network**: Docker bridge network (`balut-network`)
+- **Network**: Docker bridge network (`ubecode-network`)
 - **Health Checks**: Built into each service
 - **Configuration**: Environment variables
 
@@ -540,7 +540,7 @@ flowchart TD
 
 ## CONCLUSION
 
-The Balut project discovery has successfully reverse-engineered the existing codebase into comprehensive Anvil framework specifications. The system demonstrates a well-architected microservices approach with:
+The UbeCode project discovery has successfully reverse-engineered the existing codebase into comprehensive Anvil framework specifications. The system demonstrates a well-architected microservices approach with:
 
 ### Strengths
 ✅ Clean separation of concerns across capabilities

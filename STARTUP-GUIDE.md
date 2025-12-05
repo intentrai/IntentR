@@ -271,7 +271,7 @@ docker-compose ps postgres
 docker-compose logs postgres
 
 # Connect to database (for debugging)
-docker-compose exec postgres psql -U balut_user -d balut_db
+docker-compose exec postgres psql -U ubecode_user -d ubecode_db
 ```
 
 **Reset database:**
@@ -393,17 +393,17 @@ Or restart everything:
 
 **Access database:**
 ```bash
-docker-compose exec postgres psql -U balut_user -d balut_db
+docker-compose exec postgres psql -U ubecode_user -d ubecode_db
 ```
 
 **Backup database:**
 ```bash
-docker-compose exec postgres pg_dump -U balut_user balut_db > backup.sql
+docker-compose exec postgres pg_dump -U ubecode_user ubecode_db > backup.sql
 ```
 
 **Restore database:**
 ```bash
-cat backup.sql | docker-compose exec -T postgres psql -U balut_user -d balut_db
+cat backup.sql | docker-compose exec -T postgres psql -U ubecode_user -d ubecode_db
 ```
 
 ---

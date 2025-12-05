@@ -3,7 +3,7 @@
 ## Metadata
 - **Name**: Design Artifact Management
 - **Type**: Capability
-- **System**: Balut
+- **System**: UbeCode
 - **Component**: Design Service
 - **ID**: CAP-694827
 - **Owner**: Product Team
@@ -60,7 +60,7 @@ flowchart TD
     class INT1,INT2 internal
 
     %% Capability Grouping
-    subgraph ORG1 ["Balut System"]
+    subgraph ORG1 ["UbeCode System"]
         subgraph DOMAIN1 ["Design Domain"]
             CURRENT
         end

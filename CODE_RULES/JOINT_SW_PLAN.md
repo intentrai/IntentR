@@ -54,7 +54,7 @@ Component (System/Application)
 
 | Element | Description | Example |
 |---------|-------------|---------|
-| **Component** | A logical system or application | "Balut Web Application" |
+| **Component** | A logical system or application | "UbeCode Web Application" |
 | **Capability** | A high-level business function | "User Authentication" |
 | **Enabler** | Technical implementation of a capability | "JWT Token Handler" |
 | **Requirement** | Specific functional or non-functional need | "Tokens expire after 24 hours" |

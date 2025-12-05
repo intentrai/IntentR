@@ -170,7 +170,7 @@ See `TESTING_WORKSPACE_INTEGRATIONS.md` for detailed testing guide.
 ## 🗂️ File Structure
 
 ```
-balut/
+ubecode/
 ├── migrations/
 │   └── 002_create_workspace_tables.sql         # Database schema
 ├── internal/integration/

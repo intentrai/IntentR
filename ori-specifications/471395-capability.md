@@ -3,8 +3,8 @@
 ## Metadata
 - **Name**: Container Orchestration
 - **Type**: Capability
-- **System**: Balut
-- **Component**: Balut Orchestrator
+- **System**: UbeCode
+- **Component**: UbeCode Orchestrator
 - **ID**: CAP-471395
 - **Owner**: Product Team
 - **Status**: Implemented
@@ -66,7 +66,7 @@ flowchart TD
     class INT1,INT2,INT3 internal
 
     %% Capability Grouping
-    subgraph ORG1 ["Balut System"]
+    subgraph ORG1 ["UbeCode System"]
         subgraph DOMAIN1 ["Infrastructure Domain"]
             CURRENT
         end
