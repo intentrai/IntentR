@@ -1,7 +1,7 @@
 
 # UbeCode - Design- and Capability-Driven Software Development
 
-## What it is any why it matters
+## What it is and why it matters
 UbeCode is an open-source platform for DESIGN- and CAPABILITY-driven software development, treating capabilities as the structural backbone that connects specification, design, delivery, and AI governance.
 
 
@@ -15,21 +15,19 @@ Most existing agile and scaled agile frameworks were not designed for this reali
 
 UbeCode is built around SAWai (Scaled Agile With AI)—an evolution of scaled agile practices specifically designed for AI-amplified software development.
 
-SAWai is based on several core principles:
-Specification-first development
-When AI can generate implementation rapidly, the quality of vision, ideation, and specification becomes the dominant success factor.
-A structured, four-phase workflow
-SAWai formalizes the lifecycle of software intent and delivery into four explicit phases:
-Specification — Define what to build (Vision, Themes, Ideation, Storyboarding)
-Definition — Define the scope (Capabilities, Epics)
-Design — Define how it looks and behaves (UI assets, frameworks, styles)
-Execution — Build and run (System, Code, Runtime)
-Capability-driven hierarchy
-SAWai simplifies traditional agile hierarchies by treating capabilities as the primary unit of intent, with epics representing scoped delivery and implementation details serving as execution specifications.
-AI-amplified delivery with governance
-AI is not an add-on tool, but a governed participant in the development process, guided by explicit principles, constraints, and traceability back to the capabilities it affects.
-Existing tools struggle to support this model because they are artifact-centric—tickets, boards, files, and pipelines—rather than capability-centric.
-UbeCode exists to provide a unified, open-source platform that operationalizes SAWai by making capabilities the first-class abstraction that connects specification, design, delivery, collaboration, and AI governance in a single, coherent system.
+### What is SAWai
+SAWai (Scaled Agile With AI) is an evolution of traditional scaled agile frameworks designed specifically for AI-assisted development. Key principles:
+
+**SAWai (Scaled Agile With AI)** is an evolution of traditional scaled agile frameworks designed specifically for AI-assisted development. Key principles:
+
+- **Specification-First**: With AI accelerating code generation, the bottleneck shifts to specification quality. SAWai emphasizes thorough Vision, Ideation, and Storyboarding before implementation.
+- **Four-Phase Workflow**:
+  1. **SPECIFICATION** - Define what to build (Vision & Themes, Ideation, Storyboard)
+  2. **DEFINITION** - Define the scope (Capabilities, Epics)
+  3. **DESIGN** - Define how it looks (UI Assets, Framework, Styles)
+  4. **EXECUTION** - Build and run (System, Code, Run)
+- **AI-Amplified Delivery**: Traditional sprint velocities are superseded by AI-assisted generation, making well-defined requirements the primary success factor.
+- **Simplified Hierarchy**: Capabilities → Epics (Features merged into Epics, Stories become implementation specs)
 
 
 ## Quick Start
@@ -39,25 +37,23 @@ Git
 Node.js (LTS)
 Docker (recommended for local and cloud environments)
 1. Clone the Repository
-git clone https://github.com/<org>/ubecode.git
+git clone https://github.com/jareynolds/ubecode.git
 cd ubecode
 2. Set Up Your Development Environment
 UbeCode provides environment-specific setup scripts to streamline local and cloud development.
 Choose the script that matches your environment:
 ./setup-osx-environment.sh
-./setup-win-environment.sh
 ./setup-aws-environment.sh
-./setup-gcp-environment.sh
-Each script installs required dependencies, configures services, and prepares the environment for running UbeCode.
-Refer to the script contents if you need to customize or extend the setup for your environment.
+(more env coming in the future)
+Each script installs required dependencies, configures services, and prepares the environment for running UbeCode. Refer to the script contents if you need to customize or extend the setup for your environment.
 3. Start the Platform
-npm run dev
+./start.sh
 This launches:
-The UbeCode web UI
-Core backend services
-A local development workspace
++ The UbeCode web UI
++ Core backend services
++ A local development workspace
 4. Open the Web Interface
-http://localhost:3000
+http://localhost:6175
 You can now:
 Create a workspace
 Define capabilities and epics
@@ -82,18 +78,23 @@ UbeCode is built in the open and welcomes contributions across engineering, desi
 ## Env
 A GoLang-based microservices application for massively streamlined comprehensive software development using the **SAWai (Scaled Agile With AI)** methodology.
 
-## What is SAWai?
+## SAWai Principles?
 
-**SAWai (Scaled Agile With AI)** is an evolution of traditional scaled agile frameworks designed specifically for AI-assisted development. Key principles:
-
-- **Specification-First**: With AI accelerating code generation, the bottleneck shifts to specification quality. SAWai emphasizes thorough Vision, Ideation, and Storyboarding before implementation.
-- **Four-Phase Workflow**:
-  1. **SPECIFICATION** - Define what to build (Vision & Themes, Ideation, Storyboard)
-  2. **DEFINITION** - Define the scope (Capabilities, Epics)
-  3. **DESIGN** - Define how it looks (UI Assets, Framework, Styles)
-  4. **EXECUTION** - Build and run (System, Code, Run)
-- **AI-Amplified Delivery**: Traditional sprint velocities are superseded by AI-assisted generation, making well-defined requirements the primary success factor.
-- **Simplified Hierarchy**: Capabilities → Epics (Features merged into Epics, Stories become implementation specs)
+SAWai is based on several core principles:
+Specification-first development
+When AI can generate implementation rapidly, the quality of vision, ideation, and specification becomes the dominant success factor.
+A structured, four-phase workflow
+SAWai formalizes the lifecycle of software intent and delivery into four explicit phases:
+Specification — Define what to build (Vision, Themes, Ideation, Storyboarding)
+Definition — Define the scope (Capabilities, Epics)
+Design — Define how it looks and behaves (UI assets, frameworks, styles)
+Execution — Build and run (System, Code, Runtime)
+Capability-driven hierarchy
+SAWai simplifies traditional agile hierarchies by treating capabilities as the primary unit of intent, with epics representing scoped delivery and implementation details serving as execution specifications.
+AI-amplified delivery with governance
+AI is not an add-on tool, but a governed participant in the development process, guided by explicit principles, constraints, and traceability back to the capabilities it affects.
+Existing tools struggle to support this model because they are artifact-centric—tickets, boards, files, and pipelines—rather than capability-centric.
+UbeCode exists to provide a unified, open-source platform that operationalizes SAWai by making capabilities the first-class abstraction that connects specification, design, delivery, collaboration, and AI governance in a single, coherent system.
 
 ## Overview
 
