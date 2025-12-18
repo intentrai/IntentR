@@ -16,18 +16,18 @@ Most existing agile and scaled agile frameworks were not designed for this reali
 UbeCode is built around SAWai (Scaled Agile With AI)—an evolution of scaled agile practices specifically designed for AI-amplified software development.
 
 ### What is SAWai
-SAWai (Scaled Agile With AI) is an evolution of traditional scaled agile frameworks designed specifically for AI-assisted development. Key principles:
-
 **SAWai (Scaled Agile With AI)** is an evolution of traditional scaled agile frameworks designed specifically for AI-assisted development. Key principles:
 
 - **Specification-First**: With AI accelerating code generation, the bottleneck shifts to specification quality. SAWai emphasizes thorough Vision, Ideation, and Storyboarding before implementation.
-- **Four-Phase Workflow**:
-  1. **SPECIFICATION** - Define what to build (Vision & Themes, Ideation, Storyboard)
-  2. **DEFINITION** - Define the scope (Capabilities, Epics)
-  3. **DESIGN** - Define how it looks (UI Assets, Framework, Styles)
-  4. **EXECUTION** - Build and run (System, Code, Run)
+- **Five-Phase Workflow**:
+  1. **CONCEPTION** - Define what to build (Product Vision, Ideation, Storyboard)
+  2. **DEFINITION** - Define the scope (Capabilities, Enablers, Narrative/Story Map)
+  3. **DESIGN** - Define how it looks (UI Assets, UI Framework, UI Styles, UI Designer)
+  4. **TESTING** - Define quality criteria (Test Scenarios with AI-generated BDD/Gherkin)
+  5. **IMPLEMENTATION** - Build and run (System, AI Principles, Code, Run)
 - **AI-Amplified Delivery**: Traditional sprint velocities are superseded by AI-assisted generation, making well-defined requirements the primary success factor.
-- **Simplified Hierarchy**: Capabilities → Epics (Features merged into Epics, Stories become implementation specs)
+- **Simplified Hierarchy**: Capabilities → Enablers → Requirements (no Epics needed with AI assistance)
+- **Phase Approvals**: Each phase includes a dedicated approval gate for human-in-the-loop governance
 
 
 ## Quick Start
@@ -55,18 +55,23 @@ This launches:
 4. Open the Web Interface
 http://localhost:6175
 You can now:
-Create a workspace
-Define capabilities and epics
-Capture specification and design artifacts
-Explore how capabilities structure delivery and AI governance
+- Create a workspace
+- Define capabilities and enablers
+- Capture specification and design artifacts
+- Generate AI-powered test scenarios
+- Explore how capabilities structure delivery and AI governance
 5. Explore the SAWai Workflow
-Begin in the Specification phase:
-Define vision, themes, ideation, and storyboards
+Begin in the Conception phase:
+- Define vision, ideation, and storyboards
+- Get phase approval before proceeding
+
 Then progress through:
-Definition → Capabilities and epics
-Design → UI assets and design integration
-Execution → System, code, and runtime alignment
-Each phase remains explicitly connected to the originating capability.
+- **Definition** → Capabilities, Enablers, and Narrative/Story Map
+- **Design** → UI assets, frameworks, styles, and visual design
+- **Testing** → AI-generated BDD/Gherkin test scenarios
+- **Implementation** → System configuration, AI principles, code, and runtime
+
+Each phase includes an approval gate for human oversight. Rejections are tracked and surfaced in the sidebar navigation.
 6. Make Your First Contribution (Optional)
 Interested in contributing?
 Browse issues labeled good-first-issue
@@ -78,23 +83,32 @@ UbeCode is built in the open and welcomes contributions across engineering, desi
 ## Env
 A GoLang-based microservices application for massively streamlined comprehensive software development using the **SAWai (Scaled Agile With AI)** methodology.
 
-## SAWai Principles?
+## SAWai Principles
 
 SAWai is based on several core principles:
-Specification-first development
+
+**Specification-first development**
 When AI can generate implementation rapidly, the quality of vision, ideation, and specification becomes the dominant success factor.
-A structured, four-phase workflow
-SAWai formalizes the lifecycle of software intent and delivery into four explicit phases:
-Specification — Define what to build (Vision, Themes, Ideation, Storyboarding)
-Definition — Define the scope (Capabilities, Epics)
-Design — Define how it looks and behaves (UI assets, frameworks, styles)
-Execution — Build and run (System, Code, Runtime)
-Capability-driven hierarchy
-SAWai simplifies traditional agile hierarchies by treating capabilities as the primary unit of intent, with epics representing scoped delivery and implementation details serving as execution specifications.
-AI-amplified delivery with governance
-AI is not an add-on tool, but a governed participant in the development process, guided by explicit principles, constraints, and traceability back to the capabilities it affects.
+
+**A structured, five-phase workflow**
+SAWai formalizes the lifecycle of software intent and delivery into five explicit phases:
+- **Conception** — Define what to build (Vision, Ideation, Storyboarding)
+- **Definition** — Define the scope (Capabilities, Enablers, Narrative)
+- **Design** — Define how it looks and behaves (UI assets, frameworks, styles, designer tools)
+- **Testing** — Define quality criteria (BDD/Gherkin test scenarios, AI-assisted analysis)
+- **Implementation** — Build and run (System, AI Principles, Code, Runtime)
+
+**Capability-driven hierarchy**
+SAWai simplifies traditional agile hierarchies by treating capabilities as the primary unit of intent, with enablers representing technical implementations and requirements serving as execution specifications. No Epics needed—AI handles the complexity that traditionally required Epic-level grouping.
+
+**AI-amplified delivery with governance**
+AI is not an add-on tool, but a governed participant in the development process, guided by explicit principles, constraints, and traceability back to the capabilities it affects. Each phase includes approval gates for human oversight.
+
+**Phase Approvals**
+Every phase includes a dedicated approval page where stakeholders can review, approve, or reject items before progressing to the next phase. Rejections are tracked and surfaced in the sidebar navigation.
+
 Existing tools struggle to support this model because they are artifact-centric—tickets, boards, files, and pipelines—rather than capability-centric.
-UbeCode exists to provide a unified, open-source platform that operationalizes SAWai by making capabilities the first-class abstraction that connects specification, design, delivery, collaboration, and AI governance in a single, coherent system.
+UbeCode exists to provide a unified, open-source platform that operationalizes SAWai by making capabilities the first-class abstraction that connects specification, design, testing, delivery, collaboration, and AI governance in a single, coherent system.
 
 ## Overview
 
@@ -102,11 +116,35 @@ UbeCode is a web application that facilitates capability-driven software develop
 
 - **Web UI** - Modern React-based interface with design system
 - **Design Service** - Manages design artifacts and versioning
-- **Capability Service** - Tracks capabilities, features, and user stories
-- **Integration Service** - Connects with external design tools (Figma)
+- **Capability Service** - Tracks capabilities, enablers, and requirements with approval workflows
+- **Integration Service** - Connects with external design tools (Figma) and AI services
+- **Claude Proxy Service** - Executes Claude CLI commands for AI-assisted development
 - **Role-Based Access Control** - Granular permission management for all pages
 - **Real-time Collaboration** - Workspace sharing and cursor tracking
-- **AI Governance** - Configurable AI principles and presets
+- **AI Governance** - Configurable AI principles and presets (5 enforcement levels)
+- **Phase Approval Workflow** - Human-in-the-loop approval gates for each development phase
+- **AI-Powered Testing** - Automatic BDD/Gherkin test scenario generation from enablers
+- **Narrative/Story Map** - Visual story mapping for requirement traceability
+
+## AI-Powered Features
+
+UbeCode integrates AI throughout the development workflow:
+
+- **AI Chat Assistant** - Context-aware AI assistant for development questions and guidance
+- **Test Scenario Generation** - Automatically generates BDD/Gherkin test scenarios from enabler specifications
+- **Ideation Analysis** - AI-assisted analysis of ideation cards and concepts
+- **Vision Analysis** - AI-powered refinement of product vision statements
+- **Storyboard Enhancement** - AI suggestions for storyboard improvements
+- **Code Generation** - AI-assisted code generation from specifications (via Claude CLI)
+
+**AI Governance Levels:**
+| Level | Name | Use Case |
+|-------|------|----------|
+| 1 | Awareness (Advisory) | Prototyping, learning environments |
+| 2 | Guided Recommendations | Development, iterative work |
+| 3 | Enforced with Warnings | Production, quality-critical systems |
+| 4 | Strict Enforcement | Mission-critical, compliance-heavy |
+| 5 | Zero-Tolerance | Safety-critical systems |
 
 ## Architecture
 
@@ -122,21 +160,24 @@ The application follows a microservices architecture pattern where each service:
 │     Ford Design System - Port 6175       │
 └──────────────────────────────────────────┘
               │
-    ┌─────────┼─────────┬─────────┐
-    │         │         │         │
-┌───▼────┐ ┌──▼──────┐ ┌──▼──────┐ ┌──▼──────┐
-│ Design │ │Capability│ │Integration│ │  Auth   │
-│Service │ │ Service  │ │  Service  │ │ Service │
-│ :9081  │ │  :9082   │ │   :9080   │ │  :9083  │
-└────────┘ └────┬─────┘ └─────┬─────┘ └────┬────┘
-                │              │             │
-           ┌────▼──────────────▼─────────────▼───┐
-           │      PostgreSQL Database :6432      │
-           └─────────────────────────────────────┘
+    ┌─────────┼─────────┬─────────┬─────────┐
+    │         │         │         │         │
+┌───▼────┐ ┌──▼──────┐ ┌──▼──────┐ ┌──▼─────┐ ┌──▼──────┐
+│ Design │ │Capability│ │Integration│ │ Auth  │ │ Claude  │
+│Service │ │ Service  │ │ Service   │ │Service│ │  Proxy  │
+│ :9081  │ │  :9082   │ │  :9080    │ │ :9083 │ │  :9085  │
+└────────┘ └────┬─────┘ └─────┬─────┘ └───┬───┘ └────┬────┘
+                │              │           │         │
+           ┌────▼──────────────▼───────────▼─────────┘
+           │      PostgreSQL Database :6432           │
+           └──────────────────────────────────────────┘
                               │
-                         ┌────▼─────┐
-                         │Figma API │
-                         └──────────┘
+                    ┌─────────┼─────────┐
+                    │         │         │
+               ┌────▼────┐ ┌──▼───┐ ┌───▼────┐
+               │Figma API│ │Claude│ │Anthropic│
+               └─────────┘ │ CLI  │ │  API    │
+                           └──────┘ └─────────┘
 ```
 
 ## Prerequisites
@@ -263,17 +304,42 @@ After running `./start.sh`, the application will be available at:
 - **Web UI**: `http://localhost:6175/`
 - **Dashboard**: `http://localhost:6175/`
 - **Workspaces**: `http://localhost:6175/workspaces`
-  - Designs: `http://localhost:6175/designs`
-  - Ideation: `http://localhost:6175/ideation`
-  - Storyboard: `http://localhost:6175/storyboard`
-  - System: `http://localhost:6175/system`
-  - Capabilities: `http://localhost:6175/capabilities`
-  - AI Principles: `http://localhost:6175/ai-principles`
-  - UI Framework: `http://localhost:6175/ui-framework`
-  - AI Assistant: `http://localhost:6175/ai-chat`
-- **Integrations**: `http://localhost:6175/integrations`
-- **Settings**: `http://localhost:6175/settings`
-- **Admin Panel**: `http://localhost:6175/admin` (Admins only)
+
+**Phase 1: CONCEPTION**
+- Product Vision: `http://localhost:6175/vision`
+- Ideation: `http://localhost:6175/ideation`
+- Storyboard: `http://localhost:6175/storyboard`
+- Phase Approval: `http://localhost:6175/conception-approval`
+
+**Phase 2: DEFINITION**
+- Capabilities: `http://localhost:6175/capabilities`
+- Enablers: `http://localhost:6175/enablers`
+- Narrative (Story Map): `http://localhost:6175/story-map`
+- Phase Approval: `http://localhost:6175/definition-approval`
+
+**Phase 3: DESIGN**
+- UI Assets: `http://localhost:6175/designs`
+- UI Framework: `http://localhost:6175/ui-framework`
+- UI Styles: `http://localhost:6175/ui-styles`
+- UI Designer: `http://localhost:6175/ui-designer`
+- Phase Approval: `http://localhost:6175/design-approval`
+
+**Phase 4: TESTING**
+- Test Scenarios: `http://localhost:6175/testing`
+- Phase Approval: `http://localhost:6175/testing-approval`
+
+**Phase 5: IMPLEMENTATION**
+- System: `http://localhost:6175/system`
+- AI Principles: `http://localhost:6175/ai-principles`
+- Code: `http://localhost:6175/code`
+- Run: `http://localhost:6175/run`
+- Phase Approval: `http://localhost:6175/implementation-approval`
+
+**Other Pages**
+- AI Assistant: `http://localhost:6175/ai-chat`
+- Integrations: `http://localhost:6175/integrations`
+- Settings: `http://localhost:6175/settings`
+- Admin Panel: `http://localhost:6175/admin` (Admins only)
 
 ## API Endpoints
 
@@ -284,6 +350,8 @@ After running `./start.sh`, the application will be available at:
 - `GET /figma/files/{fileKey}/comments` - Get Figma file comments
 - `POST /analyze-application` - Analyze application structure
 - `POST /export-ideation` - Export ideation cards
+- `POST /ai-chat` - AI chat for assistance and analysis
+- `POST /generate-test-scenarios` - AI-powered BDD/Gherkin test scenario generation
 
 ### Design Service (Port 9081)
 
@@ -294,6 +362,12 @@ After running `./start.sh`, the application will be available at:
 
 - `GET /health` - Health check
 - `GET /capabilities` - List capabilities
+- `POST /approvals/request` - Request approval for a capability stage
+- `GET /approvals/pending` - Get all pending approvals
+- `POST /approvals/{id}/approve` - Approve a request
+- `POST /approvals/{id}/reject` - Reject a request (requires feedback)
+- `GET /capabilities/{id}/approvals` - Get approval history
+- `GET /approval-permissions/{role}` - Get approval permissions for a role
 
 ### Auth Service (Port 9083)
 
@@ -305,9 +379,18 @@ After running `./start.sh`, the application will be available at:
 - `GET /users` - List users (admin only)
 - `PUT /users/{id}/role` - Update user role (admin only)
 
+### Claude Proxy Service (Port 9085)
+
+- `GET /health` - Health check
+- `POST /execute` - Execute Claude CLI command in workspace
+- `POST /run-app` - Run application in workspace
+- `POST /stop-app` - Stop running application
+- `GET /check-app-status` - Check application status
+
 ### Node.js APIs
 
 - **Specification API** (Port 4001): `http://localhost:4001/api/health`
+  - Manages markdown specification files (capabilities, enablers, requirements)
 - **Collaboration Server** (Port 9084): WebSocket server for real-time collaboration
 - **Shared Workspace API** (Port 4002): `http://localhost:4002/api/health`
 
@@ -342,15 +425,20 @@ cd web-ui && npm test
 The database is automatically initialized when using Docker. For manual setup:
 
 ```bash
-# Connect to PostgreSQL
-psql -h localhost -p 6432 -U ubecode_user -d ubecode_db
+# Connect to PostgreSQL (via Docker)
+docker compose exec postgres psql -U ubecode_user -d ubecode_db
 
 # Initialize schema manually (if needed)
-psql -h localhost -p 6432 -U ubecode_user -d ubecode_db -f scripts/init-db.sql
+docker compose exec -T postgres psql -U ubecode_user -d ubecode_db < scripts/init-db.sql
 
-# Run approval workflow migration
-psql -h localhost -p 6432 -U ubecode_user -d ubecode_db -f scripts/migration_approval.sql
+# Run approval workflow migration (REQUIRED for phase approvals)
+docker compose exec -T postgres psql -U ubecode_user -d ubecode_db < scripts/migration_approval.sql
 ```
+
+**Note**: The approval workflow migration creates tables for:
+- `capability_approvals` - Tracks approval requests per capability stage
+- `approval_workflow_rules` - Role-based approval permissions
+- `approval_audit_log` - Audit trail of all approval actions
 
 ## Development
 
@@ -358,33 +446,42 @@ psql -h localhost -p 6432 -U ubecode_user -d ubecode_db -f scripts/migration_app
 
 ```
 ubecode/
-├── web-ui/                # React Web UI (NEW)
+├── web-ui/                # React Web UI
 │   ├── src/
 │   │   ├── api/          # Backend API clients
 │   │   ├── components/   # Ford Design System components
 │   │   ├── context/      # React Context (state management)
-│   │   ├── pages/        # Page components
+│   │   ├── pages/        # Page components (organized by phase)
 │   │   └── styles/       # Ford Design System CSS
 │   ├── package.json
 │   └── README.md
 ├── cmd/                   # Main applications
-│   ├── design-service/
-│   ├── capability-service/
-│   └── integration-service/
+│   ├── auth-service/     # Authentication service
+│   ├── design-service/   # Design artifact service
+│   ├── capability-service/ # Capability & approval service
+│   ├── integration-service/ # Figma & AI integration
+│   ├── claude-proxy/     # Claude CLI proxy service
+│   └── ubecli/           # UbeCode CLI tool
 ├── internal/              # Private application code
-│   ├── design/
-│   ├── capability/
-│   └── integration/
+│   ├── auth/             # Auth handlers & logic
+│   ├── design/           # Design handlers
+│   ├── capability/       # Capability handlers
+│   └── integration/      # Integration handlers (AI chat, Figma)
 ├── pkg/                   # Public library code
-│   ├── client/
-│   ├── models/
-│   └── utils/
-├── specifications/        # Capability specifications
-├── api/                   # API definitions
+│   ├── client/           # Figma API client
+│   ├── models/           # Data structures
+│   ├── middleware/       # HTTP middleware (auth, CORS)
+│   └── repository/       # Data access layer
+├── workspaces/           # User workspaces (capabilities, enablers, tests)
+├── CODE_RULES/           # SAWai methodology documentation
+│   └── MAIN_SWDEV_PLAN.md # Main development plan
+├── scripts/              # Build and utility scripts
+│   ├── init-db.sql       # Initial database schema
+│   └── migration_approval.sql # Approval workflow tables
 ├── docs/                  # Documentation
-├── scripts/               # Build and utility scripts
 ├── start.sh              # Start all services
 ├── stop.sh               # Stop all services
+├── status.sh             # Check service status
 ├── docker-compose.yml
 ├── Dockerfile
 ├── Makefile
@@ -420,24 +517,37 @@ make lint
 ## Documentation
 
 - [CLAUDE.md](CLAUDE.md) - AI assistant context and quick reference
-- [Development Guide](DEVELOPMENT_GUIDE.md) - Comprehensive guide for SAWai capability-driven development
 - [SAWai Development Plan](CODE_RULES/MAIN_SWDEV_PLAN.md) - Complete SAWai methodology and workflows
 - [API Documentation](docs/api/API.md) - API specifications
 - [Role-Based Access Control](docs/ROLE_BASED_ACCESS_CONTROL.md) - RBAC system documentation
 - [Real-time Collaboration](docs/REALTIME_COLLABORATION.md) - Collaboration features
+- [Contributions Guide](CONTRIBUTIONS.md) - How to contribute to UbeCode
 
 ## SAWai Framework
 
 This project follows the **SAWai (Scaled Agile With AI)** capability-driven approach:
 
-1. **Vision & Themes** - Strategic direction and business objectives
-2. **Capabilities** - Higher-level business outcomes spanning multiple epics
-3. **Epics** - Large initiatives that define significant deliverables
-4. **Implementation Specs** - Detailed specifications for AI-assisted code generation
+**Hierarchy:**
+1. **Strategic Themes** - Business objectives and direction
+2. **Components** - Systems or applications
+3. **Capabilities** - Business functions that deliver value
+4. **Enablers** - Technical implementations that realize capabilities
+5. **Requirements** - Specific functional and non-functional needs
 
-**Key Difference from Traditional Agile**: In SAWai, the emphasis shifts from sprint velocity to specification quality. With AI handling much of the implementation, well-defined requirements become the primary driver of success.
+**Five-Phase Workflow with Approval Gates:**
+1. **CONCEPTION** → Vision, Ideation, Storyboard → **Phase Approval**
+2. **DEFINITION** → Capabilities, Enablers, Narrative → **Phase Approval**
+3. **DESIGN** → UI Assets, Framework, Styles, Designer → **Phase Approval**
+4. **TESTING** → AI-generated BDD/Gherkin test scenarios → **Phase Approval**
+5. **IMPLEMENTATION** → System, AI Principles, Code, Run → **Phase Approval**
 
-See [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md) for detailed information.
+**Key Differences from Traditional Agile**:
+- **No Epics**: Capabilities and Enablers are sufficient when AI handles implementation complexity
+- **Specification Quality**: The bottleneck shifts from execution to specification quality
+- **Human-in-the-Loop**: Every phase includes approval gates for governance
+- **AI Governance**: Configurable AI principles with 5 enforcement levels
+
+See [CODE_RULES/MAIN_SWDEV_PLAN.md](CODE_RULES/MAIN_SWDEV_PLAN.md) for the complete methodology.
 
 ## Contributing
 
