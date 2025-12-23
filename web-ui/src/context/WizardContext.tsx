@@ -104,12 +104,12 @@ const BASE_STEPS: Record<string, Omit<WizardStep, 'path' | 'startPath'>> = {
   },
   conception: {
     id: 'conception',
-    name: 'Intent Declaration',
+    name: 'Intent',
     description: 'Capture ideas, stories, and user journeys',
   },
   definition: {
     id: 'definition',
-    name: 'Formal Specification',
+    name: 'Specification',
     description: 'Define capabilities, enablers, and design assets',
   },
   design: {
@@ -119,12 +119,12 @@ const BASE_STEPS: Record<string, Omit<WizardStep, 'path' | 'startPath'>> = {
   },
   testing: {
     id: 'testing',
-    name: 'Continuous Validation',
+    name: 'Control Loop',
     description: 'Validate test scenarios and acceptance criteria',
   },
   implementation: {
     id: 'implementation',
-    name: 'System Derivation',
+    name: 'System',
     description: 'Build, test, and deploy your application',
   },
   discovery: {

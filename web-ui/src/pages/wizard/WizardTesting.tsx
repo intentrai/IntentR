@@ -7,7 +7,7 @@ export const WizardTesting: React.FC = () => {
     <WizardLayout>
       <div className="wizard-testing">
         <div className="wizard-testing-header">
-          <h2>Continuous Validation Phase</h2>
+          <h2>Control Loop Phase</h2>
           <p>Define test scenarios and acceptance criteria using BDD/Gherkin syntax for ongoing quality assurance.</p>
         </div>
 

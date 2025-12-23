@@ -95,11 +95,11 @@ export const Code: React.FC = () => {
     }
 
     const phases = [
-      { key: `conception-approved-${currentWorkspace.id}`, name: 'Intent Declaration' },
-      { key: `definition-approved-${currentWorkspace.id}`, name: 'Formal Specification' },
-      { key: `design-approved-${currentWorkspace.id}`, name: 'Formal Specification (Design)' },
-      { key: `implementation-approved-${currentWorkspace.id}`, name: 'System Derivation' },
-      { key: `phaseApprovals_${currentWorkspace.id}_testing`, name: 'Continuous Validation' },
+      { key: `conception-approved-${currentWorkspace.id}`, name: 'Intent' },
+      { key: `definition-approved-${currentWorkspace.id}`, name: 'Specification' },
+      { key: `design-approved-${currentWorkspace.id}`, name: 'Specification (Design)' },
+      { key: `implementation-approved-${currentWorkspace.id}`, name: 'System' },
+      { key: `phaseApprovals_${currentWorkspace.id}_testing`, name: 'Control Loop' },
     ];
 
     const missingPhases: string[] = [];
@@ -115,8 +115,8 @@ export const Code: React.FC = () => {
       try {
         const data = JSON.parse(stored);
 
-        // For Intent Declaration, Formal Specification, System Derivation - check if approved flag is true
-        if (phase.name !== 'Continuous Validation') {
+        // For Intent, Specification, System - check if approved flag is true
+        if (phase.name !== 'Control Loop') {
           if (!data.approved) {
             missingPhases.push(phase.name);
           }

@@ -51,17 +51,17 @@ export const ConceptionStart: React.FC = () => {
 
   return (
     <StartPageLayout
-      title="Intent Declaration Phase"
+      title="Intent Phase"
       subtitle="Where ideas take shape"
       description={[
-        'The Intent Declaration phase is where your application begins its journey from idea to reality. This is the creative foundation of your project where you\'ll capture the vision, identify user needs, and establish the core purpose of what you\'re building.',
+        'The Intent phase is where your application begins its journey from idea to reality. This is the creative foundation of your project where you\'ll capture the vision, identify user needs, and establish the core purpose of what you\'re building.',
         'During this phase, you will define the problem you\'re solving and for whom, establish the high-level vision and goals, and capture initial ideas through storyboarding and ideation.',
-        'Think of Intent Declaration as planting the seed. The clearer your vision here, the stronger your application\'s foundation will be.',
+        'Think of Intent as planting the seed. The clearer your vision here, the stronger your application\'s foundation will be.',
       ]}
       highlights={highlights}
       illustration={illustration}
       onBegin={handleBegin}
-      beginLabel="Begin Intent Declaration"
+      beginLabel="Begin Intent"
       showSkip={true}
       onSkip={handleSkip}
       accentColor="blue"

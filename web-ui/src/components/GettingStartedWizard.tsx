@@ -32,10 +32,10 @@ const WIZARD_STEPS: WizardStep[] = [
     description: 'Intentr follows a structured workflow that ensures quality and traceability at every step.',
     icon: '🔄',
     details: [
-      'Intent Declaration - Capture ideas, vision, and storyboards',
-      'Formal Specification - Define capabilities and enablers',
-      'System Derivation - Generate code from specifications',
-      'Continuous Validation - Test and verify implementation',
+      'Intent - Capture ideas, vision, and storyboards',
+      'Specification - Define capabilities and enablers',
+      'System - Generate code from specifications',
+      'Control Loop - Test and verify implementation',
     ],
   },
   {

@@ -60,17 +60,17 @@ export const ImplementationStart: React.FC = () => {
 
   return (
     <StartPageLayout
-      title="System Derivation Phase"
+      title="System Phase"
       subtitle="Bringing specifications to life"
       description={[
-        'The System Derivation phase is where code is written and tests are executed. With well-defined specifications from previous phases, implementation becomes a matter of translating designs into working software.',
+        'The System phase is where code is written and tests are executed. With well-defined specifications from previous phases, implementation becomes a matter of translating designs into working software.',
         'During this phase, you will implement code following design specifications, define and run test scenarios, use AI assistance with full context injection, and iterate based on test results.',
-        'System Derivation in INTENT is accelerated by AI. Because your specifications are detailed and unambiguous, AI can generate high-quality code that matches your requirements.',
+        'System in INTENT is accelerated by AI. Because your specifications are detailed and unambiguous, AI can generate high-quality code that matches your requirements.',
       ]}
       highlights={highlights}
       illustration={illustration}
       onBegin={handleBegin}
-      beginLabel="Begin System Derivation"
+      beginLabel="Begin System"
       showSkip={true}
       onSkip={handleSkip}
       accentColor="orange"

@@ -630,11 +630,11 @@ export const DefinitionApproval: React.FC = () => {
 
   return (
     <PageLayout
-      title="Formal Specification Phase Approval"
+      title="Specification Phase Approval"
       quickDescription="Review and approve all formal specification phase items."
-      detailedDescription="The Formal Specification phase includes Capabilities and Enablers documentation.
+      detailedDescription="The Specification phase includes Capabilities and Enablers documentation.
 Each capability and enabler must be reviewed for completeness and technical accuracy.
-All items must be approved before proceeding to the System Derivation phase."
+All items must be approved before proceeding to the System phase."
       className="max-w-7xl mx-auto"
     >
 
@@ -673,7 +673,7 @@ All items must be approved before proceeding to the System Derivation phase."
           <div style={{ flex: 1 }}>
             <h3 className="text-title2" style={{ marginBottom: '8px' }}>
               {definitionApproved
-                ? 'Formal Specification Phase Approved'
+                ? 'Specification Phase Approved'
                 : getTotalRejected() > 0
                   ? 'Items Need Revision'
                   : canApprovePhase()
@@ -695,7 +695,7 @@ All items must be approved before proceeding to the System Derivation phase."
             {definitionApproved ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
                 <Button variant="primary" onClick={() => navigate('/testing')}>
-                  Proceed to System Derivation
+                  Proceed to System
                 </Button>
                 <button
                   onClick={handleRevokeApproval}
@@ -716,7 +716,7 @@ All items must be approved before proceeding to the System Derivation phase."
                 onClick={handleApproveDefinition}
                 disabled={!canApprovePhase()}
               >
-                Approve Formal Specification Phase
+                Approve Specification Phase
               </Button>
             )}
           </div>
@@ -774,8 +774,8 @@ All items must be approved before proceeding to the System Derivation phase."
 
       {/* INTENT Info */}
       <Alert type="info" style={{ marginTop: '24px' }}>
-        <strong>INTENT Formal Specification Phase:</strong> The formal specification phase establishes the scope and design of your project.
-        Before proceeding to System Derivation, ensure all capabilities and enablers have been reviewed and approved.
+        <strong>INTENT Specification Phase:</strong> The formal specification phase establishes the scope and design of your project.
+        Before proceeding to System, ensure all capabilities and enablers have been reviewed and approved.
         This gate ensures alignment on what you're building and how it will work.
       </Alert>
 

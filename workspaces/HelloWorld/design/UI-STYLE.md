@@ -1,38 +1,38 @@
-# UI Style Specification: Dark Blue
+# UI Style Specification: Ube
 
-**Generated:** 2025-12-23T19:15:10.290Z
-**Style ID:** darkblue
+**Generated:** 2025-12-23T20:56:15.491Z
+**Style ID:** ube
 
 
 ## Overview
 
-This document provides comprehensive specifications for implementing the Dark Blue UI style system in your application. It includes detailed color palettes, typography scales, spacing systems, and component styles that form the visual foundation of your user interface.
+This document provides comprehensive specifications for implementing the Ube UI style system in your application. It includes detailed color palettes, typography scales, spacing systems, and component styles that form the visual foundation of your user interface.
 
 ## Background Colors
 
 The background colors define the foundational surfaces of your application.
 
 **Main Background**
-- **Hex:** `#FFFFFF`
+- **Hex:** `#faf8fc`
 - **Usage:** Page background, body background
 - **CSS Variable:** `--color-background`
 
 ```css
 body {
-  background-color: #FFFFFF;
+  background-color: #faf8fc;
   /* or */
   background-color: var(--color-background);
 }
 ```
 
 **Surface**
-- **Hex:** `#F5F5F5`
+- **Hex:** `#f3f0f7`
 - **Usage:** Cards, panels, content areas
 - **CSS Variable:** `--color-surface`
 
 ```css
 .card {
-  background-color: #F5F5F5;
+  background-color: #f3f0f7;
   /* or */
   background-color: var(--color-surface);
 }
@@ -56,58 +56,58 @@ body {
 ### Primary Colors
 
 
-**Maastricht Blue**
-- **Hex:** `#081534`
-- **Usage:** Primary dark, headers, key elements
-- **CSS Variable:** `--color-primary-maastricht-blue`
-
-```css
-.element {
-  background-color: #081534;
-  /* or */
-  background-color: var(--color-primary-maastricht-blue);
-}
-```
-
-
-**Dark Cerulean**
-- **Hex:** `#133A7C`
+**Ube Purple**
+- **Hex:** `#8b5cf6`
 - **Usage:** Primary brand color, CTAs, buttons
-- **CSS Variable:** `--color-primary-dark-cerulean`
+- **CSS Variable:** `--color-primary-ube-purple`
 
 ```css
 .element {
-  background-color: #133A7C;
+  background-color: #8b5cf6;
   /* or */
-  background-color: var(--color-primary-dark-cerulean);
+  background-color: var(--color-primary-ube-purple);
 }
 ```
 
 
-**Lapis Lazuli**
-- **Hex:** `#2A6BAC`
-- **Usage:** Secondary actions, links
-- **CSS Variable:** `--color-primary-lapis-lazuli`
+**Ube Purple Dark**
+- **Hex:** `#7c3aed`
+- **Usage:** Primary hover, active states
+- **CSS Variable:** `--color-primary-ube-purple-dark`
 
 ```css
 .element {
-  background-color: #2A6BAC;
+  background-color: #7c3aed;
   /* or */
-  background-color: var(--color-primary-lapis-lazuli);
+  background-color: var(--color-primary-ube-purple-dark);
 }
 ```
 
 
-**Picton Blue**
-- **Hex:** `#47A8E5`
+**Ube Purple Deep**
+- **Hex:** `#6d28d9`
+- **Usage:** Headers, key elements
+- **CSS Variable:** `--color-primary-ube-purple-deep`
+
+```css
+.element {
+  background-color: #6d28d9;
+  /* or */
+  background-color: var(--color-primary-ube-purple-deep);
+}
+```
+
+
+**Ube Purple Light**
+- **Hex:** `#a78bfa`
 - **Usage:** Accents, highlights, interactive elements
-- **CSS Variable:** `--color-primary-picton-blue`
+- **CSS Variable:** `--color-primary-ube-purple-light`
 
 ```css
 .element {
-  background-color: #47A8E5;
+  background-color: #a78bfa;
   /* or */
-  background-color: var(--color-primary-picton-blue);
+  background-color: var(--color-primary-ube-purple-light);
 }
 ```
 
@@ -143,42 +143,42 @@ body {
 ```
 
 
-**Silver Sand**
-- **Hex:** `#C6C6C6`
+**Purple Gray**
+- **Hex:** `#d8d0e5`
 - **Usage:** Borders, dividers, disabled states
-- **CSS Variable:** `--color-neutral-silver-sand`
+- **CSS Variable:** `--color-neutral-purple-gray`
 
 ```css
 .element {
-  color: #C6C6C6;
+  color: #d8d0e5;
   /* or */
-  color: var(--color-neutral-silver-sand);
+  color: var(--color-neutral-purple-gray);
 }
 ```
 
 
-**Slogan Gray**
-- **Hex:** `#3E5966`
+**Purple Muted**
+- **Hex:** `#7a6b9e`
 - **Usage:** Secondary text
-- **CSS Variable:** `--color-neutral-slogan-gray`
+- **CSS Variable:** `--color-neutral-purple-muted`
 
 ```css
 .element {
-  color: #3E5966;
+  color: #7a6b9e;
   /* or */
-  color: var(--color-neutral-slogan-gray);
+  color: var(--color-neutral-purple-muted);
 }
 ```
 
 
 **Text Primary**
-- **Hex:** `#212121`
+- **Hex:** `#1a1528`
 - **Usage:** Primary body text
 - **CSS Variable:** `--color-neutral-text-primary`
 
 ```css
 .element {
-  color: #212121;
+  color: #1a1528;
   /* or */
   color: var(--color-neutral-text-primary);
 }
@@ -189,53 +189,53 @@ body {
 
 
 **Success**
-- **Hex:** `#4caf50`
+- **Hex:** `#10b981`
 - **Usage:** Success messages, confirmations
 - **CSS Variable:** `--color-success`
 
 ```css
 .alert-success {
-  background-color: #4caf50;
-  border-color: #4caf50;
+  background-color: #10b981;
+  border-color: #10b981;
 }
 ```
 
 
 **Warning**
-- **Hex:** `#ff9800`
+- **Hex:** `#f59e0b`
 - **Usage:** Warnings, alerts
 - **CSS Variable:** `--color-warning`
 
 ```css
 .alert-warning {
-  background-color: #ff9800;
-  border-color: #ff9800;
+  background-color: #f59e0b;
+  border-color: #f59e0b;
 }
 ```
 
 
 **Error**
-- **Hex:** `#f44336`
+- **Hex:** `#ef4444`
 - **Usage:** Errors, destructive actions
 - **CSS Variable:** `--color-error`
 
 ```css
 .alert-error {
-  background-color: #f44336;
-  border-color: #f44336;
+  background-color: #ef4444;
+  border-color: #ef4444;
 }
 ```
 
 
 **Info**
-- **Hex:** `#47A8E5`
+- **Hex:** `#8b5cf6`
 - **Usage:** Information, help text
 - **CSS Variable:** `--color-info`
 
 ```css
 .alert-info {
-  background-color: #47A8E5;
-  border-color: #47A8E5;
+  background-color: #8b5cf6;
+  border-color: #8b5cf6;
 }
 ```
 
@@ -566,15 +566,15 @@ body {
 ### Primary Button
 
 **Colors:**
-- Background: `#133A7C`
-- Hover: `#081534`
+- Background: `#8b5cf6`
+- Hover: `#7c3aed`
 - Text: `#FFFFFF`
 
 **Implementation:**
 
 ```css
 .btn-primary {
-  background-color: #133A7C;
+  background-color: #8b5cf6;
   color: #FFFFFF;
   padding: 12px 24px;
   border: none;
@@ -586,7 +586,7 @@ body {
 }
 
 .btn-primary:hover {
-  background-color: #081534;
+  background-color: #7c3aed;
   transform: translateY(-1px);
 }
 
@@ -608,15 +608,15 @@ body {
 ### Secondary Button
 
 **Colors:**
-- Background: `#2A6BAC`
-- Hover: `#133A7C`
+- Background: `#a78bfa`
+- Hover: `#8b5cf6`
 - Text: `#FFFFFF`
 
 **Implementation:**
 
 ```css
 .btn-secondary {
-  background-color: #2A6BAC;
+  background-color: #a78bfa;
   color: #FFFFFF;
   padding: 12px 24px;
   border: none;
@@ -628,7 +628,7 @@ body {
 }
 
 .btn-secondary:hover {
-  background-color: #133A7C;
+  background-color: #8b5cf6;
 }
 ```
 
@@ -639,16 +639,16 @@ body {
 ### Accent Button
 
 **Colors:**
-- Background: `#47A8E5`
-- Hover: `#2A6BAC`
-- Text: `#FFFFFF`
+- Background: `#c4b5fd`
+- Hover: `#a78bfa`
+- Text: `#1a1528`
 
 **Implementation:**
 
 ```css
 .btn-accent {
-  background-color: #47A8E5;
-  color: #FFFFFF;
+  background-color: #c4b5fd;
+  color: #1a1528;
   padding: 12px 24px;
   border: none;
   border-radius: 6px;
@@ -659,7 +659,7 @@ body {
 }
 
 .btn-accent:hover {
-  background-color: #2A6BAC;
+  background-color: #a78bfa;
 }
 ```
 
@@ -674,28 +674,28 @@ For easier maintenance and theming, implement CSS variables:
 ```css
 :root {
   /* Background Colors */
-  --color-background: #FFFFFF;
-  --color-surface: #F5F5F5;
+  --color-background: #faf8fc;
+  --color-surface: #f3f0f7;
   --color-elevated: #FFFFFF;
 
   /* Primary Colors */
-  --color-primary-maastricht-blue: #081534;
-  --color-primary-dark-cerulean: #133A7C;
-  --color-primary-lapis-lazuli: #2A6BAC;
-  --color-primary-picton-blue: #47A8E5;
+  --color-primary-ube-purple: #8b5cf6;
+  --color-primary-ube-purple-dark: #7c3aed;
+  --color-primary-ube-purple-deep: #6d28d9;
+  --color-primary-ube-purple-light: #a78bfa;
 
   /* Neutral Colors */
   --color-neutral-white: #FFFFFF;
   --color-neutral-header-text: #FFFFFF;
-  --color-neutral-silver-sand: #C6C6C6;
-  --color-neutral-slogan-gray: #3E5966;
-  --color-neutral-text-primary: #212121;
+  --color-neutral-purple-gray: #d8d0e5;
+  --color-neutral-purple-muted: #7a6b9e;
+  --color-neutral-text-primary: #1a1528;
 
   /* Semantic Colors */
-  --color-success: #4caf50;
-  --color-warning: #ff9800;
-  --color-error: #f44336;
-  --color-info: #47A8E5;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-info: #8b5cf6;
 
   /* Spacing */
   --spacing-xs: 8px;
@@ -748,17 +748,17 @@ For easier maintenance and theming, implement CSS variables:
   --line-height-caption: 1.4;
 
   /* Button Styles */
-  --btn-primary-bg: #133A7C;
-  --btn-primary-hover: #081534;
+  --btn-primary-bg: #8b5cf6;
+  --btn-primary-hover: #7c3aed;
   --btn-primary-color: #FFFFFF;
 
-  --btn-secondary-bg: #2A6BAC;
-  --btn-secondary-hover: #133A7C;
+  --btn-secondary-bg: #a78bfa;
+  --btn-secondary-hover: #8b5cf6;
   --btn-secondary-color: #FFFFFF;
 
-  --btn-accent-bg: #47A8E5;
-  --btn-accent-hover: #2A6BAC;
-  --btn-accent-color: #FFFFFF;
+  --btn-accent-bg: #c4b5fd;
+  --btn-accent-hover: #a78bfa;
+  --btn-accent-color: #1a1528;
 }
 ```
 
@@ -923,6 +923,6 @@ This UI Style specification should be used in conjunction with the active UI Fra
 ---
 
 **Specification Version:** 1.0
-**Last Updated:** 2025-12-23T19:15:10.290Z
+**Last Updated:** 2025-12-23T20:56:15.491Z
 
 **Note:** This specification should be reviewed and updated whenever the UI style is modified to ensure consistency across the application.

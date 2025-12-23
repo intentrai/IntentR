@@ -1,30 +1,30 @@
 # HelloWorldWeather
 
-A simple React.js weather application that combines traditional weather data with AI-powered weather insights using the OpenWeather API. Ask any weather-related question and get intelligent responses about weather conditions around the world.
+A simple weather application that combines real-time weather data with AI-powered weather insights. Built with React.js, this app provides both traditional weather information and intelligent responses to weather-related questions using OpenWeather's AI capabilities.
 
 ## Features
 
-- 🌤️ **Real-time Weather Data** - Get current weather information for any city
+- 🌤️ **Real-time Weather Data** - Current weather conditions for any city
 - 🤖 **AI Weather Assistant** - Ask natural language questions about weather conditions
-- 🏙️ **City Selection** - Choose from popular cities or enter custom locations
-- 🎯 **Default Location** - Starts with Los Angeles, CA as the default location
-- 🧭 **Intuitive Navigation** - Easy-to-use interface with multiple sections
-- 📱 **Web Browser Compatible** - Runs in any modern web browser
+- 📍 **Location Support** - Default location (Los Angeles) with custom city selection
+- 🔍 **City Search** - Dropdown selection or manual city entry with validation
+- 📱 **Web-based Interface** - Runs entirely in the browser
+- 🎯 **Intuitive Navigation** - Easy-to-use interface for different app sections
 
 ## Getting Started
 
 ### Prerequisites
 
 - Node.js (v14 or higher)
-- npm or yarn package manager
+- npm or yarn
 - OpenWeather API key
 
 ### Installation
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/your-username/hello-world-weather.git
-cd hello-world-weather
+git clone https://github.com/yourusername/helloworldweather.git
+cd helloworldweather
 ```
 
 2. Install dependencies:
@@ -37,12 +37,7 @@ npm install
 cp default.json.example default.json
 ```
 
-4. Set up your OpenWeather API key in your environment variables or configuration file.
-
-### Configuration
-
-Create a `default.json` file in the project root with the following structure:
-
+4. Configure your OpenWeather API key and default location in `default.json`:
 ```json
 {
   "defaultLocation": {
@@ -50,9 +45,15 @@ Create a `default.json` file in the project root with the following structure:
     "state": "California",
     "country": "USA"
   },
-  "apiKey": "your-openweather-api-key-here"
+  "apiKey": "your_openweather_api_key_here"
 }
 ```
+
+### Setup OpenWeather API
+
+1. Sign up for a free account at [OpenWeatherMap](https://openweathermap.org/api)
+2. Generate an API key
+3. Ensure you have access to the [One Call API 3.0](https://openweathermap.org/api/one-call-3) with AI features
 
 ## Usage
 
@@ -64,58 +65,91 @@ npm start
 
 The application will start and be available at `http://localhost:3000`
 
-### Using the Weather App
+### Basic Usage
 
-1. **View Current Weather**: The app loads with weather data for the default location (Los Angeles)
+1. **View Default Weather**: The app loads with weather data for Los Angeles by default
+2. **Select a City**: Use the dropdown to select from popular cities or manually enter a city name
+3. **Ask Weather Questions**: Use the prompt field to ask natural language questions like:
+   - "Will it rain tomorrow?"
+   - "What should I wear today?"
+   - "Is it good weather for outdoor activities?"
+4. **Navigate**: Use the navigation menu to access different sections of the app
 
-2. **Change Location**: 
-   - Select from the dropdown of popular cities
-   - Or manually enter a custom city name
+### Example Weather Prompts
 
-3. **Ask Weather Questions**:
-   - Use the prompt field to ask natural language questions
-   - Examples: "Will it rain tomorrow?", "What should I wear today?", "Is it good beach weather?"
+- "What's the weather like for the next 3 days?"
+- "Should I bring an umbrella today?"
+- "Is it good weather for a picnic this weekend?"
+- "What's the UV index like today?"
 
-4. **Navigate Features**: Use the navigation menu to access different sections of the app
+## Configuration
 
-### API Integration
+### Environment Variables
 
-The application integrates with:
-- **OpenWeather Current Weather API** - For real-time weather data
-- **OpenWeather AI Weather Assistant** - For intelligent weather responses
+Create a `.env` file in the root directory:
 
-Learn more about the AI capabilities: https://openweathermap.org/api/one-call-3#ai_weather_assistant
+```bash
+REACT_APP_OPENWEATHER_API_KEY=your_api_key_here
+REACT_APP_DEFAULT_CITY=Los Angeles
+```
+
+### Default Configuration
+
+The `default.json` file contains:
+- Default location settings
+- API configuration
+- Application preferences
+
+## API Integration
+
+This application uses OpenWeather's APIs:
+
+- **Current Weather API** - For real-time weather data
+- **One Call API 3.0** - For detailed weather information
+- **AI Weather Assistant** - For intelligent weather responses
+
+Learn more about the [OpenWeather AI capabilities](https://openweathermap.org/api/one-call-3#ai_weather_assistant).
 
 ## Project Structure
 
 ```
-hello-world-weather/
+helloworldweather/
 ├── src/
-│   ├── components/        # React components
-│   ├── services/         # API service calls
-│   └── utils/           # Utility functions
-├── public/              # Static assets
-├── default.json         # Default configuration
-└── package.json         # Project dependencies
+│   ├── components/     # React components
+│   ├── services/       # API service functions
+│   ├── utils/         # Utility functions
+│   └── App.js         # Main application component
+├── public/            # Static assets
+├── default.json       # Default configuration
+└── package.json       # Project dependencies
 ```
 
-## Development Status
+## Development
 
-- ✅ Environment setup
-- ✅ Default location loading
-- ✅ Weather data retrieval
-- ✅ Weather data display
-- ✅ AI prompt functionality
-- ✅ Prompt results display
-- 🔄 Navigation system (In Progress)
-- 🔄 Custom city entry (In Progress)
+### Running in Development Mode
+
+```bash
+npm run dev
+```
+
+### Building for Production
+
+```bash
+npm run build
+```
+
+### Running Tests
+
+```bash
+npm test
+```
 
 ## Contributing
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
+1. Fork the project
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
 ## License
@@ -124,5 +158,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Acknowledgments
 
-- [OpenWeather API](https://openweathermap.org/api) for weather data and AI capabilities
-- React.js community for the excellent framework
+- [OpenWeatherMap](https://openweathermap.org/) for providing weather data and AI capabilities
+- React.js community for the excellent framework and resources

@@ -38,10 +38,10 @@ const StepIcons: Record<string, React.ReactNode> = {
 // Fixed display steps that always show the standard workflow
 const DISPLAY_STEPS = [
   { id: 'workspace', name: 'Workspace' },
-  { id: 'conception', name: 'Intent Declaration' },
-  { id: 'definition', name: 'Formal Specification' },
-  { id: 'implementation', name: 'System Derivation' },
-  { id: 'testing', name: 'Continuous Validation' },
+  { id: 'conception', name: 'Intent' },
+  { id: 'definition', name: 'Specification' },
+  { id: 'implementation', name: 'System' },
+  { id: 'testing', name: 'Control Loop' },
 ];
 
 export const WizardStepper: React.FC<WizardStepperProps> = ({ className = '' }) => {

@@ -677,9 +677,9 @@ export const ConceptionApproval: React.FC = () => {
 
   return (
     <PageLayout
-      title="Intent Declaration Phase Approval"
+      title="Intent Phase Approval"
       quickDescription="Review and approve all intent declaration phase items before proceeding."
-      detailedDescription="The Intent Declaration phase includes Vision documents, Ideation boards, and Storyboard cards.
+      detailedDescription="The Intent phase includes Vision documents, Ideation boards, and Storyboard cards.
 Each item must be individually reviewed and approved before the phase can be marked complete.
 Rejected items need revision before they can be approved. All items must be approved with no rejections to proceed."
       className="max-w-7xl mx-auto"
@@ -720,7 +720,7 @@ Rejected items need revision before they can be approved. All items must be appr
           <div style={{ flex: 1 }}>
             <h3 className="text-title2" style={{ marginBottom: '8px' }}>
               {conceptionApproved
-                ? 'Intent Declaration Phase Approved'
+                ? 'Intent Phase Approved'
                 : getTotalRejected() > 0
                   ? 'Items Need Revision'
                   : canApprovePhase()
@@ -742,7 +742,7 @@ Rejected items need revision before they can be approved. All items must be appr
             {conceptionApproved ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
                 <Button variant="primary" onClick={() => navigate('/capabilities')}>
-                  Proceed to Formal Specification
+                  Proceed to Specification
                 </Button>
                 <button
                   onClick={handleRevokeApproval}
@@ -763,7 +763,7 @@ Rejected items need revision before they can be approved. All items must be appr
                 onClick={handleApproveConception}
                 disabled={!canApprovePhase()}
               >
-                Approve Intent Declaration Phase
+                Approve Intent Phase
               </Button>
             )}
           </div>
@@ -824,8 +824,8 @@ Rejected items need revision before they can be approved. All items must be appr
 
       {/* INTENT Info */}
       <Alert type="info" style={{ marginTop: '24px' }}>
-        <strong>INTENT Intent Declaration Phase:</strong> The intent declaration phase establishes the foundation for your project.
-        Before proceeding to Formal Specification (Capabilities & Enablers), ensure all vision themes, ideas, and storyboards
+        <strong>INTENT Intent Phase:</strong> The intent declaration phase establishes the foundation for your project.
+        Before proceeding to Specification (Capabilities & Enablers), ensure all vision themes, ideas, and storyboards
         have been reviewed and approved. This gate ensures alignment on what you're building before defining how.
       </Alert>
 

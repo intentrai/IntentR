@@ -471,7 +471,7 @@ export const Settings: React.FC = () => {
                       <strong>Sidebar Navigation (Default):</strong> Access any page directly using the left sidebar. Best for experienced users who want quick, ad-hoc access.
                     </p>
                     <p>
-                      <strong>Wizard Mode:</strong> A guided step-by-step experience with progress tracking. Ideal for new users or when following the complete INTENT workflow from Intent Declaration to Continuous Validation.
+                      <strong>Wizard Mode:</strong> A guided step-by-step experience with progress tracking. Ideal for new users or when following the complete INTENT workflow from Intent to Control Loop.
                     </p>
                   </div>
                 </div>

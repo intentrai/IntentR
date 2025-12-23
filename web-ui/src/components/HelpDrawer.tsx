@@ -23,9 +23,9 @@ const HELP_TOPICS: HelpTopic[] = [
     content: [
       'Intentr uses the INTENT methodology for AI-assisted software development.',
       'Start by creating a workspace for your project.',
-      'Define your vision and storyboards in the Intent Declaration phase.',
-      'Create capabilities and enablers in the Formal Specification phase.',
-      'Generate code in the System Derivation phase.',
+      'Define your vision and storyboards in the Intent phase.',
+      'Create capabilities and enablers in the Specification phase.',
+      'Generate code in the System phase.',
     ],
     action: {
       label: 'Start Tutorial',
@@ -48,7 +48,7 @@ const HELP_TOPICS: HelpTopic[] = [
   },
   {
     id: 'intent-declaration',
-    title: 'Intent Declaration',
+    title: 'Intent',
     description: 'Vision, Ideation & Storyboards',
     icon: '💡',
     content: [
@@ -62,7 +62,7 @@ const HELP_TOPICS: HelpTopic[] = [
   },
   {
     id: 'formal-specification',
-    title: 'Formal Specification',
+    title: 'Specification',
     description: 'Capabilities & Enablers',
     icon: '📋',
     content: [
@@ -104,7 +104,7 @@ const HELP_TOPICS: HelpTopic[] = [
   },
   {
     id: 'validation',
-    title: 'Continuous Validation',
+    title: 'Control Loop',
     description: 'Test and verify',
     icon: '✅',
     content: [

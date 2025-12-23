@@ -392,7 +392,7 @@ export const TestingApproval: React.FC = () => {
 
   return (
     <PageLayout
-      title="Testing Approval"
+      title="Intent Integrity"
       quickDescription="Review and approve test scenarios, coverage, and execution results"
       detailedDescription="The Testing Approval page allows you to review and approve test scenarios, verify test coverage meets thresholds, review execution results, and sign off on final test reports before completing the testing phase."
     >
@@ -614,7 +614,7 @@ export const TestingApproval: React.FC = () => {
         <div className="phase-status-banner approved">
           <span className="status-icon">[OK]</span>
           <div>
-            <div className="status-text">Continuous Validation Phase Approved</div>
+            <div className="status-text">Control Loop Phase Approved</div>
             {approvalDate && (
               <div className="status-date">
                 Approved on {new Date(approvalDate).toLocaleDateString()}

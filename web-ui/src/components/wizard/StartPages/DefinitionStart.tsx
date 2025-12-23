@@ -60,17 +60,17 @@ export const DefinitionStart: React.FC = () => {
 
   return (
     <StartPageLayout
-      title="Formal Specification Phase"
+      title="Specification Phase"
       subtitle="Translating vision into structure"
       description={[
-        'The Formal Specification phase transforms your conceptual ideas into a structured framework. Here you\'ll define the Capabilities (what your application can do), Enablers (how it will do them), and Design assets that make up your system.',
+        'The Specification phase transforms your conceptual ideas into a structured framework. Here you\'ll define the Capabilities (what your application can do), Enablers (how it will do them), and Design assets that make up your system.',
         'During this phase, you will create Capability documents that describe business functions, break capabilities into technical Enablers, define Requirements for each enabler, design UI frameworks and styles, and establish dependencies and relationships.',
-        'Formal Specification is the blueprint stage. Well-defined capabilities and designs lead to clear implementation paths and reduce ambiguity for both humans and AI assistants.',
+        'Specification is the blueprint stage. Well-defined capabilities and designs lead to clear implementation paths and reduce ambiguity for both humans and AI assistants.',
       ]}
       highlights={highlights}
       illustration={illustration}
       onBegin={handleBegin}
-      beginLabel="Begin Formal Specification"
+      beginLabel="Begin Specification"
       showSkip={true}
       onSkip={handleSkip}
       accentColor="purple"

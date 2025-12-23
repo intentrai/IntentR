@@ -24,7 +24,7 @@ const WORKSPACE_TYPE_OPTIONS: WorkspaceTypeOption[] = [
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
       </svg>
     ),
-    workflow: ['Intent Declaration', 'Formal Specification', 'System Derivation', 'Continuous Validation'],
+    workflow: ['Intent', 'Specification', 'System', 'Control Loop'],
     color: 'blue',
   },
   {
@@ -36,7 +36,7 @@ const WORKSPACE_TYPE_OPTIONS: WorkspaceTypeOption[] = [
         <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
       </svg>
     ),
-    workflow: ['Formal Specification', 'System Derivation', 'Continuous Validation'],
+    workflow: ['Specification', 'System', 'Control Loop'],
     color: 'purple',
   },
   {
@@ -48,7 +48,7 @@ const WORKSPACE_TYPE_OPTIONS: WorkspaceTypeOption[] = [
         <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
       </svg>
     ),
-    workflow: ['Discovery', 'Formal Specification', 'System Derivation', 'Continuous Validation'],
+    workflow: ['Discovery', 'Specification', 'System', 'Control Loop'],
     color: 'orange',
   },
 ];

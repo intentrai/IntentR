@@ -60,17 +60,17 @@ export const TestingStart: React.FC = () => {
 
   return (
     <StartPageLayout
-      title="Continuous Validation Phase"
+      title="Control Loop Phase"
       subtitle="Ensuring quality through ongoing verification"
       description={[
-        'The Continuous Validation phase establishes how you\'ll verify that your implementation meets its requirements. Using Behavior-Driven Development (BDD) with Gherkin syntax, you\'ll create test scenarios that serve as both documentation and automated tests.',
+        'The Control Loop phase establishes how you\'ll verify that your implementation meets its requirements. Using Behavior-Driven Development (BDD) with Gherkin syntax, you\'ll create test scenarios that serve as both documentation and automated tests.',
         'During this phase, you will review test scenario results, validate acceptance criteria with Given/When/Then, manage test suites that group related scenarios, and monitor coverage requirements.',
-        'Continuous Validation in INTENT ensures ongoing quality. By continuously validating against tests, you maintain a clear picture of what "done" looks like and enable AI to validate its own outputs.',
+        'Control Loop in INTENT ensures ongoing quality. By continuously validating against tests, you maintain a clear picture of what "done" looks like and enable AI to validate its own outputs.',
       ]}
       highlights={highlights}
       illustration={illustration}
       onBegin={handleBegin}
-      beginLabel="Begin Continuous Validation"
+      beginLabel="Begin Control Loop"
       showSkip={true}
       onSkip={handleSkip}
       accentColor="green"

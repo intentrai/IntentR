@@ -12,7 +12,7 @@ export const WizardImplementation: React.FC = () => {
     <WizardLayout>
       <div className="wizard-implementation">
         <div className="wizard-implementation-header">
-          <h2>System Derivation Phase</h2>
+          <h2>System Phase</h2>
           <p>Configure your system, generate code with AI, test scenarios, and run your application.</p>
         </div>
 

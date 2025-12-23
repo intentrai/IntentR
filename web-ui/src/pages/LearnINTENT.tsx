@@ -64,7 +64,7 @@ const PRINCIPLES = [
 const LIFECYCLE_PHASES = [
   {
     number: 1,
-    title: 'Intent Declaration',
+    title: 'Intent',
     description: 'Human intent is explicitly declared before any implementation.',
     examples: [
       'Conceptual idea, vision, strategy',
@@ -76,7 +76,7 @@ const LIFECYCLE_PHASES = [
   },
   {
     number: 2,
-    title: 'Formal Specification',
+    title: 'Specification',
     description: 'Intent is captured as engineering-grade notation, not prose.',
     characteristics: ['Structured', 'Versioned', 'Machine-interpretable', 'Testable'],
     examples: [
@@ -90,14 +90,14 @@ const LIFECYCLE_PHASES = [
   },
   {
     number: 3,
-    title: 'System Derivation',
+    title: 'System',
     description: 'AI systems derive artifacts from specifications.',
     artifacts: ['Code', 'Tests', 'Infrastructure', 'Documentation', 'Validation harnesses'],
     note: 'Humans do not "build" — they approve derivations.',
   },
   {
     number: 4,
-    title: 'Continuous Validation',
+    title: 'Control Loop',
     description: 'Derived systems are continuously validated against intent.',
     checks: [
       'Spec conformance',

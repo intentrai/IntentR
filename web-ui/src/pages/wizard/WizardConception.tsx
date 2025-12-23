@@ -4,7 +4,7 @@ import { Ideation } from '../Ideation';
 import { Storyboard } from '../Storyboard';
 import { Vision } from '../Vision';
 
-// Intent Declaration phase includes: Vision, Ideation, Storyboard
+// Intent phase includes: Vision, Ideation, Storyboard
 // For wizard mode, we show a combined view or tabs
 
 export const WizardConception: React.FC = () => {
@@ -14,7 +14,7 @@ export const WizardConception: React.FC = () => {
     <WizardLayout>
       <div className="wizard-conception">
         <div className="wizard-conception-header">
-          <h2>Intent Declaration Phase</h2>
+          <h2>Intent Phase</h2>
           <p>Define your vision, capture ideas, and create storyboards for your application.</p>
         </div>
 

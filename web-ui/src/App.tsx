@@ -177,17 +177,17 @@ function AppContent() {
   }, [currentWorkspace?.id]);
 
   // Build sidebar items with phase-based navigation
-  // Phase 1: INTENT DECLARATION - Define what to build (formerly Conception)
-  // Phase 2: FORMAL SPECIFICATION - Define scope and design (formerly Definition + Design)
-  // Phase 3: SYSTEM DERIVATION - Build, test and run it (formerly Implementation + Test Scenarios)
-  // Phase 4: CONTINUOUS VALIDATION - Ongoing quality assurance (formerly Testing)
+  // Phase 1: INTENT - Define what to build (formerly Conception)
+  // Phase 2: SPECIFICATION - Define scope and design (formerly Definition + Design)
+  // Phase 3: SYSTEM - Build, test and run it (formerly Implementation + Test Scenarios)
+  // Phase 4: CONTROL LOOP - Ongoing quality assurance (formerly Testing)
   const dynamicSidebarItems = [
     { path: '/', label: 'Welcome', icon: '⌂' },
     { path: '/dashboard', label: 'Dashboard', icon: '▦' },
     { path: '/workspaces', label: 'Workspaces', icon: '◰' },
-    // INTENT DECLARATION PHASE (formerly Conception)
+    // INTENT PHASE (formerly Conception)
     {
-      label: 'INTENT DECLARATION',
+      label: 'INTENT',
       path: '/wizard/conception/start',
       isPhase: true,
       phaseIcon: '◇',
@@ -198,9 +198,9 @@ function AppContent() {
         { path: '/conception-approval', label: 'Phase Approval', hasRejection: phaseRejections.conception, isPhaseIncomplete: !phaseApprovals.conception },
       ]
     },
-    // FORMAL SPECIFICATION PHASE (formerly Definition + Design merged)
+    // SPECIFICATION PHASE (formerly Definition + Design merged)
     {
-      label: 'FORMAL SPECIFICATION',
+      label: 'SPECIFICATION',
       path: '/wizard/definition/start',
       isPhase: true,
       phaseIcon: '☰',
@@ -215,9 +215,9 @@ function AppContent() {
         { path: '/definition-approval', label: 'Phase Approval', hasRejection: phaseRejections.definition || phaseRejections.design, isPhaseIncomplete: !phaseApprovals.definition || !phaseApprovals.design },
       ]
     },
-    // SYSTEM DERIVATION PHASE (formerly Implementation + Test Scenarios)
+    // SYSTEM PHASE (formerly Implementation + Test Scenarios)
     {
-      label: 'SYSTEM DERIVATION',
+      label: 'SYSTEM',
       path: '/wizard/implementation/start',
       isPhase: true,
       phaseIcon: '⚙',
@@ -230,14 +230,14 @@ function AppContent() {
         { path: '/implementation-approval', label: 'Phase Approval', hasRejection: phaseRejections.implementation, isPhaseIncomplete: !phaseApprovals.implementation },
       ]
     },
-    // CONTINUOUS VALIDATION PHASE (formerly Testing - new pages to be added later)
+    // CONTROL LOOP PHASE (formerly Testing - new pages to be added later)
     {
-      label: 'CONTINUOUS VALIDATION',
+      label: 'CONTROL LOOP',
       path: '/wizard/testing/start',
       isPhase: true,
       phaseIcon: '✓',
       children: [
-        { path: '/testing-approval', label: 'Phase Approval', hasRejection: phaseRejections.testing, isPhaseIncomplete: !phaseApprovals.testing },
+        { path: '/testing-approval', label: 'Intent Integrity', hasRejection: phaseRejections.testing, isPhaseIncomplete: !phaseApprovals.testing },
       ]
     },
     { path: '/ai-chat', label: 'AI Assistant', icon: '◉' },

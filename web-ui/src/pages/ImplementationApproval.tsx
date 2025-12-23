@@ -516,11 +516,11 @@ export const ImplementationApproval: React.FC = () => {
 
   return (
     <PageLayout
-      title="System Derivation Phase Approval"
+      title="System Phase Approval"
       quickDescription="Review and approve all system derivation phase items."
-      detailedDescription="The System Derivation phase includes System Architecture, AI Principles configuration, Code Generation, and Run Configuration.
+      detailedDescription="The System phase includes System Architecture, AI Principles configuration, Code Generation, and Run Configuration.
 Each item has specific checklist requirements that must be satisfied.
-Complete all reviews and approve each section before proceeding to Continuous Validation."
+Complete all reviews and approve each section before proceeding to Control Loop."
       className="max-w-7xl mx-auto"
     >
 
@@ -559,7 +559,7 @@ Complete all reviews and approve each section before proceeding to Continuous Va
           <div style={{ flex: 1 }}>
             <h3 className="text-title2" style={{ marginBottom: '8px' }}>
               {implementationApproved
-                ? 'System Derivation Phase Approved'
+                ? 'System Phase Approved'
                 : getTotalRejected() > 0
                   ? 'Items Need Revision'
                   : canApprovePhase()
@@ -581,7 +581,7 @@ Complete all reviews and approve each section before proceeding to Continuous Va
             {implementationApproved ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
                 <Button variant="primary" onClick={() => navigate('/testing-approval')}>
-                  Proceed to Continuous Validation
+                  Proceed to Control Loop
                 </Button>
                 <button
                   onClick={handleRevokeApproval}
@@ -602,7 +602,7 @@ Complete all reviews and approve each section before proceeding to Continuous Va
                 onClick={handleApproveImplementation}
                 disabled={!canApprovePhase()}
               >
-                Approve System Derivation Phase
+                Approve System Phase
               </Button>
             )}
           </div>
@@ -634,9 +634,9 @@ Complete all reviews and approve each section before proceeding to Continuous Va
 
       {/* INTENT Info */}
       <Alert type="info" style={{ marginTop: '24px' }}>
-        <strong>INTENT System Derivation Phase:</strong> The system derivation phase is where your application comes to life.
+        <strong>INTENT System Phase:</strong> The system derivation phase is where your application comes to life.
         Ensure the system architecture is documented, AI principles are configured, code is generated and reviewed,
-        and the application runs correctly. This gate validates that the implementation meets all requirements before proceeding to Continuous Validation.
+        and the application runs correctly. This gate validates that the implementation meets all requirements before proceeding to Control Loop.
       </Alert>
 
       {/* Rejection Modal */}

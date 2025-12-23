@@ -10,7 +10,7 @@ export const WizardDefinition: React.FC = () => {
     <WizardLayout>
       <div className="wizard-definition">
         <div className="wizard-definition-header">
-          <h2>Formal Specification Phase</h2>
+          <h2>Specification Phase</h2>
           <p>Define capabilities, enablers, and design artifacts that describe your application's functionality.</p>
         </div>
 
