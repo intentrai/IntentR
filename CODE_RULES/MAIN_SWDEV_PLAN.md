@@ -2205,3 +2205,4 @@ Strategic Theme → Component → Capability → Enabler → Requirement
 **Framework**: INTENT (Scaled Agile With AI)
 **Last Updated**: December 2, 2025
 **Maintained By**: Development Team
+- 1. the readme is fine how it is - don't change it. #2 but the system uses port 6175 so plese fix the CLAUDE.md. #3 Fix the quick start section

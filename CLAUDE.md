@@ -74,7 +74,7 @@ make docker-logs        # View logs
 ```bash
 cd web-ui
 npm install
-npm run dev            # Start Vite dev server (port 6173)
+npm run dev            # Start Vite dev server (port 6175)
 npm run build          # Production build
 npm run lint           # ESLint
 ```
@@ -83,7 +83,7 @@ npm run lint           # ESLint
 
 ```
 ┌──────────────────────────────────────────┐
-│     Web UI (React + Vite) :6173          │
+│     Web UI (React + Vite) :6175          │
 └──────────────────────────────────────────┘
               │
     ┌─────────┼──────────┬──────────┐
@@ -132,7 +132,7 @@ web-ui/src/
 
 | Service | Port |
 |---------|------|
-| Web UI | 6173 |
+| Web UI | 6175 |
 | Integration Service | 9080 |
 | Design Service | 9081 |
 | Capability Service | 9082 |

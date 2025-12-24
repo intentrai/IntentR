@@ -31,29 +31,53 @@ IntentR is built around INTENT (Scaled Agile With AI)—an evolution of scaled a
 
 
 ## Quick Start
+
 IntentR is designed to be explored quickly, without requiring deep setup or prior framework knowledge.
-Prerequisites
-Git
-Node.js (LTS)
-Docker (recommended for local and cloud environments)
-1. Clone the Repository
+
+### Prerequisites
+
+- Git
+- Node.js (LTS)
+- Docker (recommended for local and cloud environments)
+
+### 1. Clone the Repository
+
+```bash
 git clone https://github.com/jareynolds/intentr.git
 cd intentr
-2. Set Up Your Development Environment
+```
+
+### 2. Set Up Your Development Environment
+
 IntentR provides environment-specific setup scripts to streamline local and cloud development.
 Choose the script that matches your environment:
+
+```bash
 ./setup-osx-environment.sh
 ./setup-aws-environment.sh
-(more env coming in the future)
+```
+
+(more environments coming in the future)
+
 Each script installs required dependencies, configures services, and prepares the environment for running IntentR. Refer to the script contents if you need to customize or extend the setup for your environment.
-3. Start the Platform
+
+### 3. Start the Platform
+
+```bash
 ./start.sh
+```
+
 This launches:
-+ The IntentR web UI
-+ Core backend services
-+ A local development workspace
-4. Open the Web Interface
+- The IntentR web UI
+- Core backend services
+- A local development workspace
+
+### 4. Open the Web Interface
+
+```
 http://localhost:6175
+```
+
 You can now:
 - Create a workspace
 - Define capabilities and enablers

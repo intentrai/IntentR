@@ -5,9 +5,9 @@
 - **Storyboard**: HelloWorldWeather
 - **Card ID**: card-1765937281984
 - **Status**: Completed
-- **Grid Position X**: 128
-- **Grid Position Y**: 552
-- **Generated**: 12/23/2025, 1:05:34 PM
+- **Grid Position X**: 955
+- **Grid Position Y**: 6
+- **Generated**: 12/24/2025, 8:28:45 AM
 - **File**: STORY-READ-DEFAULT-LOCATION.md
 
 ## Description
@@ -20,13 +20,12 @@ This story card depends on the following cards being completed first:
 
 | Card Title | Card ID | Connection ID | File Reference |
 |------------|---------|---------------|----------------|
-| start app | card-1765937081415 | conn-card-1765937081415-card-1765937281984-1765937306332 | [STORY-START-APP.md](./STORY-START-APP.md) |
+| start app | card-1765937081415 | conn-card-1765937081415-card-1765937281984-1766592644023 | [STORY-START-APP.md](./STORY-START-APP.md) |
 
 ### Downstream Impact
 Completing this story card enables the following cards:
 
 | Card Title | Card ID | Connection ID | File Reference |
 |------------|---------|---------------|----------------|
-| pull weather data | card-1765937126217 | conn-card-1765937281984-card-1765937126217-1766172037213 | [STORY-PULL-WEATHER-DATA.md](./STORY-PULL-WEATHER-DATA.md) |
-| Navigation | card-1766171779671 | conn-card-1765937281984-card-1766171779671-1766433968845 | [STORY-NAVIGATION.md](./STORY-NAVIGATION.md) |
+| pull weather data | card-1765937126217 | conn-card-1765937281984-card-1765937126217-1766592652857 | [STORY-PULL-WEATHER-DATA.md](./STORY-PULL-WEATHER-DATA.md) |
 

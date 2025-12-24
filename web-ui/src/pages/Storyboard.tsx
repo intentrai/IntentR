@@ -550,7 +550,7 @@ export const Storyboard: React.FC = () => {
       setLoadedFileHashes(newHashes);
 
       // Also try to load connections from the index file
-      const indexFile = data.files.find((f: any) => f.fileName === 'SBSUP-INDEX-1.md');
+      const indexFile = data.files.find((f: any) => f.fileName === 'STORYBOARD-INDEX.md');
       let loadedConnections: Connection[] = [];
 
       if (indexFile) {
@@ -585,33 +585,54 @@ export const Storyboard: React.FC = () => {
         }
       }
 
-      // Add new cards if any
+      // Add new cards if any - use functional update to avoid stale closure issues
       if (newCardsToAdd.length > 0) {
-        // If cards have saved positions, use them directly (don't offset)
-        const hasSavedPositions = newCardsToAdd.some(card => card.x !== 100 || card.y !== 100);
+        setCards(prevCards => {
+          // Deduplicate against actual current cards (not stale closure value)
+          const existingHashes = new Set(
+            prevCards.map(card => createCardContentHash(card.title, card.description))
+          );
 
-        let cardsWithPositions: StoryCard[];
+          // Also deduplicate by card ID
+          const existingIds = new Set(prevCards.map(card => card.id));
 
-        if (hasSavedPositions) {
-          // Use saved positions directly
-          cardsWithPositions = newCardsToAdd;
-        } else {
-          // Calculate offset to avoid overlap with existing cards
-          let offsetX = 0;
-          if (cards.length > 0) {
-            const maxX = Math.max(...cards.map(c => c.x));
-            offsetX = maxX + 400;
+          // Filter out cards that already exist (by content hash or ID)
+          const uniqueNewCards = newCardsToAdd.filter(card => {
+            const hash = createCardContentHash(card.title, card.description);
+            return !existingHashes.has(hash) && !existingIds.has(card.id);
+          });
+
+          if (uniqueNewCards.length === 0) {
+            console.log('[Load] All cards already exist, no new cards to add');
+            return prevCards;
           }
 
-          cardsWithPositions = newCardsToAdd.map((card, index) => ({
-            ...card,
-            x: offsetX > 0 ? offsetX + (index % 3) * 380 : card.x,
-            y: offsetX > 0 ? 100 + Math.floor(index / 3) * 500 : card.y,
-          }));
-        }
+          // If cards have saved positions, use them directly (don't offset)
+          const hasSavedPositions = uniqueNewCards.some(card => card.x !== 100 || card.y !== 100);
 
-        setCards(prevCards => [...prevCards, ...cardsWithPositions]);
-        console.log(`Added ${newCardsToAdd.length} new/changed cards from files`);
+          let cardsWithPositions: StoryCard[];
+
+          if (hasSavedPositions) {
+            // Use saved positions directly
+            cardsWithPositions = uniqueNewCards;
+          } else {
+            // Calculate offset to avoid overlap with existing cards
+            let offsetX = 0;
+            if (prevCards.length > 0) {
+              const maxX = Math.max(...prevCards.map(c => c.x));
+              offsetX = maxX + 400;
+            }
+
+            cardsWithPositions = uniqueNewCards.map((card, index) => ({
+              ...card,
+              x: offsetX > 0 ? offsetX + (index % 3) * 380 : card.x,
+              y: offsetX > 0 ? 100 + Math.floor(index / 3) * 500 : card.y,
+            }));
+          }
+
+          console.log(`[Load] Added ${cardsWithPositions.length} new cards from files`);
+          return [...prevCards, ...cardsWithPositions];
+        });
       }
 
       // Add loaded connections if any (with proper deduplication)
@@ -748,34 +769,50 @@ export const Storyboard: React.FC = () => {
         return;
       }
 
-      // Calculate offset position for new cards to avoid overlap with existing cards
-      let offsetX = 0;
-      let offsetY = 0;
-      if (cards.length > 0) {
-        const maxX = Math.max(...cards.map(c => c.x));
-        offsetX = maxX + 400;
-      }
+      // Add new cards to existing cards - use functional update to avoid stale closure
+      setCards(prevCards => {
+        // Re-deduplicate against actual current cards
+        const existingHashes = new Set(
+          prevCards.map(card => createCardContentHash(card.title, card.description))
+        );
+        const existingIds = new Set(prevCards.map(card => card.id));
 
-      // Add new cards with adjusted positions
-      const cardsWithPositions = newCardsToAdd.map((card, index) => ({
-        ...card,
-        id: `card-${Date.now()}-${index}`,
-        x: card.x + offsetX,
-        y: card.y + offsetY,
-      }));
+        const uniqueNewCards = newCardsToAdd.filter(card => {
+          const hash = createCardContentHash(card.title, card.description);
+          return !existingHashes.has(hash) && !existingIds.has(card.id);
+        });
 
-      // Add new cards to existing cards
-      setCards([...cards, ...cardsWithPositions]);
+        if (uniqueNewCards.length === 0) {
+          return prevCards;
+        }
 
-      // If this is the first set of cards, also add connections
-      if (cards.length === 0 && data.connections) {
-        const newConnections: Connection[] = data.connections.map((conn: any) => ({
-          id: conn.id,
-          from: conn.from,
-          to: conn.to,
+        // Calculate offset position for new cards to avoid overlap with existing cards
+        let offsetX = 0;
+        if (prevCards.length > 0) {
+          const maxX = Math.max(...prevCards.map(c => c.x));
+          offsetX = maxX + 400;
+        }
+
+        // Add new cards with adjusted positions
+        const cardsWithPositions = uniqueNewCards.map((card, index) => ({
+          ...card,
+          id: `card-${Date.now()}-${index}`,
+          x: card.x + offsetX,
+          y: card.y,
         }));
-        setConnections(newConnections);
-      }
+
+        // If this is the first set of cards, also add connections
+        if (prevCards.length === 0 && data.connections) {
+          const newConnections: Connection[] = data.connections.map((conn: any) => ({
+            id: conn.id,
+            from: conn.from,
+            to: conn.to,
+          }));
+          setConnections(newConnections);
+        }
+
+        return [...prevCards, ...cardsWithPositions];
+      });
 
     } catch (err) {
       setAnalyzeError(`Failed to analyze: ${err instanceof Error ? err.message : 'Unknown error'}`);
@@ -865,14 +902,14 @@ export const Storyboard: React.FC = () => {
       // Delete or Backspace key
       if ((e.key === 'Delete' || e.key === 'Backspace') && selectedConnection) {
         e.preventDefault();
-        setConnections(connections.filter(conn => conn.id !== selectedConnection));
+        setConnections(prevConns => prevConns.filter(conn => conn.id !== selectedConnection));
         setSelectedConnection(null);
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedConnection, connections]);
+  }, [selectedConnection]);
 
   // Attach native wheel event listener to handle zoom while allowing scroll
   useEffect(() => {
@@ -1040,14 +1077,20 @@ export const Storyboard: React.FC = () => {
     }
 
     if (connecting) {
-      // Creating a connection
-      if (connecting !== cardId && !connections.find(c => c.from === connecting && c.to === cardId)) {
-        const newConnection = {
-          id: `conn-${connecting}-${cardId}-${Date.now()}`,
-          from: connecting,
-          to: cardId
-        };
-        setConnections([...connections, newConnection]);
+      // Creating a connection - use functional update to avoid stale closure
+      if (connecting !== cardId) {
+        setConnections(prevConns => {
+          // Check if connection already exists
+          if (prevConns.find(c => c.from === connecting && c.to === cardId)) {
+            return prevConns;
+          }
+          const newConnection = {
+            id: `conn-${connecting}-${cardId}-${Date.now()}`,
+            from: connecting,
+            to: cardId
+          };
+          return [...prevConns, newConnection];
+        });
       }
       setConnecting(null);
       return;
@@ -1096,7 +1139,7 @@ export const Storyboard: React.FC = () => {
       const mouseX = (e.clientX - rect.left + wrapper.scrollLeft) / zoom;
       const mouseY = (e.clientY - rect.top + wrapper.scrollTop) / zoom;
 
-      setCards(cards.map(card =>
+      setCards(prevCards => prevCards.map(card =>
         card.id === draggingCard
           ? { ...card, x: mouseX - dragOffset.x, y: mouseY - dragOffset.y }
           : card
@@ -1148,8 +1191,8 @@ export const Storyboard: React.FC = () => {
         );
 
         if (targetCard) {
-          // Update the connection
-          setConnections(connections.map(conn => {
+          // Update the connection - use functional update
+          setConnections(prevConns => prevConns.map(conn => {
             if (conn.id === draggingEndpoint.connectionId) {
               if (draggingEndpoint.endpoint === 'from') {
                 return { ...conn, from: targetCard.id };
@@ -1273,7 +1316,7 @@ export const Storyboard: React.FC = () => {
       ideationCardId: cardFormData.ideationCardId || undefined,
     };
 
-    setCards([...cards, newCard]);
+    setCards(prevCards => [...prevCards, newCard]);
     setShowCardDialog(false);
     setEditingCardId(null);
     setCardFormData({ title: '', description: '', imageUrl: '', status: 'pending', ideationTags: [], ideationCardId: '' });
@@ -1282,7 +1325,7 @@ export const Storyboard: React.FC = () => {
   const handleUpdateCard = () => {
     if (!editingCardId || !cardFormData.title.trim()) return;
 
-    setCards(cards.map(card =>
+    setCards(prevCards => prevCards.map(card =>
       card.id === editingCardId
         ? { ...card, ...cardFormData, ideationCardId: cardFormData.ideationCardId || undefined }
         : card
@@ -1301,19 +1344,20 @@ export const Storyboard: React.FC = () => {
   };
 
   const handleSelectAsset = (file: any) => {
-    // Create a new card from the selected asset
-    const newCard: StoryCard = {
-      id: 'card-' + Date.now(),
-      title: file.name,
-      description: `Asset from integration: ${file.url}`,
-      imageUrl: file.thumbnail_url || file.url, // Use thumbnail_url for the image, fallback to url
-      x: 100 + cards.length * 60,
-      y: 150 + cards.length * 40,
-      status: 'pending',
-      ideationTags: [],
-    };
-
-    setCards([...cards, newCard]);
+    // Create a new card from the selected asset - use functional update
+    setCards(prevCards => {
+      const newCard: StoryCard = {
+        id: 'card-' + Date.now(),
+        title: file.name,
+        description: `Asset from integration: ${file.url}`,
+        imageUrl: file.thumbnail_url || file.url, // Use thumbnail_url for the image, fallback to url
+        x: 100 + prevCards.length * 60,
+        y: 150 + prevCards.length * 40,
+        status: 'pending',
+        ideationTags: [],
+      };
+      return [...prevCards, newCard];
+    });
     setShowAssetsPane(false);
   };
 
@@ -1343,6 +1387,7 @@ export const Storyboard: React.FC = () => {
               body: JSON.stringify({
                 fileName: card.sourceFileName,
                 workspacePath: currentWorkspace?.projectFolder,
+                subfolder: 'conception',
               }),
             });
 
@@ -1355,9 +1400,9 @@ export const Storyboard: React.FC = () => {
           }
         }
 
-        // Remove from canvas
-        setCards(cards.filter(c => c.id !== cardId));
-        setConnections(connections.filter(c => c.from !== cardId && c.to !== cardId));
+        // Remove from canvas - use functional updates to avoid stale closure issues
+        setCards(prevCards => prevCards.filter(c => c.id !== cardId));
+        setConnections(prevConns => prevConns.filter(c => c.from !== cardId && c.to !== cardId));
         if (selectedCard === cardId) setSelectedCard(null);
       },
     });
@@ -1667,7 +1712,7 @@ Cards can be linked to ideation content and later analyzed to generate capabilit
                       style={{ pointerEvents: 'all', cursor: 'pointer' }}
                       onClick={(e) => {
                         e.stopPropagation();
-                        setConnections(connections.filter(c => {
+                        setConnections(prevConns => prevConns.filter(c => {
                           const cId = c.id || `${c.from}-${c.to}`;
                           return cId !== connectionId;
                         }));

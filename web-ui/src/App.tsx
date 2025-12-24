@@ -342,6 +342,7 @@ function App() {
                             .app-main {
                               flex: 1;
                               padding: 30px;
+                              margin-left: 256px;
                               background: var(--color-grey-50);
                               overflow-y: auto;
                             }
@@ -349,6 +350,7 @@ function App() {
                             @media (max-width: 768px) {
                               .app-main {
                                 padding: 20px;
+                                margin-left: 56px;
                               }
                             }
                           `}</style>

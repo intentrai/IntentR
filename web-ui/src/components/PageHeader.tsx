@@ -4,7 +4,6 @@ interface PageHeaderProps {
   title: string;
   quickDescription: string;
   detailedDescription?: string;
-  workspaceName?: string;
   actions?: React.ReactNode;
 }
 
@@ -12,7 +11,6 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   title,
   quickDescription,
   detailedDescription,
-  workspaceName,
   actions,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -69,13 +67,6 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
 
   return (
     <div className="page-header">
-      {/* Workspace indicator (if provided) */}
-      {workspaceName && (
-        <div className="page-header__workspace">
-          <h4 className="text-title3">Workspace: {workspaceName}</h4>
-        </div>
-      )}
-
       {/* Title and actions row */}
       <div className="page-header__title-row">
         <h1 className="text-large-title">{title}</h1>
@@ -130,22 +121,6 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
       <style>{`
         .page-header {
           margin-bottom: 24px;
-        }
-
-        .page-header__workspace {
-          background: var(--color-primary, #133A7C);
-          color: white;
-          padding: 12px 16px;
-          border-radius: 8px;
-          margin-bottom: 16px;
-          display: block;
-        }
-
-        .page-header__workspace h4 {
-          margin: 0;
-          font-size: 14px;
-          font-weight: 500;
-          color: white;
         }
 
         .page-header__title-row {

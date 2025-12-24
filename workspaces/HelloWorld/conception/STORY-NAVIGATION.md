@@ -4,10 +4,10 @@
 - **Type**: Story Card
 - **Storyboard**: HelloWorldWeather
 - **Card ID**: card-1766171779671
-- **Status**: In Progress
-- **Grid Position X**: 132
-- **Grid Position Y**: 929
-- **Generated**: 12/23/2025, 1:05:34 PM
+- **Status**: Completed
+- **Grid Position X**: 97
+- **Grid Position Y**: 652
+- **Generated**: 12/24/2025, 8:28:45 AM
 - **File**: STORY-NAVIGATION.md
 
 ## Description
@@ -20,12 +20,13 @@ This story card depends on the following cards being completed first:
 
 | Card Title | Card ID | Connection ID | File Reference |
 |------------|---------|---------------|----------------|
-| read default location | card-1765937281984 | conn-card-1765937281984-card-1766171779671-1766433968845 | [STORY-READ-DEFAULT-LOCATION.md](./STORY-READ-DEFAULT-LOCATION.md) |
+| display weather data on screen | card-1765937186735 | conn-card-1765937186735-card-1766171779671-1766592715623 | [STORY-DISPLAY-WEATHER-DATA-ON-SCREEN.md](./STORY-DISPLAY-WEATHER-DATA-ON-SCREEN.md) |
 
 ### Downstream Impact
 Completing this story card enables the following cards:
 
 | Card Title | Card ID | Connection ID | File Reference |
 |------------|---------|---------------|----------------|
-| Provide Prompt field | card-1765940802459 | conn-card-1766171779671-card-1765940802459-1766433977329 | [STORY-PROVIDE-PROMPT-FIELD.md](./STORY-PROVIDE-PROMPT-FIELD.md) |
+| Enter City | card-1766171921085 | conn-card-1766171779671-card-1766171921085-1766592677207 | [STORY-ENTER-CITY.md](./STORY-ENTER-CITY.md) |
+| Provide Prompt field | card-1765940802459 | conn-card-1766171779671-card-1765940802459-1766592713342 | [STORY-PROVIDE-PROMPT-FIELD.md](./STORY-PROVIDE-PROMPT-FIELD.md) |
 

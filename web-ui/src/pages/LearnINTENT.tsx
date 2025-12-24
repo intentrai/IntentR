@@ -137,6 +137,14 @@ export const LearnINTENT: React.FC = () => {
     localStorage.setItem('intent_read_sections', JSON.stringify([...readSections]));
   }, [readSections]);
 
+  // Make sidebar fixed by adding a class to body
+  useEffect(() => {
+    document.body.classList.add('learn-page-active');
+    return () => {
+      document.body.classList.remove('learn-page-active');
+    };
+  }, []);
+
   // Track which section is visible
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -168,24 +176,36 @@ export const LearnINTENT: React.FC = () => {
   return (
     <div className="learn-intent-page">
       <style>{`
+        /* When learn page is active, disable app-main scroll */
+        body.learn-page-active .app-main {
+          overflow: visible !important;
+          height: auto !important;
+        }
+
         .learn-intent-page {
-          display: flex;
-          min-height: 100vh;
+          display: block;
+          min-height: calc(100vh - 110px);
           background: var(--color-grey-50);
+          margin: -30px;
+          width: calc(100% + 60px);
+          padding-left: 290px;
         }
 
         .learn-sidebar {
           position: fixed;
-          left: 0;
-          top: 0;
-          bottom: 0;
-          width: 280px;
+          top: 80px;
+          left: 257px;
+          width: 260px;
+          height: calc(100vh - 100px);
           background: white;
           border-right: 1px solid var(--color-grey-200);
+          border-radius: 0 12px 12px 0;
           padding: 24px;
           display: flex;
           flex-direction: column;
-          z-index: 100;
+          overflow-y: auto;
+          box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+          z-index: 1000;
         }
 
         .sidebar-header {
@@ -312,8 +332,6 @@ export const LearnINTENT: React.FC = () => {
         }
 
         .learn-content {
-          margin-left: 280px;
-          flex: 1;
           padding: 40px 60px;
           max-width: 900px;
         }
@@ -855,13 +873,19 @@ export const LearnINTENT: React.FC = () => {
         }
 
         @media (max-width: 900px) {
+          .learn-intent-page {
+            margin: -20px;
+            width: calc(100% + 40px);
+            padding-left: 0;
+          }
+
           .learn-sidebar {
             display: none;
           }
 
           .learn-content {
-            margin-left: 0;
             padding: 24px;
+            max-width: none;
           }
         }
       `}</style>
@@ -933,28 +957,20 @@ export const LearnINTENT: React.FC = () => {
             <h3 className="acronym-title">INTENT stands for:</h3>
             <div className="acronym-breakdown">
               <span className="acronym-letter">
-                <span className="letter">I</span>
+                <span className="letter">INT</span>
                 <span className="letter-word">Intent-Centered</span>
               </span>
               <span className="acronym-letter">
-                <span className="letter">N</span>
-                <span className="letter-word">and</span>
-              </span>
-              <span className="acronym-letter">
-                <span className="letter">T</span>
+                <span className="letter">E</span>
                 <span className="letter-word">Engineering-Driven</span>
               </span>
               <span className="acronym-letter">
-                <span className="letter">E</span>
+                <span className="letter">N</span>
                 <span className="letter-word">Notation for</span>
               </span>
               <span className="acronym-letter">
-                <span className="letter">N</span>
-                <span className="letter-word">Transformation</span>
-              </span>
-              <span className="acronym-letter">
                 <span className="letter">T</span>
-                <span className="letter-word">(ICE)</span>
+                <span className="letter-word">Transformation</span>
               </span>
             </div>
           </div>
@@ -1073,9 +1089,11 @@ export const LearnINTENT: React.FC = () => {
             <span className="flow-arrow">→</span>
             <span className="flow-step">Specification</span>
             <span className="flow-arrow">→</span>
-            <span className="flow-step">Derivation</span>
+            <span className="flow-step">UI-Design</span>
             <span className="flow-arrow">→</span>
-            <span className="flow-step">Validation</span>
+            <span className="flow-step">Implementation</span>
+            <span className="flow-arrow">→</span>
+            <span className="flow-step">Control-Loop</span>
             <span className="flow-arrow">→</span>
             <span className="flow-step">Evolution</span>
           </div>

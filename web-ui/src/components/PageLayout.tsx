@@ -196,40 +196,64 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
   const effectiveDetailedDescription = showInfoButton ? detailedDescription : undefined;
 
   return (
-    <div
-      className={`page-layout ${className}`}
-      style={{
-        padding: '16px',
-        maxWidth: fullWidth ? 'none' : '1400px',
-        margin: fullWidth ? 0 : '0 auto',
-        ...style,
-      }}
-    >
-      {/* 1. Wizard Navigation */}
-      {showWizard && <WizardPageNavigation />}
-
-      {/* 2. AI Preset + UI Framework Indicators */}
-      {showPreset && <AIPresetIndicator />}
-
-      {/* 3-5. Workspace Bar, Title, Description (via PageHeader) */}
-      {(showTitle || showWorkspaceBar) && (
-        <PageHeader
-          title={showTitle ? title : ''}
-          quickDescription={effectiveQuickDescription}
-          detailedDescription={effectiveDetailedDescription}
-          workspaceName={showWorkspaceBar ? currentWorkspace?.name : undefined}
-          actions={actions}
-        />
+    <div className={`page-layout-wrapper ${className}`}>
+      {/* Full-width workspace bar */}
+      {showWorkspaceBar && currentWorkspace?.name && (
+        <div className="page-layout__workspace-bar">
+          <h4 className="text-title3">Workspace: {currentWorkspace.name}</h4>
+        </div>
       )}
 
-      {/* Page Content */}
-      <div className="page-layout__content">
-        {children}
+      {/* Constrained content area */}
+      <div
+        className="page-layout"
+        style={{
+          padding: '16px',
+          maxWidth: fullWidth ? 'none' : '1400px',
+          margin: fullWidth ? 0 : '0 auto',
+          ...style,
+        }}
+      >
+        {/* 1. Wizard Navigation */}
+        {showWizard && <WizardPageNavigation />}
+
+        {/* 2. AI Preset + UI Framework Indicators */}
+        {showPreset && <AIPresetIndicator />}
+
+        {/* 3-5. Title, Description (via PageHeader - workspace bar now separate) */}
+        {showTitle && (
+          <PageHeader
+            title={title}
+            quickDescription={effectiveQuickDescription}
+            detailedDescription={effectiveDetailedDescription}
+            actions={actions}
+          />
+        )}
+
+        {/* Page Content */}
+        <div className="page-layout__content">
+          {children}
+        </div>
       </div>
 
       <style>{`
-        .page-layout {
+        .page-layout-wrapper {
           min-height: calc(100vh - 60px);
+        }
+
+        .page-layout__workspace-bar {
+          background: var(--color-primary, #133A7C);
+          color: white;
+          padding: 12px 24px;
+          width: 100%;
+          box-sizing: border-box;
+        }
+
+        .page-layout__workspace-bar h4 {
+          margin: 0;
+          font-size: 14px;
+          font-weight: 500;
+          color: white;
         }
 
         .page-layout__content {
