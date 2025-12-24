@@ -6198,7 +6198,7 @@ func (h *Handler) HandleDeleteFeature(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// WorkspaceConfig represents the configuration stored in .ubeworkspace file
+// WorkspaceConfig represents the configuration stored in .intentrworkspace file
 type WorkspaceConfig struct {
 	ID               string                 `json:"id"`
 	Name             string                 `json:"name"`
@@ -6224,7 +6224,7 @@ type SaveWorkspaceConfigRequest struct {
 }
 
 // HandleSaveWorkspaceConfig handles POST /workspace-config/save
-// Creates or updates the .ubeworkspace file in the workspace folder
+// Creates or updates the .intentrworkspace file in the workspace folder
 func (h *Handler) HandleSaveWorkspaceConfig(w http.ResponseWriter, r *http.Request) {
 	var req SaveWorkspaceConfigRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -6254,8 +6254,8 @@ func (h *Handler) HandleSaveWorkspaceConfig(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	// Create the .ubeworkspace file path
-	configPath := filepath.Join(req.Config.ProjectFolder, ".ubeworkspace")
+	// Create the .intentrworkspace file path
+	configPath := filepath.Join(req.Config.ProjectFolder, ".intentrworkspace")
 
 	// Marshal config to JSON with pretty formatting
 	configJSON, err := json.MarshalIndent(req.Config, "", "  ")
@@ -6293,7 +6293,7 @@ type ScanWorkspacesResponse struct {
 }
 
 // HandleScanWorkspaces handles GET /workspace-config/scan
-// Scans the ./workspaces folder for subfolders with .ubeworkspace files
+// Scans the ./workspaces folder for subfolders with .intentrworkspace files
 func (h *Handler) HandleScanWorkspaces(w http.ResponseWriter, r *http.Request) {
 	basePath := "workspaces"
 
@@ -6323,13 +6323,13 @@ func (h *Handler) HandleScanWorkspaces(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		// Skip hidden directories (except we're looking for .ubeworkspace inside them)
+		// Skip hidden directories (except we're looking for .intentrworkspace inside them)
 		if strings.HasPrefix(entry.Name(), ".") {
 			continue
 		}
 
 		folderPath := filepath.Join(basePath, entry.Name())
-		configPath := filepath.Join(folderPath, ".ubeworkspace")
+		configPath := filepath.Join(folderPath, ".intentrworkspace")
 
 		scannedWorkspace := ScannedWorkspace{
 			FolderName: entry.Name(),
@@ -6337,7 +6337,7 @@ func (h *Handler) HandleScanWorkspaces(w http.ResponseWriter, r *http.Request) {
 			HasConfig:  false,
 		}
 
-		// Check if .ubeworkspace file exists
+		// Check if .intentrworkspace file exists
 		if _, err := os.Stat(configPath); err == nil {
 			// Read and parse the config file
 			configData, err := os.ReadFile(configPath)
@@ -6361,7 +6361,7 @@ func (h *Handler) HandleScanWorkspaces(w http.ResponseWriter, r *http.Request) {
 }
 
 // HandleGetWorkspaceConfig handles GET /workspace-config/{folderPath}
-// Reads the .ubeworkspace file from a specific folder
+// Reads the .intentrworkspace file from a specific folder
 func (h *Handler) HandleGetWorkspaceConfig(w http.ResponseWriter, r *http.Request) {
 	folderPath := r.URL.Query().Get("path")
 	if folderPath == "" {
@@ -6375,7 +6375,7 @@ func (h *Handler) HandleGetWorkspaceConfig(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	configPath := filepath.Join(folderPath, ".ubeworkspace")
+	configPath := filepath.Join(folderPath, ".intentrworkspace")
 
 	// Check if config file exists
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {

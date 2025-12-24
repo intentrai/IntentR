@@ -26,7 +26,7 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle }) => {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <img
-              src="/ube-logo.svg"
+              src="/intentr-logo.svg"
               alt="IntentR Logo"
               style={{ width: '48px', height: '48px' }}
             />

@@ -12,7 +12,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/jareynolds/ubecode/pkg/models"
+	"github.com/jareynolds/intentr/pkg/models"
 )
 
 // EnablerRepository handles database operations for enablers

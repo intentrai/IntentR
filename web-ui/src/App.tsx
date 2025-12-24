@@ -1,21 +1,22 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Header, Sidebar, ProtectedRoute, ProtectedPage, UIFrameworkProvider, UIFrameworkIndicator } from './components';
-import { Login, GoogleCallback, Welcome, Dashboard, WorkspaceOverview, Capabilities, Features, Vision, Designs, Integrations, AIChat, Code, Run, Workspaces, Storyboard, Ideation, Analyze, Settings, Admin, System, AIPrinciples, UIFramework, UIStyles, UIDesigner, DataCollection, Enablers, ConceptionApproval, DefinitionApproval, DesignApproval, ImplementationApproval, Testing, TestingApproval, StoryMap, LearnINTENT } from './pages';
+import { Login, GoogleCallback, Welcome, Dashboard, WorkspaceOverview, Capabilities, Features, Vision, Designs, Integrations, AIChat, Code, Run, Workspaces, Storyboard, Ideation, Analyze, Settings, Admin, System, AIPrinciples, UIFramework, UIStyles, UIDesigner, DataCollection, Enablers, IntentApproval, SpecificationApproval, SystemApproval, ImplementationApproval, Testing, ControlLoopApproval, StoryMap, LearnINTENT } from './pages';
 import {
   WizardWorkspace,
-  WizardConceptionStart,
-  WizardConception,
-  WizardDefinitionStart,
-  WizardDefinition,
-  WizardDesignStart,
-  WizardDesign,
-  WizardTestingStart,
-  WizardTesting,
+  WizardIntentStart,
+  WizardIntent,
+  WizardSpecificationStart,
+  WizardSpecification,
+  WizardSystemStart,
+  WizardSystem,
+  WizardControlLoopStart,
+  WizardControlLoop,
   WizardImplementationStart,
   WizardImplementation,
   WizardDiscoveryStart,
   WizardDiscovery,
+  WizardSubpage,
 } from './pages/wizard';
 import { defaultUIFrameworks, applyUIStyleToDOM } from './pages/UIStyles';
 import { AppProvider } from './context/AppContext';
@@ -26,7 +27,14 @@ import { CollaborationProvider } from './context/CollaborationContext';
 import { RoleAccessProvider } from './context/RoleAccessContext';
 import { ApprovalProvider } from './context/ApprovalContext';
 import { EnablerProvider } from './context/EnablerContext';
-import { WizardProvider } from './context/WizardContext';
+import {
+  WizardProvider,
+  useWizard,
+  STEP_DEFINITIONS,
+  ALL_SUBPAGES_FLAT,
+  DEFAULT_WIZARD_FLOWS,
+  type WizardFlowType,
+} from './context/WizardContext';
 import { VersionControlProvider } from './context/VersionControlContext';
 import { VersionControlPanel, VersionHistoryDrawer } from './components';
 import './styles/main.css';
@@ -40,9 +48,9 @@ const checkPhaseRejections = (workspaceId: string, phase: string): boolean => {
   if (!workspaceId) return false;
 
   try {
-    if (phase === 'testing') {
-      // Testing uses: phaseApprovals_${workspaceId}_testing (array of items)
-      const key = `phaseApprovals_${workspaceId}_testing`;
+    if (phase === 'control-loop') {
+      // Control Loop uses: phaseApprovals_${workspaceId}_control-loop (array of items)
+      const key = `phaseApprovals_${workspaceId}_control-loop`;
       const data = localStorage.getItem(key);
       if (!data) return false;
       const items = JSON.parse(data);
@@ -66,9 +74,9 @@ const checkPhaseApproved = (workspaceId: string, phase: string): boolean => {
   if (!workspaceId) return false;
 
   try {
-    if (phase === 'testing') {
-      // Testing phase: check if all items in phaseApprovals_${workspaceId}_testing are approved
-      const key = `phaseApprovals_${workspaceId}_testing`;
+    if (phase === 'control-loop') {
+      // Control Loop phase: check if all items in phaseApprovals_${workspaceId}_control-loop are approved
+      const key = `phaseApprovals_${workspaceId}_control-loop`;
       const data = localStorage.getItem(key);
       if (!data) return false;
       const items = JSON.parse(data);
@@ -90,23 +98,24 @@ const checkPhaseApproved = (workspaceId: string, phase: string): boolean => {
 function AppContent() {
   const { user } = useAuth();
   const { currentWorkspace } = useWorkspace();
+  const { flowType, customFlows, customSubpages } = useWizard();
 
   // Track rejection status for each phase
   const [phaseRejections, setPhaseRejections] = useState({
-    conception: false,
-    definition: false,
-    design: false,
+    intent: false,
+    specification: false,
+    system: false,
     implementation: false,
-    testing: false,
+    'control-loop': false,
   });
 
   // Track approval status for each phase (true = fully approved)
   const [phaseApprovals, setPhaseApprovals] = useState({
-    conception: false,
-    definition: false,
-    design: false,
+    intent: false,
+    specification: false,
+    system: false,
     implementation: false,
-    testing: false,
+    'control-loop': false,
   });
 
   // Apply saved UI style when workspace changes
@@ -131,33 +140,33 @@ function AppContent() {
     const checkStatus = () => {
       if (currentWorkspace?.id) {
         setPhaseRejections({
-          conception: checkPhaseRejections(currentWorkspace.id, 'conception'),
-          definition: checkPhaseRejections(currentWorkspace.id, 'definition'),
-          design: checkPhaseRejections(currentWorkspace.id, 'design'),
+          intent: checkPhaseRejections(currentWorkspace.id, 'intent'),
+          specification: checkPhaseRejections(currentWorkspace.id, 'specification'),
+          system: checkPhaseRejections(currentWorkspace.id, 'system'),
           implementation: checkPhaseRejections(currentWorkspace.id, 'implementation'),
-          testing: checkPhaseRejections(currentWorkspace.id, 'testing'),
+          'control-loop': checkPhaseRejections(currentWorkspace.id, 'control-loop'),
         });
         setPhaseApprovals({
-          conception: checkPhaseApproved(currentWorkspace.id, 'conception'),
-          definition: checkPhaseApproved(currentWorkspace.id, 'definition'),
-          design: checkPhaseApproved(currentWorkspace.id, 'design'),
+          intent: checkPhaseApproved(currentWorkspace.id, 'intent'),
+          specification: checkPhaseApproved(currentWorkspace.id, 'specification'),
+          system: checkPhaseApproved(currentWorkspace.id, 'system'),
           implementation: checkPhaseApproved(currentWorkspace.id, 'implementation'),
-          testing: checkPhaseApproved(currentWorkspace.id, 'testing'),
+          'control-loop': checkPhaseApproved(currentWorkspace.id, 'control-loop'),
         });
       } else {
         setPhaseRejections({
-          conception: false,
-          definition: false,
-          design: false,
+          intent: false,
+          specification: false,
+          system: false,
           implementation: false,
-          testing: false,
+          'control-loop': false,
         });
         setPhaseApprovals({
-          conception: false,
-          definition: false,
-          design: false,
+          intent: false,
+          specification: false,
+          system: false,
           implementation: false,
-          testing: false,
+          'control-loop': false,
         });
       }
     };
@@ -176,70 +185,54 @@ function AppContent() {
     };
   }, [currentWorkspace?.id]);
 
-  // Build sidebar items with phase-based navigation
-  // Phase 1: INTENT - Define what to build (formerly Conception)
-  // Phase 2: SPECIFICATION - Define scope and design (formerly Definition + Design)
-  // Phase 3: SYSTEM - Build, test and run it (formerly Implementation + Test Scenarios)
-  // Phase 4: CONTROL LOOP - Ongoing quality assurance (formerly Testing)
+  // Build sidebar items dynamically from wizard configuration
+  // Use the active flow type, or default to 'new' if none selected
+  const activeFlowType: WizardFlowType = flowType || 'new';
+  const activeSections = customFlows[activeFlowType] || DEFAULT_WIZARD_FLOWS[activeFlowType];
+
+  // Helper to build children (subpages) for a section
+  const buildSectionChildren = (sectionId: string) => {
+    const subpageIds = customSubpages[sectionId] || [];
+    // Filter out 'overview' as it's the section start page, not a child item
+    const childSubpages = subpageIds.filter(id => id !== 'overview');
+
+    return childSubpages.map(subpageId => {
+      const subpage = ALL_SUBPAGES_FLAT[subpageId];
+      const isApprovalPage = subpageId.endsWith('-approval');
+      const phaseId = sectionId as keyof typeof phaseRejections;
+
+      return {
+        path: `/${subpageId}`,
+        label: subpage?.name || subpageId,
+        ...(isApprovalPage && phaseRejections[phaseId] !== undefined && {
+          hasRejection: phaseRejections[phaseId],
+          isPhaseIncomplete: !phaseApprovals[phaseId],
+        }),
+      };
+    });
+  };
+
+  // Build dynamic sidebar items from wizard configuration
   const dynamicSidebarItems = [
     { path: '/', label: 'Welcome', icon: '⌂' },
     { path: '/dashboard', label: 'Dashboard', icon: '▦' },
     { path: '/workspaces', label: 'Workspaces', icon: '◰' },
-    // INTENT PHASE (formerly Conception)
-    {
-      label: 'INTENT',
-      path: '/wizard/conception/start',
-      isPhase: true,
-      phaseIcon: '◇',
-      children: [
-        { path: '/vision', label: 'Product Vision' },
-        { path: '/ideation', label: 'Ideation' },
-        { path: '/storyboard', label: 'Storyboard' },
-        { path: '/conception-approval', label: 'Phase Approval', hasRejection: phaseRejections.conception, isPhaseIncomplete: !phaseApprovals.conception },
-      ]
-    },
-    // SPECIFICATION PHASE (formerly Definition + Design merged)
-    {
-      label: 'SPECIFICATION',
-      path: '/wizard/definition/start',
-      isPhase: true,
-      phaseIcon: '☰',
-      children: [
-        { path: '/capabilities', label: 'Capabilities' },
-        { path: '/enablers', label: 'Enablers' },
-        { path: '/story-map', label: 'Dependencies' },
-        { path: '/designs', label: 'UI Assets' },
-        { path: '/ui-framework', label: 'UI Framework' },
-        { path: '/ui-styles', label: 'UI Styles' },
-        { path: '/ui-designer', label: 'UI Designer' },
-        { path: '/definition-approval', label: 'Phase Approval', hasRejection: phaseRejections.definition || phaseRejections.design, isPhaseIncomplete: !phaseApprovals.definition || !phaseApprovals.design },
-      ]
-    },
-    // SYSTEM PHASE (formerly Implementation + Test Scenarios)
-    {
-      label: 'SYSTEM',
-      path: '/wizard/implementation/start',
-      isPhase: true,
-      phaseIcon: '⚙',
-      children: [
-        { path: '/testing', label: 'Test Scenarios' },
-        { path: '/system', label: 'System' },
-        { path: '/ai-principles', label: 'AI Principles' },
-        { path: '/code', label: 'Code' },
-        { path: '/run', label: 'Run' },
-        { path: '/implementation-approval', label: 'Phase Approval', hasRejection: phaseRejections.implementation, isPhaseIncomplete: !phaseApprovals.implementation },
-      ]
-    },
-    // CONTROL LOOP PHASE (formerly Testing - new pages to be added later)
-    {
-      label: 'CONTROL LOOP',
-      path: '/wizard/testing/start',
-      isPhase: true,
-      phaseIcon: '✓',
-      children: [
-        { path: '/testing-approval', label: 'Intent Integrity', hasRejection: phaseRejections.testing, isPhaseIncomplete: !phaseApprovals.testing },
-      ]
-    },
+    // Dynamically generated sections based on active flow
+    ...activeSections
+      .filter(sectionId => sectionId !== 'workspace') // Workspace is not shown as a sidebar section
+      .map(sectionId => {
+        const stepDef = STEP_DEFINITIONS[sectionId];
+        if (!stepDef) return null;
+
+        return {
+          label: stepDef.name.toUpperCase(),
+          path: `/wizard/${sectionId}/start`,
+          isPhase: true,
+          phaseIcon: stepDef.icon,
+          children: buildSectionChildren(sectionId),
+        };
+      })
+      .filter(Boolean),
     { path: '/ai-chat', label: 'AI Assistant', icon: '◉' },
   ];
 
@@ -261,12 +254,12 @@ function AppContent() {
             <Route path="/ideation" element={<ProtectedPage path="/ideation"><Ideation /></ProtectedPage>} />
             <Route path="/analyze" element={<ProtectedPage path="/analyze"><Analyze /></ProtectedPage>} />
             <Route path="/storyboard" element={<ProtectedPage path="/storyboard"><Storyboard /></ProtectedPage>} />
-            <Route path="/conception-approval" element={<ProtectedPage path="/conception-approval"><ConceptionApproval /></ProtectedPage>} />
-            <Route path="/definition-approval" element={<ProtectedPage path="/definition-approval"><DefinitionApproval /></ProtectedPage>} />
-            <Route path="/design-approval" element={<ProtectedPage path="/design-approval"><DesignApproval /></ProtectedPage>} />
+            <Route path="/intent-approval" element={<ProtectedPage path="/intent-approval"><IntentApproval /></ProtectedPage>} />
+            <Route path="/specification-approval" element={<ProtectedPage path="/specification-approval"><SpecificationApproval /></ProtectedPage>} />
+            <Route path="/system-approval" element={<ProtectedPage path="/system-approval"><SystemApproval /></ProtectedPage>} />
             <Route path="/implementation-approval" element={<ProtectedPage path="/implementation-approval"><ImplementationApproval /></ProtectedPage>} />
             <Route path="/testing" element={<ProtectedPage path="/testing"><Testing /></ProtectedPage>} />
-            <Route path="/testing-approval" element={<ProtectedPage path="/testing-approval"><TestingApproval /></ProtectedPage>} />
+            <Route path="/control-loop-approval" element={<ProtectedPage path="/control-loop-approval"><ControlLoopApproval /></ProtectedPage>} />
             <Route path="/system" element={<ProtectedPage path="/system"><System /></ProtectedPage>} />
             <Route path="/capabilities" element={<ProtectedPage path="/capabilities"><Capabilities /></ProtectedPage>} />
             <Route path="/enablers" element={<ProtectedPage path="/enablers"><Enablers /></ProtectedPage>} />
@@ -290,18 +283,21 @@ function AppContent() {
 
             {/* Wizard Routes */}
             <Route path="/wizard/workspace" element={<ProtectedPage path="/wizard/workspace"><WizardWorkspace /></ProtectedPage>} />
-            <Route path="/wizard/conception/start" element={<ProtectedPage path="/wizard/conception/start"><WizardConceptionStart /></ProtectedPage>} />
-            <Route path="/wizard/conception" element={<ProtectedPage path="/wizard/conception"><WizardConception /></ProtectedPage>} />
-            <Route path="/wizard/definition/start" element={<ProtectedPage path="/wizard/definition/start"><WizardDefinitionStart /></ProtectedPage>} />
-            <Route path="/wizard/definition" element={<ProtectedPage path="/wizard/definition"><WizardDefinition /></ProtectedPage>} />
-            <Route path="/wizard/design/start" element={<ProtectedPage path="/wizard/design/start"><WizardDesignStart /></ProtectedPage>} />
-            <Route path="/wizard/design" element={<ProtectedPage path="/wizard/design"><WizardDesign /></ProtectedPage>} />
-            <Route path="/wizard/testing/start" element={<ProtectedPage path="/wizard/testing/start"><WizardTestingStart /></ProtectedPage>} />
-            <Route path="/wizard/testing" element={<ProtectedPage path="/wizard/testing"><WizardTesting /></ProtectedPage>} />
+            <Route path="/wizard/intent/start" element={<ProtectedPage path="/wizard/intent/start"><WizardIntentStart /></ProtectedPage>} />
+            <Route path="/wizard/intent" element={<ProtectedPage path="/wizard/intent"><WizardIntent /></ProtectedPage>} />
+            <Route path="/wizard/specification/start" element={<ProtectedPage path="/wizard/specification/start"><WizardSpecificationStart /></ProtectedPage>} />
+            <Route path="/wizard/specification" element={<ProtectedPage path="/wizard/specification"><WizardSpecification /></ProtectedPage>} />
+            <Route path="/wizard/system/start" element={<ProtectedPage path="/wizard/system/start"><WizardSystemStart /></ProtectedPage>} />
+            <Route path="/wizard/system" element={<ProtectedPage path="/wizard/system"><WizardSystem /></ProtectedPage>} />
+            <Route path="/wizard/control-loop/start" element={<ProtectedPage path="/wizard/control-loop/start"><WizardControlLoopStart /></ProtectedPage>} />
+            <Route path="/wizard/control-loop" element={<ProtectedPage path="/wizard/control-loop"><WizardControlLoop /></ProtectedPage>} />
             <Route path="/wizard/implementation/start" element={<ProtectedPage path="/wizard/implementation/start"><WizardImplementationStart /></ProtectedPage>} />
             <Route path="/wizard/implementation" element={<ProtectedPage path="/wizard/implementation"><WizardImplementation /></ProtectedPage>} />
             <Route path="/wizard/discovery/start" element={<ProtectedPage path="/wizard/discovery/start"><WizardDiscoveryStart /></ProtectedPage>} />
             <Route path="/wizard/discovery" element={<ProtectedPage path="/wizard/discovery"><WizardDiscovery /></ProtectedPage>} />
+
+            {/* Generic wizard subpage route - handles all subpages within wizard mode */}
+            <Route path="/wizard/:stepId/:subpageId" element={<ProtectedPage path="/wizard/subpage"><WizardSubpage /></ProtectedPage>} />
           </Routes>
         </main>
         {/* Version Control Components */}

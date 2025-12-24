@@ -27,7 +27,7 @@ cmd/*/auth-service
 cmd/*/design-service
 cmd/*/capability-service
 cmd/*/balut
-cmd/*/ubecli
+cmd/*/intentrcli
 # Corrupted/temp build files
 .!*!*
 cmd/*/.!*
@@ -123,7 +123,7 @@ id_rsa*
 # ============================================
 # LOCAL CONFIG FILES
 # ============================================
-.ubecli.yaml
+.intentrcli.yaml
 *.local.json
 **/*.local.json
 

@@ -5,10 +5,10 @@ export { WizardPageNavigation } from './WizardPageNavigation';
 
 export {
   StartPageLayout,
-  ConceptionStart,
-  DefinitionStart,
-  DesignStart,
-  TestingStart,
+  IntentStart,
+  SpecificationStart,
+  SystemStart,
+  ControlLoopStart,
   ImplementationStart,
   DiscoveryStart,
 } from './StartPages';

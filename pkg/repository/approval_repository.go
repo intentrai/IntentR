@@ -14,7 +14,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/jareynolds/ubecode/pkg/models"
+	"github.com/jareynolds/intentr/pkg/models"
 )
 
 // ApprovalRepository handles database operations for approvals

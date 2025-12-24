@@ -1,285 +1,318 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useWizard, WIZARD_FLOWS, type WizardFlowType } from '../../context/WizardContext';
+import { useWizard } from '../../context/WizardContext';
 import { useWorkspace } from '../../context/WorkspaceContext';
-import { Card } from '../Card';
 import { Button } from '../Button';
-
-interface WorkspaceTypeOption {
-  id: WizardFlowType;
-  title: string;
-  description: string;
-  icon: React.ReactNode;
-  workflow: string[];
-  color: string;
-}
-
-const WORKSPACE_TYPE_OPTIONS: WorkspaceTypeOption[] = [
-  {
-    id: 'new',
-    title: 'Create New Application',
-    description: 'Start from scratch with the full INTENT development workflow. Define your vision, create capabilities, design the solution, test, and implement.',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-      </svg>
-    ),
-    workflow: ['Intent', 'Specification', 'System', 'Control Loop'],
-    color: 'blue',
-  },
-  {
-    id: 'refactor',
-    title: 'Refactor IntentR Application',
-    description: 'Improve an existing IntentR workspace that already has defined capabilities. Skip conception and go straight to enhancing definitions.',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-      </svg>
-    ),
-    workflow: ['Specification', 'System', 'Control Loop'],
-    color: 'purple',
-  },
-  {
-    id: 'reverse-engineer',
-    title: 'Reverse Engineer Application',
-    description: 'Document and integrate an existing non-IntentR application. Start with discovery to analyze the codebase, then create specifications.',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-      </svg>
-    ),
-    workflow: ['Discovery', 'Specification', 'System', 'Control Loop'],
-    color: 'orange',
-  },
-];
 
 export const WorkspaceTypeStep: React.FC = () => {
   const navigate = useNavigate();
-  const { setFlowType, nextStep } = useWizard();
-  const { currentWorkspace, workspaces } = useWorkspace();
-  const [selectedType, setSelectedType] = useState<WizardFlowType | null>(null);
+  const { flowType, setFlowType, setWizardMode, nextStep, steps } = useWizard();
+  const { currentWorkspace, workspaces, switchWorkspace } = useWorkspace();
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string>(currentWorkspace?.id || '');
 
-  const handleTypeSelect = (type: WizardFlowType) => {
-    setSelectedType(type);
+  const handleWorkspaceSelect = (workspaceId: string) => {
+    setSelectedWorkspaceId(workspaceId);
   };
 
-  const handleContinue = () => {
-    if (selectedType) {
-      setFlowType(selectedType);
-      // Navigate to the first step after workspace (which is the start page of the next section)
-      const steps = WIZARD_FLOWS[selectedType];
-      if (steps.length > 1) {
-        navigate(steps[1].startPath);
-      }
+  const handleContinue = async () => {
+    // Switch to the selected workspace
+    if (selectedWorkspaceId) {
+      await switchWorkspace(selectedWorkspaceId);
+    }
+
+    // Ensure wizard mode is enabled
+    setWizardMode(true);
+
+    // Ensure we have a flow type set (default to 'new' if not)
+    if (!flowType) {
+      setFlowType('new');
+    }
+
+    // Use nextStep to properly navigate to the next step in the wizard
+    // This handles state updates and navigation correctly
+    if (steps.length > 1) {
+      nextStep();
+    } else {
+      // Fallback: navigate to the first non-workspace step
+      navigate('/wizard/intent/start');
     }
   };
 
-  const getColorClasses = (color: string, isSelected: boolean) => {
-    const colors: Record<string, { bg: string; border: string; text: string; hover: string }> = {
-      blue: {
-        bg: isSelected ? 'var(--color-blue-50)' : 'white',
-        border: isSelected ? 'var(--color-blue-500)' : 'var(--color-grey-200)',
-        text: 'var(--color-blue-600)',
-        hover: 'var(--color-blue-50)',
-      },
-      purple: {
-        bg: isSelected ? 'var(--color-purple-50)' : 'white',
-        border: isSelected ? 'var(--color-purple-500)' : 'var(--color-grey-200)',
-        text: 'var(--color-purple-600)',
-        hover: 'var(--color-purple-50)',
-      },
-      orange: {
-        bg: isSelected ? 'var(--color-orange-50)' : 'white',
-        border: isSelected ? 'var(--color-orange-500)' : 'var(--color-grey-200)',
-        text: 'var(--color-orange-600)',
-        hover: 'var(--color-orange-50)',
-      },
-    };
-    return colors[color] || colors.blue;
+  const handleCreateNew = () => {
+    // Navigate to workspaces page to create a new workspace
+    navigate('/workspaces');
   };
 
   return (
-    <div className="workspace-type-step">
-      <div className="workspace-type-header">
-        <h1>What would you like to do?</h1>
-        <p>Select the type of project you want to work on. This will determine your workflow path.</p>
+    <div className="workspace-select-step">
+      <div className="workspace-select-header">
+        <h1>Select a Workspace</h1>
+        <p>Choose the workspace you want to work with in this wizard session.</p>
       </div>
 
-      {/* Current Workspace Display */}
-      {currentWorkspace && (
-        <div className="current-workspace-info">
-          <span className="current-workspace-label">Current Workspace:</span>
-          <span className="current-workspace-name">{currentWorkspace.name}</span>
-        </div>
-      )}
+      {/* Workspace List */}
+      <div className="workspace-list">
+        {workspaces.length === 0 ? (
+          <div className="no-workspaces">
+            <div className="no-workspaces-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
+              </svg>
+            </div>
+            <h3>No Workspaces Found</h3>
+            <p>Create a new workspace to get started with the wizard.</p>
+            <Button variant="primary" onClick={handleCreateNew}>
+              Create Workspace
+            </Button>
+          </div>
+        ) : (
+          <>
+            {workspaces.map((workspace) => {
+              const isSelected = selectedWorkspaceId === workspace.id;
+              const isCurrent = currentWorkspace?.id === workspace.id;
 
-      {/* Workspace Type Options */}
-      <div className="workspace-type-options">
-        {WORKSPACE_TYPE_OPTIONS.map((option) => {
-          const isSelected = selectedType === option.id;
-          const colors = getColorClasses(option.color, isSelected);
-
-          return (
-            <button
-              key={option.id}
-              onClick={() => handleTypeSelect(option.id)}
-              className={`workspace-type-card ${isSelected ? 'workspace-type-card--selected' : ''}`}
-              style={{
-                backgroundColor: colors.bg,
-                borderColor: colors.border,
-              }}
-            >
-              <div className="workspace-type-card-header">
-                <div
-                  className="workspace-type-icon"
-                  style={{ color: colors.text }}
+              return (
+                <button
+                  key={workspace.id}
+                  onClick={() => handleWorkspaceSelect(workspace.id)}
+                  className={`workspace-card ${isSelected ? 'workspace-card--selected' : ''}`}
                 >
-                  {option.icon}
-                </div>
-                <div className="workspace-type-radio">
-                  {isSelected ? (
-                    <div className="radio-selected" style={{ backgroundColor: colors.text }} />
-                  ) : (
-                    <div className="radio-unselected" />
-                  )}
-                </div>
-              </div>
-
-              <h3 className="workspace-type-title">{option.title}</h3>
-              <p className="workspace-type-description">{option.description}</p>
-
-              <div className="workspace-type-workflow">
-                <span className="workflow-label">Workflow:</span>
-                <div className="workflow-steps">
-                  {option.workflow.map((step, index) => (
-                    <React.Fragment key={step}>
-                      <span className="workflow-step">{step}</span>
-                      {index < option.workflow.length - 1 && (
-                        <span className="workflow-arrow">→</span>
+                  <div className="workspace-card-content">
+                    <div className="workspace-card-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
+                      </svg>
+                    </div>
+                    <div className="workspace-card-info">
+                      <h3 className="workspace-card-name">
+                        {workspace.name}
+                        {isCurrent && <span className="current-badge">Current</span>}
+                      </h3>
+                      {workspace.description && (
+                        <p className="workspace-card-description">{workspace.description}</p>
                       )}
-                    </React.Fragment>
-                  ))}
+                    </div>
+                  </div>
+                  <div className="workspace-card-radio">
+                    {isSelected ? (
+                      <div className="radio-selected" />
+                    ) : (
+                      <div className="radio-unselected" />
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+
+            {/* Create New Workspace Option */}
+            <button
+              onClick={handleCreateNew}
+              className="workspace-card workspace-card--create"
+            >
+              <div className="workspace-card-content">
+                <div className="workspace-card-icon workspace-card-icon--create">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                  </svg>
+                </div>
+                <div className="workspace-card-info">
+                  <h3 className="workspace-card-name">Create New Workspace</h3>
+                  <p className="workspace-card-description">Start a new project from scratch</p>
                 </div>
               </div>
             </button>
-          );
-        })}
+          </>
+        )}
       </div>
 
       {/* Continue Button */}
-      <div className="workspace-type-actions">
-        <Button
-          variant="primary"
-          size="lg"
-          onClick={handleContinue}
-          disabled={!selectedType}
-        >
-          Continue with {selectedType ? WORKSPACE_TYPE_OPTIONS.find(o => o.id === selectedType)?.title : 'selected option'}
-          <svg className="continue-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-          </svg>
-        </Button>
-      </div>
+      {workspaces.length > 0 && (
+        <div className="workspace-select-actions">
+          <Button
+            variant="primary"
+            size="lg"
+            onClick={handleContinue}
+            disabled={!selectedWorkspaceId}
+          >
+            Continue with {selectedWorkspaceId ? workspaces.find(w => w.id === selectedWorkspaceId)?.name : 'selected workspace'}
+            <svg className="continue-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </Button>
+        </div>
+      )}
 
       <style>{`
-        .workspace-type-step {
-          max-width: 900px;
+        .workspace-select-step {
+          max-width: 700px;
           margin: 0 auto;
           padding: 2rem;
         }
 
-        .workspace-type-header {
+        .workspace-select-header {
           text-align: center;
           margin-bottom: 2rem;
         }
 
-        .workspace-type-header h1 {
+        .workspace-select-header h1 {
           font-size: 1.75rem;
           font-weight: 700;
           color: var(--color-grey-900);
           margin-bottom: 0.5rem;
         }
 
-        .workspace-type-header p {
+        .workspace-select-header p {
           font-size: 1rem;
           color: var(--color-grey-600);
         }
 
-        .current-workspace-info {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 0.5rem;
-          padding: 0.75rem 1rem;
-          background: var(--color-grey-100);
-          border-radius: 0.5rem;
-          margin-bottom: 2rem;
-        }
-
-        .current-workspace-label {
-          font-size: 0.875rem;
-          color: var(--color-grey-600);
-        }
-
-        .current-workspace-name {
-          font-size: 0.875rem;
-          font-weight: 600;
-          color: var(--color-grey-900);
-        }
-
-        .workspace-type-options {
+        .workspace-list {
           display: flex;
           flex-direction: column;
-          gap: 1rem;
+          gap: 0.75rem;
         }
 
-        .workspace-type-card {
-          display: block;
-          width: 100%;
-          text-align: left;
-          padding: 1.5rem;
-          border: 2px solid;
+        .no-workspaces {
+          text-align: center;
+          padding: 3rem 2rem;
+          background: var(--color-grey-50);
           border-radius: 0.75rem;
-          cursor: pointer;
-          transition: all 0.2s ease;
+          border: 2px dashed var(--color-grey-300);
         }
 
-        .workspace-type-card:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        .no-workspaces-icon {
+          width: 4rem;
+          height: 4rem;
+          margin: 0 auto 1rem;
+          color: var(--color-grey-400);
         }
 
-        .workspace-type-card--selected {
-          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-        }
-
-        .workspace-type-card-header {
-          display: flex;
-          align-items: flex-start;
-          justify-content: space-between;
-          margin-bottom: 1rem;
-        }
-
-        .workspace-type-icon {
-          width: 2.5rem;
-          height: 2.5rem;
-        }
-
-        .workspace-type-icon svg {
+        .no-workspaces-icon svg {
           width: 100%;
           height: 100%;
         }
 
-        .workspace-type-radio {
+        .no-workspaces h3 {
+          font-size: 1.125rem;
+          font-weight: 600;
+          color: var(--color-grey-900);
+          margin-bottom: 0.5rem;
+        }
+
+        .no-workspaces p {
+          font-size: 0.875rem;
+          color: var(--color-grey-600);
+          margin-bottom: 1.5rem;
+        }
+
+        .workspace-card {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          width: 100%;
+          text-align: left;
+          padding: 1rem 1.25rem;
+          border: 2px solid var(--color-grey-200);
+          border-radius: 0.75rem;
+          background: white;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .workspace-card:hover {
+          border-color: var(--color-grey-300);
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .workspace-card--selected {
+          border-color: var(--color-blue-500);
+          background: var(--color-blue-50);
+          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .workspace-card--create {
+          border-style: dashed;
+          background: var(--color-grey-50);
+        }
+
+        .workspace-card--create:hover {
+          background: var(--color-grey-100);
+          border-color: var(--color-grey-400);
+        }
+
+        .workspace-card-content {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+        }
+
+        .workspace-card-icon {
+          width: 2.5rem;
+          height: 2.5rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: var(--color-blue-600);
+          background: var(--color-blue-100);
+          border-radius: 0.5rem;
+          flex-shrink: 0;
+        }
+
+        .workspace-card-icon svg {
+          width: 1.5rem;
+          height: 1.5rem;
+        }
+
+        .workspace-card-icon--create {
+          color: var(--color-grey-500);
+          background: var(--color-grey-200);
+        }
+
+        .workspace-card-info {
+          min-width: 0;
+        }
+
+        .workspace-card-name {
+          font-size: 1rem;
+          font-weight: 600;
+          color: var(--color-grey-900);
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+
+        .current-badge {
+          display: inline-flex;
+          padding: 0.125rem 0.5rem;
+          background: var(--color-green-100);
+          color: var(--color-green-700);
+          font-size: 0.625rem;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          border-radius: 9999px;
+        }
+
+        .workspace-card-description {
+          font-size: 0.875rem;
+          color: var(--color-grey-600);
+          margin-top: 0.25rem;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .workspace-card-radio {
           width: 1.25rem;
           height: 1.25rem;
+          flex-shrink: 0;
         }
 
         .radio-selected {
           width: 100%;
           height: 100%;
           border-radius: 50%;
+          background: var(--color-blue-500);
           position: relative;
         }
 
@@ -302,60 +335,7 @@ export const WorkspaceTypeStep: React.FC = () => {
           border-radius: 50%;
         }
 
-        .workspace-type-title {
-          font-size: 1.125rem;
-          font-weight: 600;
-          color: var(--color-grey-900);
-          margin-bottom: 0.5rem;
-        }
-
-        .workspace-type-description {
-          font-size: 0.875rem;
-          color: var(--color-grey-600);
-          line-height: 1.5;
-          margin-bottom: 1rem;
-        }
-
-        .workspace-type-workflow {
-          display: flex;
-          flex-wrap: wrap;
-          align-items: center;
-          gap: 0.5rem;
-          padding-top: 1rem;
-          border-top: 1px solid var(--color-grey-200);
-        }
-
-        .workflow-label {
-          font-size: 0.75rem;
-          font-weight: 600;
-          color: var(--color-grey-500);
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-        }
-
-        .workflow-steps {
-          display: flex;
-          flex-wrap: wrap;
-          align-items: center;
-          gap: 0.25rem;
-        }
-
-        .workflow-step {
-          display: inline-flex;
-          padding: 0.25rem 0.5rem;
-          background: var(--color-grey-100);
-          border-radius: 0.25rem;
-          font-size: 0.75rem;
-          font-weight: 500;
-          color: var(--color-grey-700);
-        }
-
-        .workflow-arrow {
-          color: var(--color-grey-400);
-          font-size: 0.75rem;
-        }
-
-        .workspace-type-actions {
+        .workspace-select-actions {
           display: flex;
           justify-content: center;
           margin-top: 2rem;
@@ -368,20 +348,26 @@ export const WorkspaceTypeStep: React.FC = () => {
         }
 
         @media (max-width: 640px) {
-          .workspace-type-step {
+          .workspace-select-step {
             padding: 1rem;
           }
 
-          .workspace-type-header h1 {
+          .workspace-select-header h1 {
             font-size: 1.5rem;
           }
 
-          .workspace-type-card {
-            padding: 1rem;
+          .workspace-card {
+            padding: 0.875rem 1rem;
           }
 
-          .workflow-steps {
-            flex-wrap: wrap;
+          .workspace-card-icon {
+            width: 2rem;
+            height: 2rem;
+          }
+
+          .workspace-card-icon svg {
+            width: 1.25rem;
+            height: 1.25rem;
           }
         }
       `}</style>

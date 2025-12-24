@@ -1,7 +1,7 @@
 export { StartPageLayout } from './StartPageLayout';
-export { ConceptionStart } from './ConceptionStart';
-export { DefinitionStart } from './DefinitionStart';
-export { DesignStart } from './DesignStart';
-export { TestingStart } from './TestingStart';
+export { IntentStart } from './IntentStart';
+export { SpecificationStart } from './SpecificationStart';
+export { SystemStart } from './SystemStart';
+export { ControlLoopStart } from './ControlLoopStart';
 export { ImplementationStart } from './ImplementationStart';
 export { DiscoveryStart } from './DiscoveryStart';

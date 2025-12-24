@@ -49,9 +49,9 @@ services:
       - PORT=9082
       - DB_HOST=postgres
       - DB_PORT=5432
-      - DB_USER=ubecode_user
-      - DB_PASSWORD=ubecode_password
-      - DB_NAME=ubecode_db
+      - DB_USER=intentr_user
+      - DB_PASSWORD=intentr_password
+      - DB_NAME=intentr_db
     networks:
       - intentra-network
     depends_on:
@@ -105,7 +105,7 @@ services:
       - "9083:9083"
     environment:
       - PORT=9083
-      - DATABASE_URL=postgres://ubecode_user:ubecode_password@postgres:5432/ubecode_db?sslmode=disable
+      - DATABASE_URL=postgres://intentr_user:intentr_password@postgres:5432/intentr_db?sslmode=disable
       - JWT_SECRET=${JWT_SECRET:-your-secret-key-change-in-production}
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
@@ -125,9 +125,9 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      - POSTGRES_USER=ubecode_user
-      - POSTGRES_PASSWORD=ubecode_password
-      - POSTGRES_DB=ubecode_db
+      - POSTGRES_USER=intentr_user
+      - POSTGRES_PASSWORD=intentr_password
+      - POSTGRES_DB=intentr_db
     ports:
       - "6432:5432"
     volumes:
@@ -136,7 +136,7 @@ services:
     networks:
       - intentra-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ubecode_user -d ubecode_db"]
+      test: ["CMD-SHELL", "pg_isready -U intentr_user -d intentr_db"]
       interval: 10s
       timeout: 5s
       retries: 5

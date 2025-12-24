@@ -617,7 +617,7 @@ export const Workspaces: React.FC = () => {
                           backgroundColor: 'rgba(52, 199, 89, 0.1)',
                           color: 'var(--color-systemGreen)',
                         }}>
-                          Has .ubeworkspace
+                          Has .intentrworkspace
                         </span>
                       ) : (
                         <span style={{

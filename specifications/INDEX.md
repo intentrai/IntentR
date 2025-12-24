@@ -165,7 +165,7 @@ This index catalogs all reverse-engineered specifications from the IntentR appli
 - Automatic injection of CLAUDE.md and MAIN_SWDEV_PLAN.md
 - Pluggable LLM adapter architecture (Claude CLI, Claude API, OpenAI, Ollama)
 - INTENT approval workflow enforcement
-- Configuration via .ubecli.yaml
+- Configuration via .intentrcli.yaml
 
 **Enablers**: 5 enablers (ENB-759321 through ENB-759325)
 

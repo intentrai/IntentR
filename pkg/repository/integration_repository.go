@@ -13,7 +13,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/jareynolds/ubecode/pkg/models"
+	"github.com/jareynolds/intentr/pkg/models"
 )
 
 // IntegrationRepository handles database operations for integrations

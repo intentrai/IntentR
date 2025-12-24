@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, Button, PageLayout } from '../components';
 import { useWorkspace } from '../context/WorkspaceContext';
 import axios from 'axios';
@@ -20,6 +21,7 @@ interface FigmaFile {
 }
 
 export const Designs: React.FC = () => {
+  const navigate = useNavigate();
   const { currentWorkspace } = useWorkspace();
   const [projects, setProjects] = useState<FigmaProject[]>([]);
   const [selectedProject, setSelectedProject] = useState<FigmaProject | null>(null);
@@ -193,7 +195,7 @@ export const Designs: React.FC = () => {
               <li>Go to Workspaces page → Edit this workspace → Paste the URL in "Figma Team URL" field</li>
             </ol>
           </div>
-          <Button variant="primary" onClick={() => window.location.href = '/workspaces'}>
+          <Button variant="primary" onClick={() => navigate('/workspaces')}>
             Go to Workspaces
           </Button>
         </Card>
@@ -213,7 +215,7 @@ export const Designs: React.FC = () => {
           <p className="text-body text-secondary" style={{ marginBottom: '16px' }}>
             To access Figma files, you need to configure your Figma integration first.
           </p>
-          <Button variant="primary" onClick={() => window.location.href = '/integrations'}>
+          <Button variant="primary" onClick={() => navigate('/integrations')}>
             Configure Figma
           </Button>
         </Card>

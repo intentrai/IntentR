@@ -1,9 +1,10 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useWorkspace } from './WorkspaceContext';
 
 // Types
-export type WizardFlowType = 'new' | 'refactor' | 'reverse-engineer';
+export type WizardFlowType = 'new' | 'refactor' | 'enhance' | 'reverse-engineer';
 
 export type WizardStepStatus = 'completed' | 'active' | 'upcoming';
 
@@ -26,33 +27,35 @@ export const SECTION_SUBPAGES: Record<string, WizardSubpage[]> = {
   workspace: [
     { id: 'overview', name: 'Section Overview' },
   ],
-  conception: [
+  intent: [
     { id: 'overview', name: 'Section Overview' },
     { id: 'vision', name: 'Product Vision' },
     { id: 'ideation', name: 'Ideation' },
     { id: 'storyboard', name: 'Storyboard' },
   ],
-  definition: [
+  specification: [
     { id: 'overview', name: 'Section Overview' },
     { id: 'capabilities', name: 'Capabilities' },
     { id: 'enablers', name: 'Enablers' },
     { id: 'story-map', name: 'Dependencies' },
+  ],
+  system: [
+    { id: 'overview', name: 'Section Overview' },
     { id: 'designs', name: 'UI Assets' },
     { id: 'ui-framework', name: 'UI Framework' },
     { id: 'ui-styles', name: 'UI Styles' },
     { id: 'ui-designer', name: 'UI Designer' },
   ],
-  implementation: [
+  'control-loop': [
     { id: 'overview', name: 'Section Overview' },
     { id: 'testing', name: 'Test Scenarios' },
-    { id: 'system', name: 'System' },
+    { id: 'control-loop-approval', name: 'Phase Approval' },
+  ],
+  implementation: [
+    { id: 'overview', name: 'Section Overview' },
     { id: 'ai-principles', name: 'AI Principles' },
     { id: 'code', name: 'Code' },
     { id: 'run', name: 'Run' },
-  ],
-  testing: [
-    { id: 'overview', name: 'Section Overview' },
-    { id: 'testing-approval', name: 'Phase Approval' },
   ],
   discovery: [
     { id: 'overview', name: 'Section Overview' },
@@ -68,6 +71,10 @@ interface WizardContextType {
   currentSubpageIndex: number;
   steps: WizardStep[];
   completedSteps: Set<number>;
+
+  // Configuration (for sidebar synchronization)
+  customFlows: Record<WizardFlowType, string[]>;
+  customSubpages: Record<string, string[]>;
 
   // Computed
   currentStep: WizardStep | null;
@@ -93,46 +100,64 @@ interface WizardContextType {
   exitWizard: () => void;
   resetWizard: () => void;
   getStepStatus: (index: number) => WizardStepStatus;
+  saveFlowsToWorkspace: (flows: Record<WizardFlowType, string[]>, subpages: Record<string, string[]>) => Promise<void>;
 }
 
-// Flow definitions
-const BASE_STEPS: Record<string, Omit<WizardStep, 'path' | 'startPath'>> = {
+// Step definitions with icons for sidebar display
+export interface StepDefinition {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+}
+
+export const STEP_DEFINITIONS: Record<string, StepDefinition> = {
   workspace: {
     id: 'workspace',
     name: 'Workspace',
     description: 'Select your project type and workspace',
+    icon: '◰',
   },
-  conception: {
-    id: 'conception',
+  intent: {
+    id: 'intent',
     name: 'Intent',
     description: 'Capture ideas, stories, and user journeys',
+    icon: '◇',
   },
-  definition: {
-    id: 'definition',
+  specification: {
+    id: 'specification',
     name: 'Specification',
-    description: 'Define capabilities, enablers, and design assets',
+    description: 'Define capabilities and enablers',
+    icon: '☰',
   },
-  design: {
-    id: 'design',
-    name: 'Design',
-    description: 'Create technical designs and specifications',
+  system: {
+    id: 'system',
+    name: 'System',
+    description: 'Configure UI framework, styles, and design assets',
+    icon: '⚙',
   },
-  testing: {
-    id: 'testing',
+  'control-loop': {
+    id: 'control-loop',
     name: 'Control Loop',
     description: 'Validate test scenarios and acceptance criteria',
+    icon: '✓',
   },
   implementation: {
     id: 'implementation',
-    name: 'System',
+    name: 'Implementation',
     description: 'Build, test, and deploy your application',
+    icon: '▶',
   },
   discovery: {
     id: 'discovery',
     name: 'Discovery',
     description: 'Analyze and document existing code',
+    icon: '🔍',
   },
 };
+
+// Flow definitions (alias for backward compatibility)
+const BASE_STEPS: Record<string, Omit<WizardStep, 'path' | 'startPath'>> = STEP_DEFINITIONS;
 
 const createStep = (id: string): WizardStep => ({
   ...BASE_STEPS[id],
@@ -140,29 +165,131 @@ const createStep = (id: string): WizardStep => ({
   startPath: `/wizard/${id}/start`,
 });
 
+// Default wizard flows (fallback)
+export const DEFAULT_WIZARD_FLOWS: Record<WizardFlowType, string[]> = {
+  'new': ['workspace', 'intent', 'specification', 'system', 'control-loop', 'implementation'],
+  'refactor': ['workspace', 'specification', 'control-loop', 'implementation'],
+  'enhance': ['workspace', 'intent', 'specification', 'system', 'control-loop', 'implementation'],
+  'reverse-engineer': ['workspace', 'discovery', 'specification', 'system', 'control-loop', 'implementation'],
+};
+
+// Storage keys for custom wizard flows and subpages
+export const WIZARD_FLOWS_STORAGE_KEY = 'intentr_custom_wizard_flows';
+export const WIZARD_SUBPAGES_STORAGE_KEY = 'intentr_custom_wizard_subpages';
+
+// Helper to load custom wizard flows from localStorage
+export const loadCustomWizardFlows = (): Record<WizardFlowType, string[]> => {
+  try {
+    const saved = localStorage.getItem(WIZARD_FLOWS_STORAGE_KEY);
+    if (saved) {
+      return { ...DEFAULT_WIZARD_FLOWS, ...JSON.parse(saved) };
+    }
+  } catch (e) {
+    console.error('Failed to load custom wizard flows:', e);
+  }
+  return DEFAULT_WIZARD_FLOWS;
+};
+
+// Default subpages per section (just the IDs)
+export const DEFAULT_SECTION_SUBPAGE_IDS: Record<string, string[]> = {
+  workspace: ['overview'],
+  intent: ['overview', 'vision', 'ideation', 'storyboard'],
+  specification: ['overview', 'capabilities', 'enablers', 'story-map'],
+  system: ['overview', 'designs', 'ui-framework', 'ui-styles', 'ui-designer'],
+  'control-loop': ['overview', 'testing', 'control-loop-approval'],
+  implementation: ['overview', 'ai-principles', 'code', 'run'],
+  discovery: ['overview', 'analyze'],
+};
+
+// All available subpages with their names (used for lookup)
+export const ALL_SUBPAGE_DEFINITIONS: Record<string, { id: string; name: string }[]> = {
+  workspace: [
+    { id: 'overview', name: 'Section Overview' },
+  ],
+  intent: [
+    { id: 'overview', name: 'Section Overview' },
+    { id: 'vision', name: 'Product Vision' },
+    { id: 'ideation', name: 'Ideation' },
+    { id: 'storyboard', name: 'Storyboard' },
+    { id: 'intent-approval', name: 'Phase Approval' },
+  ],
+  specification: [
+    { id: 'overview', name: 'Section Overview' },
+    { id: 'capabilities', name: 'Capabilities' },
+    { id: 'enablers', name: 'Enablers' },
+    { id: 'story-map', name: 'Dependencies' },
+    { id: 'specification-approval', name: 'Phase Approval' },
+  ],
+  system: [
+    { id: 'overview', name: 'Section Overview' },
+    { id: 'designs', name: 'UI Assets' },
+    { id: 'ui-framework', name: 'UI Framework' },
+    { id: 'ui-styles', name: 'UI Styles' },
+    { id: 'ui-designer', name: 'UI Designer' },
+    { id: 'system-approval', name: 'Phase Approval' },
+  ],
+  'control-loop': [
+    { id: 'overview', name: 'Section Overview' },
+    { id: 'testing', name: 'Test Scenarios' },
+    { id: 'control-loop-approval', name: 'Phase Approval' },
+  ],
+  implementation: [
+    { id: 'overview', name: 'Section Overview' },
+    { id: 'ai-principles', name: 'AI Principles' },
+    { id: 'code', name: 'Code' },
+    { id: 'run', name: 'Run' },
+    { id: 'implementation-approval', name: 'Phase Approval' },
+  ],
+  discovery: [
+    { id: 'overview', name: 'Section Overview' },
+    { id: 'analyze', name: 'Discovery Analysis' },
+  ],
+};
+
+// Helper to load custom wizard subpages from localStorage
+export const loadCustomWizardSubpages = (): Record<string, string[]> => {
+  try {
+    const saved = localStorage.getItem(WIZARD_SUBPAGES_STORAGE_KEY);
+    if (saved) {
+      return { ...DEFAULT_SECTION_SUBPAGE_IDS, ...JSON.parse(saved) };
+    }
+  } catch (e) {
+    console.error('Failed to load custom wizard subpages:', e);
+  }
+  return DEFAULT_SECTION_SUBPAGE_IDS;
+};
+
+// Create a flat map of ALL subpage definitions across all sections
+// This allows looking up any subpage regardless of which section it was originally in
+const ALL_SUBPAGES_FLAT: Record<string, WizardSubpage> = {};
+for (const sectionId of Object.keys(ALL_SUBPAGE_DEFINITIONS)) {
+  for (const subpage of ALL_SUBPAGE_DEFINITIONS[sectionId]) {
+    ALL_SUBPAGES_FLAT[subpage.id] = subpage;
+  }
+}
+
+// Export the flat map for use by other components (like Admin.tsx)
+export { ALL_SUBPAGES_FLAT };
+
+// Helper to convert subpage IDs to WizardSubpage objects
+// Uses flat lookup to support subpages that have been moved between sections
+const getSubpagesForSection = (sectionId: string, subpageIds: string[]): WizardSubpage[] => {
+  return subpageIds
+    .map(id => ALL_SUBPAGES_FLAT[id])
+    .filter((subpage): subpage is WizardSubpage => subpage !== undefined);
+};
+
+// Helper to convert step IDs to WizardStep objects
+const createFlowSteps = (stepIds: string[]): WizardStep[] => {
+  return stepIds.map(id => createStep(id)).filter(step => step.id); // Filter out invalid steps
+};
+
+// Export for backward compatibility - will use custom flows if available
 export const WIZARD_FLOWS: Record<WizardFlowType, WizardStep[]> = {
-  'new': [
-    createStep('workspace'),
-    createStep('conception'),
-    createStep('definition'),
-    createStep('design'),
-    createStep('testing'),
-    createStep('implementation'),
-  ],
-  'refactor': [
-    createStep('workspace'),
-    createStep('definition'),
-    createStep('testing'),
-    createStep('implementation'),
-  ],
-  'reverse-engineer': [
-    createStep('workspace'),
-    createStep('discovery'),
-    createStep('definition'),
-    createStep('design'),
-    createStep('testing'),
-    createStep('implementation'),
-  ],
+  'new': createFlowSteps(loadCustomWizardFlows()['new']),
+  'refactor': createFlowSteps(loadCustomWizardFlows()['refactor']),
+  'enhance': createFlowSteps(loadCustomWizardFlows()['enhance']),
+  'reverse-engineer': createFlowSteps(loadCustomWizardFlows()['reverse-engineer']),
 };
 
 // Context
@@ -183,6 +310,67 @@ interface WizardProviderProps {
 export const WizardProvider: React.FC<WizardProviderProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { currentWorkspace, updateWorkspace } = useWorkspace();
+
+  // Track previous workspace ID to detect workspace changes
+  const prevWorkspaceIdRef = useRef<string | null>(null);
+
+  // State for custom wizard flows and subpages
+  const [customFlows, setCustomFlows] = useState<Record<WizardFlowType, string[]>>(() => loadCustomWizardFlows());
+  const [customSubpages, setCustomSubpages] = useState<Record<string, string[]>>(() => loadCustomWizardSubpages());
+
+  // Load flows from workspace when workspace changes OR when workspace flows are updated
+  useEffect(() => {
+    console.log('[WizardContext] Workspace load effect triggered');
+    console.log('[WizardContext] currentWorkspace:', currentWorkspace?.id, currentWorkspace?.name);
+    console.log('[WizardContext] currentWorkspace.wizardFlows:', currentWorkspace?.wizardFlows);
+    console.log('[WizardContext] prevWorkspaceIdRef:', prevWorkspaceIdRef.current);
+
+    if (!currentWorkspace) {
+      console.log('[WizardContext] No currentWorkspace, returning');
+      return;
+    }
+
+    // Check if this is a workspace switch (different ID)
+    const isWorkspaceSwitch = prevWorkspaceIdRef.current !== currentWorkspace.id;
+
+    if (isWorkspaceSwitch) {
+      console.log('[WizardContext] Workspace ID changed, loading flows from workspace');
+      prevWorkspaceIdRef.current = currentWorkspace.id;
+    } else {
+      console.log('[WizardContext] Same workspace ID - checking if flows were updated in workspace');
+    }
+
+    // Always sync from workspace if flows exist (handles both workspace switch and updates)
+    if (currentWorkspace.wizardFlows) {
+      const mergedFlows = { ...DEFAULT_WIZARD_FLOWS, ...currentWorkspace.wizardFlows };
+      console.log('[WizardContext] Syncing wizardFlows from workspace:', mergedFlows);
+      setCustomFlows(mergedFlows);
+    } else if (isWorkspaceSwitch) {
+      // Only reset to defaults on workspace switch, not on every update
+      console.log('[WizardContext] No wizardFlows in workspace, using defaults');
+      setCustomFlows(DEFAULT_WIZARD_FLOWS);
+    }
+
+    if (currentWorkspace.wizardSubpages) {
+      const mergedSubpages = { ...DEFAULT_SECTION_SUBPAGE_IDS, ...currentWorkspace.wizardSubpages };
+      console.log('[WizardContext] Syncing wizardSubpages from workspace:', mergedSubpages);
+      setCustomSubpages(mergedSubpages);
+    } else if (isWorkspaceSwitch) {
+      // Only reset to defaults on workspace switch, not on every update
+      console.log('[WizardContext] No wizardSubpages in workspace, using defaults');
+      setCustomSubpages(DEFAULT_SECTION_SUBPAGE_IDS);
+    }
+
+    // Dispatch event so sidebar updates
+    console.log('[WizardContext] Dispatching intentr-wizard-flows-changed event for sidebar');
+    window.dispatchEvent(new CustomEvent('intentr-wizard-flows-changed', {
+      detail: {
+        flows: currentWorkspace.wizardFlows || DEFAULT_WIZARD_FLOWS,
+        subpages: currentWorkspace.wizardSubpages || DEFAULT_SECTION_SUBPAGE_IDS,
+      }
+    }));
+  }, [currentWorkspace?.id, currentWorkspace?.wizardFlows, currentWorkspace?.wizardSubpages]);
 
   // State
   const [isWizardMode, setIsWizardMode] = useState<boolean>(() => {
@@ -217,10 +405,31 @@ export const WizardProvider: React.FC<WizardProviderProps> = ({ children }) => {
     return new Set();
   });
 
-  // Derived state
-  const steps = flowType ? WIZARD_FLOWS[flowType] : [];
+  // Listen for wizard flows changes from admin panel
+  useEffect(() => {
+    const handleFlowsChanged = (event: CustomEvent<{ flows: Record<WizardFlowType, string[]>; subpages: Record<string, string[]> }>) => {
+      if (event.detail.flows) {
+        setCustomFlows(event.detail.flows);
+      }
+      if (event.detail.subpages) {
+        setCustomSubpages(event.detail.subpages);
+      }
+    };
+
+    window.addEventListener('intentr-wizard-flows-changed', handleFlowsChanged as EventListener);
+
+    return () => {
+      window.removeEventListener('intentr-wizard-flows-changed', handleFlowsChanged as EventListener);
+    };
+  }, []);
+
+  // Derived state - use custom flows and subpages
+  const steps = flowType ? createFlowSteps(customFlows[flowType]) : [];
   const currentStep = steps[currentStepIndex] || null;
-  const currentSubpages = currentStep ? (SECTION_SUBPAGES[currentStep.id] || []) : [];
+  // Get subpages for current section using custom configuration
+  const currentSubpages = currentStep
+    ? getSubpagesForSection(currentStep.id, customSubpages[currentStep.id] || DEFAULT_SECTION_SUBPAGE_IDS[currentStep.id] || [])
+    : [];
   const currentSubpage = currentSubpages[currentSubpageIndex] || null;
   const isFirstStep = currentStepIndex === 0;
   const isLastStep = currentStepIndex === steps.length - 1;
@@ -277,8 +486,8 @@ export const WizardProvider: React.FC<WizardProviderProps> = ({ children }) => {
       // Overview pages are the start pages
       navigate(`/wizard/${stepId}/start`);
     } else {
-      // Regular subpages - navigate to the page directly
-      navigate(`/${subpageId}`);
+      // Regular subpages - navigate within wizard context
+      navigate(`/wizard/${stepId}/${subpageId}`);
     }
   }, [navigate]);
 
@@ -316,8 +525,10 @@ export const WizardProvider: React.FC<WizardProviderProps> = ({ children }) => {
     if (currentStepIndex > 0) {
       const prevIndex = currentStepIndex - 1;
       setCurrentStepIndex(prevIndex);
-      // Go to last subpage of previous section
-      const prevSubpages = SECTION_SUBPAGES[steps[prevIndex]?.id] || [];
+      // Go to last subpage of previous section using custom subpages
+      const prevSectionId = steps[prevIndex]?.id;
+      const prevSubpageIds = customSubpages[prevSectionId] || DEFAULT_SECTION_SUBPAGE_IDS[prevSectionId] || [];
+      const prevSubpages = getSubpagesForSection(prevSectionId, prevSubpageIds);
       setCurrentSubpageIndex(prevSubpages.length - 1);
 
       // Navigate to previous step's last subpage
@@ -326,7 +537,7 @@ export const WizardProvider: React.FC<WizardProviderProps> = ({ children }) => {
         navigateToSubpage(prevStepData.id, prevSubpages[prevSubpages.length - 1].id);
       }
     }
-  }, [currentStepIndex, steps, navigateToSubpage]);
+  }, [currentStepIndex, steps, customSubpages, navigateToSubpage]);
 
   const previousSubpage = useCallback(() => {
     if (currentSubpageIndex > 0) {
@@ -405,20 +616,72 @@ export const WizardProvider: React.FC<WizardProviderProps> = ({ children }) => {
     return 'upcoming';
   }, [completedSteps, currentStepIndex]);
 
-  // Sync step index with URL when in wizard mode
+  // Save flows to the current workspace
+  const saveFlowsToWorkspace = useCallback(async (
+    flows: Record<WizardFlowType, string[]>,
+    subpages: Record<string, string[]>
+  ): Promise<void> => {
+    console.log('[WizardContext] saveFlowsToWorkspace called');
+    console.log('[WizardContext] currentWorkspace:', currentWorkspace?.id, currentWorkspace?.name);
+    console.log('[WizardContext] flows to save:', flows);
+    console.log('[WizardContext] subpages to save:', subpages);
+
+    if (!currentWorkspace) {
+      console.warn('[WizardContext] Cannot save flows: no workspace selected');
+      return;
+    }
+
+    // Update local state
+    console.log('[WizardContext] Setting customFlows state...');
+    setCustomFlows(flows);
+    setCustomSubpages(subpages);
+
+    // Save to workspace
+    console.log('[WizardContext] Calling updateWorkspace...');
+    await updateWorkspace(currentWorkspace.id, {
+      wizardFlows: flows,
+      wizardSubpages: subpages,
+    });
+    console.log('[WizardContext] updateWorkspace completed');
+
+    // Dispatch event so sidebar updates
+    console.log('[WizardContext] Dispatching intentr-wizard-flows-changed event');
+    window.dispatchEvent(new CustomEvent('intentr-wizard-flows-changed', {
+      detail: { flows, subpages }
+    }));
+  }, [currentWorkspace, updateWorkspace]);
+
+  // Sync step and subpage index with URL when in wizard mode
   useEffect(() => {
     if (isWizardMode && flowType && location.pathname.startsWith('/wizard/')) {
       const pathParts = location.pathname.split('/');
       const stepId = pathParts[2]; // /wizard/{stepId}/...
+      const subpageId = pathParts[3]; // /wizard/{stepId}/{subpageId} or 'start'
 
       if (stepId) {
         const stepIndex = steps.findIndex(s => s.id === stepId);
         if (stepIndex !== -1 && stepIndex !== currentStepIndex) {
           setCurrentStepIndex(stepIndex);
         }
+
+        // Sync subpage index
+        if (stepIndex !== -1) {
+          const sectionSubpageIds = customSubpages[stepId] || DEFAULT_SECTION_SUBPAGE_IDS[stepId] || [];
+          if (subpageId === 'start' || subpageId === undefined) {
+            // Start page is the overview (first subpage)
+            if (currentSubpageIndex !== 0) {
+              setCurrentSubpageIndex(0);
+            }
+          } else if (subpageId) {
+            const subpageIndex = sectionSubpageIds.indexOf(subpageId);
+            if (subpageIndex !== -1 && subpageIndex !== currentSubpageIndex) {
+              setCurrentSubpageIndex(subpageIndex);
+            }
+          }
+        }
       }
     }
-  }, [location.pathname, isWizardMode, flowType, steps, currentStepIndex]);
+  }, [location.pathname, isWizardMode, flowType, steps, currentStepIndex, currentSubpageIndex, customSubpages]);
 
   const value: WizardContextType = {
     // State
@@ -428,6 +691,10 @@ export const WizardProvider: React.FC<WizardProviderProps> = ({ children }) => {
     currentSubpageIndex,
     steps,
     completedSteps,
+
+    // Configuration (for sidebar synchronization)
+    customFlows,
+    customSubpages,
 
     // Computed
     currentStep,
@@ -453,6 +720,7 @@ export const WizardProvider: React.FC<WizardProviderProps> = ({ children }) => {
     exitWizard,
     resetWizard,
     getStepStatus,
+    saveFlowsToWorkspace,
   };
 
   return (

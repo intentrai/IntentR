@@ -165,15 +165,15 @@ This document tracks the phased reorganization of the Intentr codebase to improv
 
 ---
 
-## Phase 2: Rename UbeCode to Intentr (COMPLETE)
+## Phase 2: Rename Intentr to Intentr (COMPLETE)
 **Status**: Complete
 **Date**: 2025-12-23
 
 ### Completed Tasks
-- [x] Replace all "UbeCode" references with "Intentr" across codebase
+- [x] Replace all "Intentr" references with "Intentr" across codebase
 - [x] Update 39 files (Go services, specs, docs, web-ui, configs)
 - [x] Rebuild web-ui to regenerate dist folder
-- [x] Verified zero remaining UbeCode references
+- [x] Verified zero remaining Intentr references
 
 ---
 
@@ -253,7 +253,7 @@ duplicate specifications, stray logs
 ### After Phase 1-2 (38 items)
 ```
 Clean source directories, proper .gitignore,
-all UbeCode references renamed to Intentr
+all Intentr references renamed to Intentr
 ```
 
 ### Target State After All Phases (~30 items)

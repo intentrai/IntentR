@@ -126,6 +126,8 @@ export interface SystemData {
 
 export type WorkspaceType = 'new' | 'refactor' | 'enhance' | 'reverse-engineer';
 
+export type WizardFlowType = 'new' | 'refactor' | 'enhance' | 'reverse-engineer';
+
 export interface Workspace {
   id: string;
   name: string;
@@ -145,6 +147,8 @@ export interface Workspace {
   storyboard?: StoryboardData;
   ideation?: IdeationData;
   systemDiagram?: SystemData;
+  wizardFlows?: Record<WizardFlowType, string[]>; // Wizard section sequences per flow type
+  wizardSubpages?: Record<string, string[]>; // Subpage sequences per section
   createdAt: Date;
   updatedAt: Date;
   ownerId: string;
@@ -439,7 +443,7 @@ export const WorkspaceProvider: React.FC<{ children: ReactNode }> = ({ children 
       console.error('Error ensuring workspace structure:', error);
     }
 
-    // Save .ubeworkspace configuration file
+    // Save .intentrworkspace configuration file
     try {
       await fetch(`${INTEGRATION_URL}/workspace-config/save`, {
         method: 'POST',
@@ -478,15 +482,25 @@ export const WorkspaceProvider: React.FC<{ children: ReactNode }> = ({ children 
   };
 
   const updateWorkspace = async (id: string, updates: Partial<Workspace>): Promise<void> => {
+    console.log('[WorkspaceContext] updateWorkspace called');
+    console.log('[WorkspaceContext] id:', id);
+    console.log('[WorkspaceContext] updates:', updates);
+    console.log('[WorkspaceContext] current state.workspaces count:', state.workspaces.length);
+
     const updatedWorkspaces = state.workspaces.map(w =>
       w.id === id
         ? { ...w, ...updates, updatedAt: new Date() }
         : w
     );
 
-    saveWorkspaces(updatedWorkspaces);
+    console.log('[WorkspaceContext] updatedWorkspaces - workspace found:', updatedWorkspaces.some(w => w.id === id));
+    const updatedWs = updatedWorkspaces.find(w => w.id === id);
+    console.log('[WorkspaceContext] updated workspace wizardFlows:', updatedWs?.wizardFlows);
 
-    // Update .ubeworkspace configuration file if workspace has a projectFolder
+    saveWorkspaces(updatedWorkspaces);
+    console.log('[WorkspaceContext] saveWorkspaces called');
+
+    // Update .intentrworkspace configuration file if workspace has a projectFolder
     const updatedWorkspace = updatedWorkspaces.find(w => w.id === id);
     if (updatedWorkspace?.projectFolder) {
       try {
@@ -522,13 +536,19 @@ export const WorkspaceProvider: React.FC<{ children: ReactNode }> = ({ children 
       }
     }
 
-    setState(prev => ({
-      ...prev,
-      workspaces: updatedWorkspaces,
-      currentWorkspace: prev.currentWorkspace?.id === id
+    console.log('[WorkspaceContext] Calling setState to update workspaces...');
+    setState(prev => {
+      const newCurrentWorkspace = prev.currentWorkspace?.id === id
         ? updatedWorkspaces.find(w => w.id === id) || prev.currentWorkspace
-        : prev.currentWorkspace,
-    }));
+        : prev.currentWorkspace;
+      console.log('[WorkspaceContext] setState - prev.currentWorkspace?.id:', prev.currentWorkspace?.id);
+      console.log('[WorkspaceContext] setState - newCurrentWorkspace wizardFlows:', newCurrentWorkspace?.wizardFlows);
+      return {
+        ...prev,
+        workspaces: updatedWorkspaces,
+        currentWorkspace: newCurrentWorkspace,
+      };
+    });
 
     // Sync to global shared workspaces if this workspace is shared
     const workspace = updatedWorkspaces.find(w => w.id === id);

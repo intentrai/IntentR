@@ -1,4 +1,4 @@
-.PHONY: help build test lint clean run-integration run-design run-capability docker-build docker-up docker-down ubecli install-ubecli uninstall-ubecli
+.PHONY: help build test lint clean run-integration run-design run-capability docker-build docker-up docker-down intentrcli install-intentrcli uninstall-intentrcli
 
 # UbeCLI version info
 VERSION ?= 1.0.0
@@ -81,33 +81,33 @@ install-tools: ## Install development tools
 	@echo "Tools installed!"
 
 # UbeCLI targets
-ubecli: ## Build ubecli binary with version info
-	@echo "Building ubecli..."
-	@go build $(LDFLAGS) -o cmd/ubecli/ubecli ./cmd/ubecli
-	@echo "Build complete: cmd/ubecli/ubecli"
+intentrcli: ## Build intentrcli binary with version info
+	@echo "Building intentrcli..."
+	@go build $(LDFLAGS) -o cmd/intentrcli/intentrcli ./cmd/intentrcli
+	@echo "Build complete: cmd/intentrcli/intentrcli"
 	@echo "Version: $(VERSION), Commit: $(GIT_COMMIT), Date: $(BUILD_DATE)"
 
-install-ubecli: ubecli ## Install ubecli to system PATH (requires sudo)
-	@echo "Installing ubecli to $(INSTALL_PATH)..."
+install-intentrcli: intentrcli ## Install intentrcli to system PATH (requires sudo)
+	@echo "Installing intentrcli to $(INSTALL_PATH)..."
 	@if [ -w "$(INSTALL_PATH)" ]; then \
-		cp cmd/ubecli/ubecli $(INSTALL_PATH)/ubecli; \
+		cp cmd/intentrcli/intentrcli $(INSTALL_PATH)/intentrcli; \
 	else \
 		echo "Note: $(INSTALL_PATH) requires elevated permissions."; \
-		echo "Run: sudo make install-ubecli"; \
-		sudo cp cmd/ubecli/ubecli $(INSTALL_PATH)/ubecli; \
+		echo "Run: sudo make install-intentrcli"; \
+		sudo cp cmd/intentrcli/intentrcli $(INSTALL_PATH)/intentrcli; \
 	fi
-	@chmod +x $(INSTALL_PATH)/ubecli
-	@echo "Installed! Run 'ubecli -version' to verify."
+	@chmod +x $(INSTALL_PATH)/intentrcli
+	@echo "Installed! Run 'intentrcli -version' to verify."
 
-uninstall-ubecli: ## Remove ubecli from system PATH (requires sudo)
-	@echo "Removing ubecli from $(INSTALL_PATH)..."
-	@if [ -f "$(INSTALL_PATH)/ubecli" ]; then \
+uninstall-intentrcli: ## Remove intentrcli from system PATH (requires sudo)
+	@echo "Removing intentrcli from $(INSTALL_PATH)..."
+	@if [ -f "$(INSTALL_PATH)/intentrcli" ]; then \
 		if [ -w "$(INSTALL_PATH)" ]; then \
-			rm $(INSTALL_PATH)/ubecli; \
+			rm $(INSTALL_PATH)/intentrcli; \
 		else \
-			sudo rm $(INSTALL_PATH)/ubecli; \
+			sudo rm $(INSTALL_PATH)/intentrcli; \
 		fi; \
 		echo "Uninstalled successfully."; \
 	else \
-		echo "ubecli not found in $(INSTALL_PATH)"; \
+		echo "intentrcli not found in $(INSTALL_PATH)"; \
 	fi

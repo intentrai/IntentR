@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useWizard, type WizardFlowType } from '../context/WizardContext';
+import { useWorkspace } from '../context/WorkspaceContext';
 import { authClient } from '../api/client';
 import { Card } from '../components';
 import { Alert } from '../components/Alert';
@@ -8,6 +10,102 @@ import { RoleManagement } from '../components/RoleManagement';
 import { Settings } from './Settings';
 import { Integrations } from './Integrations';
 import { DEFAULT_LAYOUTS, type PageLayoutConfig } from '../components/PageLayout';
+
+interface WizardStepConfig {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+}
+
+interface WizardSubpageConfig {
+  id: string;
+  name: string;
+}
+
+const AVAILABLE_STEPS: WizardStepConfig[] = [
+  { id: 'workspace', name: 'Workspace', description: 'Select your project type and workspace', icon: '◰' },
+  { id: 'intent', name: 'Intent', description: 'Capture ideas, stories, and user journeys', icon: '◇' },
+  { id: 'specification', name: 'Specification', description: 'Define capabilities and enablers', icon: '☰' },
+  { id: 'system', name: 'System', description: 'Configure UI framework, styles, and design assets', icon: '⚙' },
+  { id: 'control-loop', name: 'Control Loop', description: 'Validate test scenarios and acceptance criteria', icon: '✓' },
+  { id: 'implementation', name: 'Implementation', description: 'Build, test, and deploy your application', icon: '▶' },
+  { id: 'discovery', name: 'Discovery', description: 'Analyze and document existing code', icon: '🔍' },
+];
+
+// Available subpages for each section (master list)
+const AVAILABLE_SUBPAGES: Record<string, WizardSubpageConfig[]> = {
+  workspace: [
+    { id: 'overview', name: 'Section Overview' },
+  ],
+  intent: [
+    { id: 'overview', name: 'Section Overview' },
+    { id: 'vision', name: 'Product Vision' },
+    { id: 'ideation', name: 'Ideation' },
+    { id: 'storyboard', name: 'Storyboard' },
+    { id: 'intent-approval', name: 'Phase Approval' },
+  ],
+  specification: [
+    { id: 'overview', name: 'Section Overview' },
+    { id: 'capabilities', name: 'Capabilities' },
+    { id: 'enablers', name: 'Enablers' },
+    { id: 'story-map', name: 'Dependencies' },
+    { id: 'specification-approval', name: 'Phase Approval' },
+  ],
+  system: [
+    { id: 'overview', name: 'Section Overview' },
+    { id: 'designs', name: 'UI Assets' },
+    { id: 'ui-framework', name: 'UI Framework' },
+    { id: 'ui-styles', name: 'UI Styles' },
+    { id: 'ui-designer', name: 'UI Designer' },
+    { id: 'system-approval', name: 'Phase Approval' },
+  ],
+  'control-loop': [
+    { id: 'overview', name: 'Section Overview' },
+    { id: 'testing', name: 'Test Scenarios' },
+    { id: 'control-loop-approval', name: 'Phase Approval' },
+  ],
+  implementation: [
+    { id: 'overview', name: 'Section Overview' },
+    { id: 'ai-principles', name: 'AI Principles' },
+    { id: 'code', name: 'Code' },
+    { id: 'run', name: 'Run' },
+    { id: 'implementation-approval', name: 'Phase Approval' },
+  ],
+  discovery: [
+    { id: 'overview', name: 'Section Overview' },
+    { id: 'analyze', name: 'Discovery Analysis' },
+  ],
+};
+
+// Default subpage order for each section
+const DEFAULT_SECTION_SUBPAGES: Record<string, string[]> = {
+  workspace: ['overview'],
+  intent: ['overview', 'vision', 'ideation', 'storyboard'],
+  specification: ['overview', 'capabilities', 'enablers', 'story-map'],
+  system: ['overview', 'designs', 'ui-framework', 'ui-styles', 'ui-designer'],
+  'control-loop': ['overview', 'testing', 'control-loop-approval'],
+  implementation: ['overview', 'ai-principles', 'code', 'run'],
+  discovery: ['overview', 'analyze'],
+};
+
+// Create a flat map of ALL subpages across all sections for cross-section lookups
+const ALL_SUBPAGES_FLAT: Record<string, WizardSubpageConfig> = {};
+for (const sectionId of Object.keys(AVAILABLE_SUBPAGES)) {
+  for (const subpage of AVAILABLE_SUBPAGES[sectionId]) {
+    ALL_SUBPAGES_FLAT[subpage.id] = subpage;
+  }
+}
+
+const DEFAULT_WIZARD_FLOWS: Record<WizardFlowType, string[]> = {
+  'new': ['workspace', 'intent', 'specification', 'system', 'control-loop', 'implementation'],
+  'refactor': ['workspace', 'specification', 'control-loop', 'implementation'],
+  'enhance': ['workspace', 'intent', 'specification', 'system', 'control-loop', 'implementation'],
+  'reverse-engineer': ['workspace', 'discovery', 'specification', 'system', 'control-loop', 'implementation'],
+};
+
+const WIZARD_FLOWS_STORAGE_KEY = 'intentr_custom_wizard_flows';
+const WIZARD_SUBPAGES_STORAGE_KEY = 'intentr_custom_wizard_subpages';
 
 // Constants for global app settings storage
 const INTENTR_APP_PAGE_LAYOUT_KEY = 'intentr_app_page_layout';
@@ -58,7 +156,9 @@ const getRoleDisplayName = (role: string): string => {
 
 const Admin: React.FC = () => {
   const { user: currentUser } = useAuth();
-  const [activeTab, setActiveTab] = useState<'users' | 'roles' | 'integrations' | 'settings' | 'pageLayouts'>('users');
+  const { saveFlowsToWorkspace, customFlows: contextFlows, customSubpages: contextSubpages } = useWizard();
+  const { currentWorkspace } = useWorkspace();
+  const [activeTab, setActiveTab] = useState<'users' | 'roles' | 'integrations' | 'settings' | 'pageLayouts' | 'wizardFlows'>('users');
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -79,6 +179,22 @@ const Admin: React.FC = () => {
   });
 
   const [editForm, setEditForm] = useState<Partial<EditUserForm>>({});
+
+  // Wizard Flows state
+  const [selectedFlowType, setSelectedFlowType] = useState<WizardFlowType>('new');
+  const [wizardFlows, setWizardFlows] = useState<Record<WizardFlowType, string[]>>(DEFAULT_WIZARD_FLOWS);
+  const [sectionSubpages, setSectionSubpages] = useState<Record<string, string[]>>(DEFAULT_SECTION_SUBPAGES);
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
+  const [draggedStep, setDraggedStep] = useState<string | null>(null);
+  const [draggedSubpage, setDraggedSubpage] = useState<{ sectionId: string; subpageId: string } | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [dragOverSubpageIndex, setDragOverSubpageIndex] = useState<{ sectionId: string; index: number } | null>(null);
+
+  // Use a ref to track drag state without causing re-renders during drag
+  const draggedSubpageRef = useRef<{ sectionId: string; subpageId: string } | null>(null);
+  const [, forceUpdate] = useState({});
+  const [wizardFlowsHasChanges, setWizardFlowsHasChanges] = useState(false);
+  const [showWizardFlowsSuccess, setShowWizardFlowsSuccess] = useState(false);
 
   // Page Layout state (for IntentR application appearance)
   const [pageLayouts, setPageLayouts] = useState<PageLayoutConfig[]>(DEFAULT_LAYOUTS);
@@ -132,6 +248,311 @@ const Admin: React.FC = () => {
         console.error('Failed to parse active page layout:', e);
       }
     }
+
+    // Wizard flows are now loaded from WizardContext (which loads from workspace)
+  }, []);
+
+  // Sync wizard flows from context (workspace) when they change
+  useEffect(() => {
+    console.log('[Admin] Sync effect triggered');
+    console.log('[Admin] contextFlows:', contextFlows);
+    console.log('[Admin] contextSubpages:', contextSubpages);
+    if (contextFlows) {
+      console.log('[Admin] Setting wizardFlows from contextFlows');
+      setWizardFlows({ ...DEFAULT_WIZARD_FLOWS, ...contextFlows });
+    }
+    if (contextSubpages) {
+      console.log('[Admin] Setting sectionSubpages from contextSubpages');
+      setSectionSubpages({ ...DEFAULT_SECTION_SUBPAGES, ...contextSubpages });
+    }
+  }, [contextFlows, contextSubpages]);
+
+  // Wizard Flow handler functions
+  const getCurrentFlowSteps = useCallback(() => {
+    return wizardFlows[selectedFlowType] || [];
+  }, [wizardFlows, selectedFlowType]);
+
+  const getAvailableStepsForFlow = useCallback(() => {
+    const currentSteps = getCurrentFlowSteps();
+    return AVAILABLE_STEPS.filter(step => !currentSteps.includes(step.id));
+  }, [getCurrentFlowSteps]);
+
+  const handleDragStart = useCallback((stepId: string) => {
+    setDraggedStep(stepId);
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    setDragOverIndex(index);
+  }, []);
+
+  const handleDragLeave = useCallback(() => {
+    setDragOverIndex(null);
+  }, []);
+
+  const handleDropOnStep = useCallback((targetIndex: number) => {
+    if (!draggedStep) return;
+
+    const currentSteps = [...getCurrentFlowSteps()];
+    const draggedIndex = currentSteps.indexOf(draggedStep);
+
+    if (draggedIndex === -1) {
+      // Adding from available pool
+      currentSteps.splice(targetIndex, 0, draggedStep);
+    } else {
+      // Reordering within the flow
+      currentSteps.splice(draggedIndex, 1);
+      currentSteps.splice(targetIndex, 0, draggedStep);
+    }
+
+    setWizardFlows(prev => ({
+      ...prev,
+      [selectedFlowType]: currentSteps,
+    }));
+    setWizardFlowsHasChanges(true);
+    setDraggedStep(null);
+    setDragOverIndex(null);
+  }, [draggedStep, getCurrentFlowSteps, selectedFlowType]);
+
+  const handleDropOnAvailable = useCallback(() => {
+    if (!draggedStep) return;
+
+    const currentSteps = getCurrentFlowSteps();
+    if (currentSteps.includes(draggedStep)) {
+      // Remove from flow
+      setWizardFlows(prev => ({
+        ...prev,
+        [selectedFlowType]: currentSteps.filter(id => id !== draggedStep),
+      }));
+      setWizardFlowsHasChanges(true);
+    }
+    setDraggedStep(null);
+    setDragOverIndex(null);
+  }, [draggedStep, getCurrentFlowSteps, selectedFlowType]);
+
+  const handleAddStep = useCallback((stepId: string) => {
+    const currentSteps = getCurrentFlowSteps();
+    if (!currentSteps.includes(stepId)) {
+      setWizardFlows(prev => ({
+        ...prev,
+        [selectedFlowType]: [...currentSteps, stepId],
+      }));
+      setWizardFlowsHasChanges(true);
+    }
+  }, [getCurrentFlowSteps, selectedFlowType]);
+
+  const handleRemoveStep = useCallback((stepId: string) => {
+    const currentSteps = getCurrentFlowSteps();
+    setWizardFlows(prev => ({
+      ...prev,
+      [selectedFlowType]: currentSteps.filter(id => id !== stepId),
+    }));
+    setWizardFlowsHasChanges(true);
+  }, [getCurrentFlowSteps, selectedFlowType]);
+
+  const handleMoveStep = useCallback((stepId: string, direction: 'up' | 'down') => {
+    const currentSteps = [...getCurrentFlowSteps()];
+    const index = currentSteps.indexOf(stepId);
+    if (index === -1) return;
+
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= currentSteps.length) return;
+
+    currentSteps.splice(index, 1);
+    currentSteps.splice(newIndex, 0, stepId);
+
+    setWizardFlows(prev => ({
+      ...prev,
+      [selectedFlowType]: currentSteps,
+    }));
+    setWizardFlowsHasChanges(true);
+  }, [getCurrentFlowSteps, selectedFlowType]);
+
+  const handleSaveWizardFlows = useCallback(async () => {
+    console.log('[Admin] handleSaveWizardFlows called');
+    console.log('[Admin] currentWorkspace:', currentWorkspace?.id, currentWorkspace?.name);
+    console.log('[Admin] wizardFlows to save:', wizardFlows);
+    console.log('[Admin] sectionSubpages to save:', sectionSubpages);
+
+    if (!currentWorkspace) {
+      console.log('[Admin] No workspace selected, showing error');
+      setError('No workspace selected. Please select a workspace first.');
+      return;
+    }
+
+    try {
+      // Save to workspace via WizardContext
+      console.log('[Admin] Calling saveFlowsToWorkspace...');
+      await saveFlowsToWorkspace(wizardFlows, sectionSubpages);
+      console.log('[Admin] saveFlowsToWorkspace completed successfully');
+      setWizardFlowsHasChanges(false);
+      setShowWizardFlowsSuccess(true);
+      setTimeout(() => setShowWizardFlowsSuccess(false), 3000);
+    } catch (err) {
+      console.error('[Admin] Failed to save wizard flows:', err);
+      setError('Failed to save wizard flows to workspace.');
+    }
+  }, [wizardFlows, sectionSubpages, saveFlowsToWorkspace, currentWorkspace]);
+
+  const handleResetWizardFlows = useCallback(() => {
+    setWizardFlows(DEFAULT_WIZARD_FLOWS);
+    setSectionSubpages(DEFAULT_SECTION_SUBPAGES);
+    setWizardFlowsHasChanges(true);
+  }, []);
+
+  const handleResetCurrentFlow = useCallback(() => {
+    setWizardFlows(prev => ({
+      ...prev,
+      [selectedFlowType]: DEFAULT_WIZARD_FLOWS[selectedFlowType],
+    }));
+    // Also reset subpages for sections in current flow
+    const flowSections = DEFAULT_WIZARD_FLOWS[selectedFlowType];
+    setSectionSubpages(prev => {
+      const updated = { ...prev };
+      flowSections.forEach(sectionId => {
+        updated[sectionId] = DEFAULT_SECTION_SUBPAGES[sectionId] || [];
+      });
+      return updated;
+    });
+    setWizardFlowsHasChanges(true);
+  }, [selectedFlowType]);
+
+  // Section expand/collapse handlers
+  const toggleSectionExpanded = useCallback((sectionId: string) => {
+    setExpandedSections(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(sectionId)) {
+        newSet.delete(sectionId);
+      } else {
+        newSet.add(sectionId);
+      }
+      return newSet;
+    });
+  }, []);
+
+  // Subpage handler functions
+  const getSectionSubpages = useCallback((sectionId: string) => {
+    return sectionSubpages[sectionId] || [];
+  }, [sectionSubpages]);
+
+  const getAvailableSubpagesForSection = useCallback((sectionId: string) => {
+    const currentSubpages = getSectionSubpages(sectionId);
+    const allSubpages = AVAILABLE_SUBPAGES[sectionId] || [];
+    return allSubpages.filter(sp => !currentSubpages.includes(sp.id));
+  }, [getSectionSubpages]);
+
+  const handleSubpageDragStart = useCallback((sectionId: string, subpageId: string) => {
+    // Use ref to avoid re-render during drag start
+    draggedSubpageRef.current = { sectionId, subpageId };
+    // Delay state update to after drag has started
+    requestAnimationFrame(() => {
+      setDraggedSubpage({ sectionId, subpageId });
+    });
+  }, []);
+
+  const handleSubpageDragOver = useCallback((e: React.DragEvent, sectionId: string, index: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOverSubpageIndex({ sectionId, index });
+  }, []);
+
+  const handleSubpageDragLeave = useCallback(() => {
+    setDragOverSubpageIndex(null);
+  }, []);
+
+  const handleSubpageDrop = useCallback((targetSectionId: string, targetIndex: number) => {
+    // Use ref for immediate access (state may not be updated yet)
+    const dragged = draggedSubpageRef.current || draggedSubpage;
+    if (!dragged) return;
+
+    const { sectionId: sourceSectionId, subpageId } = dragged;
+
+    if (sourceSectionId === targetSectionId) {
+      // Reordering within same section
+      const currentSubpages = [...getSectionSubpages(sourceSectionId)];
+      const draggedIndex = currentSubpages.indexOf(subpageId);
+
+      if (draggedIndex !== -1) {
+        currentSubpages.splice(draggedIndex, 1);
+        currentSubpages.splice(targetIndex, 0, subpageId);
+
+        setSectionSubpages(prev => ({
+          ...prev,
+          [sourceSectionId]: currentSubpages,
+        }));
+        setWizardFlowsHasChanges(true);
+      }
+    } else {
+      // Moving between sections
+      const sourceSubpages = [...getSectionSubpages(sourceSectionId)];
+      const targetSubpages = [...getSectionSubpages(targetSectionId)];
+
+      // Remove from source section
+      const draggedIndex = sourceSubpages.indexOf(subpageId);
+      if (draggedIndex !== -1) {
+        sourceSubpages.splice(draggedIndex, 1);
+      }
+
+      // Add to target section at the specified index
+      targetSubpages.splice(targetIndex, 0, subpageId);
+
+      setSectionSubpages(prev => ({
+        ...prev,
+        [sourceSectionId]: sourceSubpages,
+        [targetSectionId]: targetSubpages,
+      }));
+      setWizardFlowsHasChanges(true);
+    }
+
+    draggedSubpageRef.current = null;
+    setDraggedSubpage(null);
+    setDragOverSubpageIndex(null);
+  }, [draggedSubpage, getSectionSubpages]);
+
+  const handleAddSubpage = useCallback((sectionId: string, subpageId: string) => {
+    const currentSubpages = getSectionSubpages(sectionId);
+    if (!currentSubpages.includes(subpageId)) {
+      setSectionSubpages(prev => ({
+        ...prev,
+        [sectionId]: [...currentSubpages, subpageId],
+      }));
+      setWizardFlowsHasChanges(true);
+    }
+  }, [getSectionSubpages]);
+
+  const handleRemoveSubpage = useCallback((sectionId: string, subpageId: string) => {
+    const currentSubpages = getSectionSubpages(sectionId);
+    setSectionSubpages(prev => ({
+      ...prev,
+      [sectionId]: currentSubpages.filter(id => id !== subpageId),
+    }));
+    setWizardFlowsHasChanges(true);
+  }, [getSectionSubpages]);
+
+  const handleMoveSubpage = useCallback((sectionId: string, subpageId: string, direction: 'up' | 'down') => {
+    const currentSubpages = [...getSectionSubpages(sectionId)];
+    const index = currentSubpages.indexOf(subpageId);
+    if (index === -1) return;
+
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= currentSubpages.length) return;
+
+    currentSubpages.splice(index, 1);
+    currentSubpages.splice(newIndex, 0, subpageId);
+
+    setSectionSubpages(prev => ({
+      ...prev,
+      [sectionId]: currentSubpages,
+    }));
+    setWizardFlowsHasChanges(true);
+  }, [getSectionSubpages]);
+
+  const handleResetSectionSubpages = useCallback((sectionId: string) => {
+    setSectionSubpages(prev => ({
+      ...prev,
+      [sectionId]: DEFAULT_SECTION_SUBPAGES[sectionId] || [],
+    }));
+    setWizardFlowsHasChanges(true);
   }, []);
 
   const fetchUsers = async () => {
@@ -474,6 +895,23 @@ const Admin: React.FC = () => {
           }}
         >
           Page Layouts
+        </button>
+        <button
+          onClick={() => setActiveTab('wizardFlows')}
+          style={{
+            padding: '12px 24px',
+            background: activeTab === 'wizardFlows' ? 'var(--color-primary)' : 'transparent',
+            color: activeTab === 'wizardFlows' ? 'white' : 'var(--color-grey-700)',
+            border: 'none',
+            borderRadius: '8px 8px 0 0',
+            fontWeight: 600,
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            borderBottom: activeTab === 'wizardFlows' ? '2px solid var(--color-primary)' : 'none',
+            marginBottom: '-2px'
+          }}
+        >
+          Wizard Flows
         </button>
       </div>
 
@@ -918,6 +1356,698 @@ const Admin: React.FC = () => {
             </div>
           </div>
         )}
+      </div>
+    ) : activeTab === 'wizardFlows' ? (
+      <div>
+        <div style={{ marginBottom: '24px' }}>
+          <h2 style={{ margin: '0 0 8px 0' }}>Wizard Flow Configuration</h2>
+          <p style={{ color: 'var(--color-grey-600)', margin: 0 }}>
+            Configure the step order for each wizard flow type. Drag steps to reorder, or use the buttons to add/remove steps.
+          </p>
+        </div>
+
+        {showWizardFlowsSuccess && (
+          <Alert variant="success" message="Wizard flows saved successfully! Changes will apply to new wizard sessions." />
+        )}
+
+        {/* Flow Type Selector */}
+        <div style={{ marginBottom: '24px' }}>
+          <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600 }}>
+            Select Flow Type
+          </label>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            {(['new', 'refactor', 'enhance', 'reverse-engineer'] as WizardFlowType[]).map(flowType => (
+              <button
+                key={flowType}
+                onClick={() => setSelectedFlowType(flowType)}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: selectedFlowType === flowType ? '2px solid var(--color-primary)' : '2px solid var(--color-grey-300)',
+                  background: selectedFlowType === flowType ? 'var(--color-primary-50)' : 'white',
+                  color: selectedFlowType === flowType ? 'var(--color-primary-700)' : 'var(--color-grey-700)',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  textTransform: 'capitalize',
+                }}
+              >
+                {flowType.replace('-', ' ')}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+          {/* Current Flow Steps */}
+          <Card>
+            <h3 style={{ margin: '0 0 16px 0' }}>
+              Current Steps ({getCurrentFlowSteps().length})
+            </h3>
+            <p style={{ color: 'var(--color-grey-600)', fontSize: '14px', marginBottom: '16px' }}>
+              Drag to reorder or remove steps from the flow.
+            </p>
+
+            <div
+              style={{
+                minHeight: '200px',
+                border: '2px dashed var(--color-grey-300)',
+                borderRadius: '8px',
+                padding: '12px',
+                background: 'var(--color-grey-50)',
+              }}
+              onDragOver={(e) => {
+                e.preventDefault();
+                if (getCurrentFlowSteps().length === 0) {
+                  setDragOverIndex(0);
+                }
+              }}
+              onDrop={() => {
+                if (getCurrentFlowSteps().length === 0) {
+                  handleDropOnStep(0);
+                }
+              }}
+            >
+              {getCurrentFlowSteps().length === 0 ? (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  height: '176px',
+                  color: 'var(--color-grey-500)',
+                  fontStyle: 'italic',
+                }}>
+                  Drag steps here to add them to this flow
+                </div>
+              ) : (
+                getCurrentFlowSteps().map((stepId, index) => {
+                  const step = AVAILABLE_STEPS.find(s => s.id === stepId);
+                  if (!step) return null;
+                  const isExpanded = expandedSections.has(stepId);
+                  const currentSubpages = getSectionSubpages(stepId);
+                  const availableSubpages = getAvailableSubpagesForSection(stepId);
+
+                  return (
+                    <div key={stepId} style={{ marginBottom: '8px', position: 'relative', zIndex: isExpanded ? 1 : 'auto' }}>
+                      {/* Section Header */}
+                      <div
+                        draggable={!draggedSubpage}
+                        onDragStart={() => !draggedSubpage && handleDragStart(stepId)}
+                        onDragOver={(e) => {
+                          if (draggedSubpage) {
+                            // Subpage being dragged - allow drop on section header
+                            e.preventDefault();
+                            e.stopPropagation();
+                            // Auto-expand section when dragging over it
+                            if (!isExpanded) {
+                              setExpandedSections(prev => new Set([...prev, stepId]));
+                            }
+                            setDragOverSubpageIndex({ sectionId: stepId, index: currentSubpages.length });
+                          } else {
+                            handleDragOver(e, index);
+                          }
+                        }}
+                        onDragLeave={() => {
+                          if (draggedSubpage) {
+                            setDragOverSubpageIndex(null);
+                          } else {
+                            handleDragLeave();
+                          }
+                        }}
+                        onDrop={() => {
+                          if (draggedSubpage) {
+                            handleSubpageDrop(stepId, currentSubpages.length);
+                          } else {
+                            handleDropOnStep(index);
+                          }
+                        }}
+                        onDragEnd={() => {
+                          setDraggedStep(null);
+                          setDragOverIndex(null);
+                        }}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '12px',
+                          padding: '12px',
+                          background: draggedStep === stepId
+                            ? 'var(--color-grey-200)'
+                            : draggedSubpage && draggedSubpage.sectionId !== stepId
+                              ? 'var(--color-primary-50)'
+                              : 'white',
+                          border: dragOverIndex === index
+                            ? '2px solid var(--color-primary)'
+                            : draggedSubpage && draggedSubpage.sectionId !== stepId && dragOverSubpageIndex?.sectionId === stepId
+                              ? '2px dashed var(--color-primary)'
+                              : draggedSubpage && draggedSubpage.sectionId !== stepId
+                                ? '2px dashed var(--color-grey-400)'
+                                : '1px solid var(--color-grey-200)',
+                          borderRadius: isExpanded ? '8px 8px 0 0' : '8px',
+                          cursor: draggedSubpage ? 'default' : 'grab',
+                          opacity: draggedStep === stepId ? 0.5 : 1,
+                          transition: 'all 0.15s ease',
+                          position: 'relative',
+                          zIndex: 5,
+                        }}
+                      >
+                        {/* Drag Handle */}
+                        <span style={{ color: 'var(--color-grey-400)', fontSize: '16px', cursor: 'grab' }}>
+                          ⋮⋮
+                        </span>
+
+                        {/* Expand/Collapse Button */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleSectionExpanded(stepId);
+                          }}
+                          style={{
+                            padding: '4px 8px',
+                            border: 'none',
+                            borderRadius: '4px',
+                            background: 'var(--color-grey-100)',
+                            cursor: 'pointer',
+                            fontSize: '12px',
+                            transition: 'transform 0.2s ease',
+                            transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
+                          }}
+                          title={isExpanded ? 'Collapse' : 'Expand'}
+                        >
+                          ▶
+                        </button>
+
+                        {/* Step Number */}
+                        <span style={{
+                          width: '24px',
+                          height: '24px',
+                          borderRadius: '50%',
+                          background: 'var(--color-primary)',
+                          color: 'white',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '12px',
+                          fontWeight: 600,
+                          flexShrink: 0,
+                        }}>
+                          {index + 1}
+                        </span>
+
+                        {/* Step Icon */}
+                        <span style={{ fontSize: '20px' }}>{step.icon}</span>
+
+                        {/* Step Info */}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontWeight: 600 }}>{step.name}</div>
+                          <div style={{ fontSize: '12px', color: 'var(--color-grey-600)' }}>
+                            {currentSubpages.length} page{currentSubpages.length !== 1 ? 's' : ''}
+                          </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleMoveStep(stepId, 'up'); }}
+                            disabled={index === 0}
+                            style={{
+                              padding: '4px 8px',
+                              border: '1px solid var(--color-grey-300)',
+                              borderRadius: '4px',
+                              background: 'white',
+                              cursor: index === 0 ? 'not-allowed' : 'pointer',
+                              opacity: index === 0 ? 0.5 : 1,
+                            }}
+                            title="Move up"
+                          >
+                            ↑
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleMoveStep(stepId, 'down'); }}
+                            disabled={index === getCurrentFlowSteps().length - 1}
+                            style={{
+                              padding: '4px 8px',
+                              border: '1px solid var(--color-grey-300)',
+                              borderRadius: '4px',
+                              background: 'white',
+                              cursor: index === getCurrentFlowSteps().length - 1 ? 'not-allowed' : 'pointer',
+                              opacity: index === getCurrentFlowSteps().length - 1 ? 0.5 : 1,
+                            }}
+                            title="Move down"
+                          >
+                            ↓
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleRemoveStep(stepId); }}
+                            style={{
+                              padding: '4px 8px',
+                              border: '1px solid var(--color-error-300)',
+                              borderRadius: '4px',
+                              background: 'var(--color-error-50)',
+                              color: 'var(--color-error-700)',
+                              cursor: 'pointer',
+                            }}
+                            title="Remove section"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Expanded Subpages Section */}
+                      {isExpanded && (
+                        <div style={{
+                          borderLeft: '1px solid var(--color-grey-200)',
+                          borderRight: '1px solid var(--color-grey-200)',
+                          borderBottom: '1px solid var(--color-grey-200)',
+                          borderRadius: '0 0 8px 8px',
+                          background: 'var(--color-grey-50)',
+                          padding: '12px',
+                          position: 'relative',
+                          zIndex: 10,
+                        }}>
+                          {/* Current Subpages */}
+                          <div style={{ marginBottom: '12px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                              <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-grey-700)' }}>
+                                Pages in this section:
+                              </span>
+                              <button
+                                onClick={() => handleResetSectionSubpages(stepId)}
+                                style={{
+                                  padding: '2px 8px',
+                                  border: '1px solid var(--color-grey-300)',
+                                  borderRadius: '4px',
+                                  background: 'white',
+                                  fontSize: '11px',
+                                  cursor: 'pointer',
+                                  color: 'var(--color-grey-600)',
+                                }}
+                                title="Reset to defaults"
+                              >
+                                Reset
+                              </button>
+                            </div>
+
+                            {currentSubpages.length === 0 ? (
+                              <div
+                                onDragOver={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setDragOverSubpageIndex({ sectionId: stepId, index: 0 });
+                                }}
+                                onDragLeave={handleSubpageDragLeave}
+                                onDrop={(e) => {
+                                  e.stopPropagation();
+                                  handleSubpageDrop(stepId, 0);
+                                }}
+                                style={{
+                                  padding: '12px',
+                                  textAlign: 'center',
+                                  color: draggedSubpage ? 'var(--color-primary)' : 'var(--color-grey-500)',
+                                  fontSize: '13px',
+                                  fontStyle: 'italic',
+                                  border: dragOverSubpageIndex?.sectionId === stepId && dragOverSubpageIndex?.index === 0 && draggedSubpage
+                                    ? '2px dashed var(--color-primary)'
+                                    : draggedSubpage
+                                      ? '2px dashed var(--color-grey-400)'
+                                      : '1px dashed var(--color-grey-300)',
+                                  borderRadius: '4px',
+                                  background: dragOverSubpageIndex?.sectionId === stepId && dragOverSubpageIndex?.index === 0 && draggedSubpage
+                                    ? 'var(--color-primary-50)'
+                                    : 'transparent',
+                                  transition: 'all 0.15s ease',
+                                }}
+                              >
+                                {draggedSubpage ? 'Drop page here' : 'No pages configured. Add pages below.'}
+                              </div>
+                            ) : (
+                              <>
+                                {currentSubpages.map((subpageId, spIndex) => {
+                                  // Use flat lookup to find subpage even if it was moved from another section
+                                  const subpage = ALL_SUBPAGES_FLAT[subpageId];
+                                  // If subpage not found in any section, create a fallback entry
+                                  const displaySubpage = subpage || { id: subpageId, name: `Unknown: ${subpageId}` };
+                                  const isMissingSubpage = !subpage;
+
+                                  return (
+                                    <div
+                                      key={subpageId}
+                                      draggable={true}
+                                      onDragStart={(e) => {
+                                        e.stopPropagation();
+                                        handleSubpageDragStart(stepId, subpageId);
+                                      }}
+                                      onDragOver={(e) => handleSubpageDragOver(e, stepId, spIndex)}
+                                      onDragLeave={handleSubpageDragLeave}
+                                      onDrop={(e) => {
+                                        e.stopPropagation();
+                                        handleSubpageDrop(stepId, spIndex);
+                                      }}
+                                      onDragEnd={() => {
+                                        draggedSubpageRef.current = null;
+                                        setDraggedSubpage(null);
+                                        setDragOverSubpageIndex(null);
+                                      }}
+                                      style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '8px',
+                                        padding: '8px 10px',
+                                        marginBottom: '4px',
+                                        background: draggedSubpage?.subpageId === subpageId ? 'var(--color-grey-200)' : 'white',
+                                        border: dragOverSubpageIndex?.sectionId === stepId && dragOverSubpageIndex?.index === spIndex
+                                          ? '2px solid var(--color-primary)'
+                                          : '1px solid var(--color-grey-200)',
+                                        borderRadius: '4px',
+                                        cursor: 'grab',
+                                        opacity: draggedSubpage?.subpageId === subpageId ? 0.5 : 1,
+                                        fontSize: '13px',
+                                        pointerEvents: 'auto',
+                                      }}
+                                    >
+                                      <span style={{ color: 'var(--color-grey-400)', fontSize: '12px', cursor: 'grab' }}>⋮⋮</span>
+                                      <span style={{
+                                        width: '18px',
+                                        height: '18px',
+                                        borderRadius: '50%',
+                                        background: 'var(--color-grey-300)',
+                                        color: 'white',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        fontSize: '10px',
+                                        fontWeight: 600,
+                                        flexShrink: 0,
+                                      }}>
+                                        {spIndex + 1}
+                                      </span>
+                                      <span style={{
+                                        flex: 1,
+                                        color: isMissingSubpage ? 'var(--color-error-600)' : 'inherit',
+                                        fontStyle: isMissingSubpage ? 'italic' : 'normal',
+                                      }}>
+                                        {displaySubpage.name}
+                                      </span>
+                                      <div style={{ display: 'flex', gap: '2px' }}>
+                                        <button
+                                          onClick={(e) => { e.stopPropagation(); handleMoveSubpage(stepId, subpageId, 'up'); }}
+                                          disabled={spIndex === 0}
+                                          style={{
+                                            padding: '2px 6px',
+                                            border: '1px solid var(--color-grey-300)',
+                                            borderRadius: '3px',
+                                            background: 'white',
+                                            cursor: spIndex === 0 ? 'not-allowed' : 'pointer',
+                                            opacity: spIndex === 0 ? 0.5 : 1,
+                                            fontSize: '11px',
+                                          }}
+                                        >
+                                          ↑
+                                        </button>
+                                        <button
+                                          onClick={(e) => { e.stopPropagation(); handleMoveSubpage(stepId, subpageId, 'down'); }}
+                                          disabled={spIndex === currentSubpages.length - 1}
+                                          style={{
+                                            padding: '2px 6px',
+                                            border: '1px solid var(--color-grey-300)',
+                                            borderRadius: '3px',
+                                            background: 'white',
+                                            cursor: spIndex === currentSubpages.length - 1 ? 'not-allowed' : 'pointer',
+                                            opacity: spIndex === currentSubpages.length - 1 ? 0.5 : 1,
+                                            fontSize: '11px',
+                                          }}
+                                        >
+                                          ↓
+                                        </button>
+                                        <button
+                                          onClick={(e) => { e.stopPropagation(); handleRemoveSubpage(stepId, subpageId); }}
+                                          style={{
+                                            padding: '2px 6px',
+                                            border: '1px solid var(--color-error-300)',
+                                            borderRadius: '3px',
+                                            background: 'var(--color-error-50)',
+                                            color: 'var(--color-error-700)',
+                                            cursor: 'pointer',
+                                            fontSize: '11px',
+                                          }}
+                                        >
+                                          ✕
+                                        </button>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                                {/* Drop zone at end of list */}
+                                {draggedSubpage && draggedSubpage.sectionId !== stepId && (
+                                  <div
+                                    onDragOver={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      setDragOverSubpageIndex({ sectionId: stepId, index: currentSubpages.length });
+                                    }}
+                                    onDragLeave={handleSubpageDragLeave}
+                                    onDrop={(e) => {
+                                      e.stopPropagation();
+                                      handleSubpageDrop(stepId, currentSubpages.length);
+                                    }}
+                                    style={{
+                                      padding: '10px',
+                                      textAlign: 'center',
+                                      color: 'var(--color-primary)',
+                                      fontSize: '12px',
+                                      border: dragOverSubpageIndex?.sectionId === stepId && dragOverSubpageIndex?.index === currentSubpages.length
+                                        ? '2px dashed var(--color-primary)'
+                                        : '2px dashed var(--color-grey-300)',
+                                      borderRadius: '4px',
+                                      background: dragOverSubpageIndex?.sectionId === stepId && dragOverSubpageIndex?.index === currentSubpages.length
+                                        ? 'var(--color-primary-50)'
+                                        : 'transparent',
+                                      marginTop: '4px',
+                                      transition: 'all 0.15s ease',
+                                    }}
+                                  >
+                                    Drop page here to add at end
+                                  </div>
+                                )}
+                              </>
+                            )}
+                          </div>
+
+                          {/* Available Subpages */}
+                          {availableSubpages.length > 0 && (
+                            <div>
+                              <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-grey-700)', display: 'block', marginBottom: '8px' }}>
+                                Available pages to add:
+                              </span>
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                {availableSubpages.map(subpage => (
+                                  <button
+                                    key={subpage.id}
+                                    onClick={() => handleAddSubpage(stepId, subpage.id)}
+                                    style={{
+                                      padding: '4px 10px',
+                                      border: '1px solid var(--color-success-300)',
+                                      borderRadius: '4px',
+                                      background: 'var(--color-success-50)',
+                                      color: 'var(--color-success-700)',
+                                      cursor: 'pointer',
+                                      fontSize: '12px',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: '4px',
+                                    }}
+                                    title={`Add ${subpage.name}`}
+                                  >
+                                    + {subpage.name}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </Card>
+
+          {/* Available Steps Pool */}
+          <Card>
+            <h3 style={{ margin: '0 0 16px 0' }}>
+              Available Steps ({getAvailableStepsForFlow().length})
+            </h3>
+            <p style={{ color: 'var(--color-grey-600)', fontSize: '14px', marginBottom: '16px' }}>
+              Drag steps to the flow, or click + to add them.
+            </p>
+
+            <div
+              style={{
+                minHeight: '200px',
+                border: '2px dashed var(--color-grey-300)',
+                borderRadius: '8px',
+                padding: '12px',
+                background: 'var(--color-grey-50)',
+              }}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={handleDropOnAvailable}
+            >
+              {getAvailableStepsForFlow().length === 0 ? (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  height: '176px',
+                  color: 'var(--color-grey-500)',
+                  fontStyle: 'italic',
+                }}>
+                  All steps are in the flow. Drag here to remove.
+                </div>
+              ) : (
+                getAvailableStepsForFlow().map(step => (
+                  <div
+                    key={step.id}
+                    draggable
+                    onDragStart={() => handleDragStart(step.id)}
+                    onDragEnd={() => {
+                      setDraggedStep(null);
+                      setDragOverIndex(null);
+                    }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '12px',
+                      marginBottom: '8px',
+                      background: draggedStep === step.id ? 'var(--color-grey-200)' : 'white',
+                      border: '1px solid var(--color-grey-200)',
+                      borderRadius: '8px',
+                      cursor: 'grab',
+                      opacity: draggedStep === step.id ? 0.5 : 1,
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    {/* Drag Handle */}
+                    <span style={{ color: 'var(--color-grey-400)', fontSize: '16px', cursor: 'grab' }}>
+                      ⋮⋮
+                    </span>
+
+                    {/* Step Icon */}
+                    <span style={{ fontSize: '20px' }}>{step.icon}</span>
+
+                    {/* Step Info */}
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 600 }}>{step.name}</div>
+                      <div style={{ fontSize: '12px', color: 'var(--color-grey-600)' }}>
+                        {step.description}
+                      </div>
+                    </div>
+
+                    {/* Add Button */}
+                    <button
+                      onClick={() => handleAddStep(step.id)}
+                      style={{
+                        padding: '4px 12px',
+                        border: '1px solid var(--color-success-300)',
+                        borderRadius: '4px',
+                        background: 'var(--color-success-50)',
+                        color: 'var(--color-success-700)',
+                        cursor: 'pointer',
+                        fontWeight: 600,
+                      }}
+                      title="Add to flow"
+                    >
+                      + Add
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </Card>
+        </div>
+
+        {/* Action Buttons */}
+        <div style={{ display: 'flex', gap: '12px', marginTop: '24px', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <Button onClick={handleSaveWizardFlows} disabled={!wizardFlowsHasChanges}>
+              Save Changes
+            </Button>
+            <Button variant="secondary" onClick={handleResetCurrentFlow}>
+              Reset This Flow
+            </Button>
+            <Button variant="secondary" onClick={handleResetWizardFlows}>
+              Reset All Flows
+            </Button>
+          </div>
+
+          {wizardFlowsHasChanges && (
+            <span style={{
+              color: 'var(--color-warning-600)',
+              fontSize: '14px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+            }}>
+              ⚠ Unsaved changes
+            </span>
+          )}
+        </div>
+
+        {/* Flow Comparison */}
+        <Card style={{ marginTop: '24px' }}>
+          <h3 style={{ margin: '0 0 16px 0' }}>Flow Comparison</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+            {(['new', 'refactor', 'enhance', 'reverse-engineer'] as WizardFlowType[]).map(flowType => (
+              <div key={flowType}>
+                <h4 style={{
+                  margin: '0 0 12px 0',
+                  textTransform: 'capitalize',
+                  color: flowType === selectedFlowType ? 'var(--color-primary)' : 'inherit',
+                }}>
+                  {flowType.replace('-', ' ')}
+                  {flowType === selectedFlowType && ' (editing)'}
+                </h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  {wizardFlows[flowType].map((stepId, index) => {
+                    const step = AVAILABLE_STEPS.find(s => s.id === stepId);
+                    return (
+                      <div
+                        key={stepId}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          padding: '6px 10px',
+                          background: 'var(--color-grey-50)',
+                          borderRadius: '4px',
+                          fontSize: '13px',
+                        }}
+                      >
+                        <span style={{
+                          width: '18px',
+                          height: '18px',
+                          borderRadius: '50%',
+                          background: 'var(--color-grey-400)',
+                          color: 'white',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '10px',
+                          fontWeight: 600,
+                        }}>
+                          {index + 1}
+                        </span>
+                        <span>{step?.icon}</span>
+                        <span>{step?.name}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
       </div>
     ) : null}
 

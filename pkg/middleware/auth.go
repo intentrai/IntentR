@@ -13,7 +13,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/jareynolds/ubecode/internal/auth"
+	"github.com/jareynolds/intentr/internal/auth"
 )
 
 // AuthMiddleware creates middleware that validates JWT tokens

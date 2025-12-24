@@ -1,0 +1,307 @@
+{
+  "id": "new",
+  "name": "Create New Application",
+  "description": "Build a new application from scratch using the INTENT methodology",
+  "steps": [
+    {
+      "id": "workspace",
+      "name": "Workspace",
+      "description": "Select or create your project workspace",
+      "index": 0,
+      "route": "/wizard/workspace",
+      "component": "WizardWorkspace",
+      "subpages": [
+        {
+          "id": "overview",
+          "name": "Overview",
+          "index": 0,
+          "route": "/wizard/workspace",
+          "isStartPage": true
+        }
+      ],
+      "navigation": {
+        "previous": null,
+        "next": {
+          "stepId": "intent",
+          "subpageId": "overview",
+          "route": "/wizard/intent/start"
+        }
+      }
+    },
+    {
+      "id": "intent",
+      "name": "Intent",
+      "description": "Define your vision, ideation, and storyboard",
+      "index": 1,
+      "route": "/wizard/intent",
+      "startRoute": "/wizard/intent/start",
+      "component": "WizardIntent",
+      "startComponent": "WizardIntentStart",
+      "subpages": [
+        {
+          "id": "overview",
+          "name": "Overview",
+          "index": 0,
+          "route": "/wizard/intent/start",
+          "isStartPage": true
+        },
+        {
+          "id": "vision",
+          "name": "Vision",
+          "index": 1,
+          "route": "/wizard/intent",
+          "tab": "vision"
+        },
+        {
+          "id": "ideation",
+          "name": "Ideation",
+          "index": 2,
+          "route": "/wizard/intent",
+          "tab": "ideation"
+        },
+        {
+          "id": "storyboard",
+          "name": "Storyboard",
+          "index": 3,
+          "route": "/wizard/intent",
+          "tab": "storyboard"
+        }
+      ],
+      "navigation": {
+        "previous": {
+          "stepId": "workspace",
+          "subpageId": "overview",
+          "route": "/wizard/workspace"
+        },
+        "next": {
+          "stepId": "specification",
+          "subpageId": "overview",
+          "route": "/wizard/specification/start"
+        }
+      }
+    },
+    {
+      "id": "specification",
+      "name": "Specification",
+      "description": "Define capabilities, enablers, and UI framework",
+      "index": 2,
+      "route": "/wizard/specification",
+      "startRoute": "/wizard/specification/start",
+      "component": "WizardSpecification",
+      "startComponent": "WizardSpecificationStart",
+      "subpages": [
+        {
+          "id": "overview",
+          "name": "Overview",
+          "index": 0,
+          "route": "/wizard/specification/start",
+          "isStartPage": true
+        },
+        {
+          "id": "capabilities",
+          "name": "Capabilities",
+          "index": 1,
+          "route": "/wizard/specification",
+          "tab": "capabilities"
+        },
+        {
+          "id": "enablers",
+          "name": "Enablers",
+          "index": 2,
+          "route": "/wizard/specification",
+          "tab": "enablers"
+        },
+        {
+          "id": "story-map",
+          "name": "Story Map",
+          "index": 3,
+          "route": "/wizard/specification",
+          "tab": "story-map"
+        },
+        {
+          "id": "designs",
+          "name": "Designs",
+          "index": 4,
+          "route": "/wizard/specification",
+          "tab": "designs"
+        },
+        {
+          "id": "ui-framework",
+          "name": "UI Framework",
+          "index": 5,
+          "route": "/wizard/specification",
+          "tab": "ui-framework"
+        },
+        {
+          "id": "ui-styles",
+          "name": "UI Styles",
+          "index": 6,
+          "route": "/wizard/specification",
+          "tab": "ui-styles"
+        },
+        {
+          "id": "ui-designer",
+          "name": "UI Designer",
+          "index": 7,
+          "route": "/wizard/specification",
+          "tab": "ui-designer"
+        }
+      ],
+      "navigation": {
+        "previous": {
+          "stepId": "intent",
+          "subpageId": "storyboard",
+          "route": "/wizard/intent"
+        },
+        "next": {
+          "stepId": "system",
+          "subpageId": "overview",
+          "route": "/wizard/system/start"
+        }
+      }
+    },
+    {
+      "id": "system",
+      "name": "System",
+      "description": "Create detailed technical designs",
+      "index": 3,
+      "route": "/wizard/system",
+      "startRoute": "/wizard/system/start",
+      "component": "WizardSystem",
+      "startComponent": "WizardSystemStart",
+      "subpages": [
+        {
+          "id": "overview",
+          "name": "Overview",
+          "index": 0,
+          "route": "/wizard/system/start",
+          "isStartPage": true
+        },
+        {
+          "id": "system",
+          "name": "System",
+          "index": 1,
+          "route": "/wizard/system",
+          "tab": "system"
+        }
+      ],
+      "navigation": {
+        "previous": {
+          "stepId": "specification",
+          "subpageId": "ui-designer",
+          "route": "/wizard/specification"
+        },
+        "next": {
+          "stepId": "control-loop",
+          "subpageId": "overview",
+          "route": "/wizard/control-loop/start"
+        }
+      }
+    },
+    {
+      "id": "control-loop",
+      "name": "Control Loop",
+      "description": "Define test scenarios and control loop",
+      "index": 4,
+      "route": "/wizard/control-loop",
+      "startRoute": "/wizard/control-loop/start",
+      "component": "WizardControlLoop",
+      "startComponent": "WizardControlLoopStart",
+      "subpages": [
+        {
+          "id": "overview",
+          "name": "Overview",
+          "index": 0,
+          "route": "/wizard/control-loop/start",
+          "isStartPage": true
+        },
+        {
+          "id": "control-loop-approval",
+          "name": "Control Loop Approval",
+          "index": 1,
+          "route": "/wizard/control-loop",
+          "tab": "control-loop-approval"
+        }
+      ],
+      "navigation": {
+        "previous": {
+          "stepId": "system",
+          "subpageId": "system",
+          "route": "/wizard/system"
+        },
+        "next": {
+          "stepId": "implementation",
+          "subpageId": "overview",
+          "route": "/wizard/implementation/start"
+        }
+      }
+    },
+    {
+      "id": "implementation",
+      "name": "Implementation",
+      "description": "Build, test, and deploy your application",
+      "index": 5,
+      "route": "/wizard/implementation",
+      "startRoute": "/wizard/implementation/start",
+      "component": "WizardImplementation",
+      "startComponent": "WizardImplementationStart",
+      "subpages": [
+        {
+          "id": "overview",
+          "name": "Overview",
+          "index": 0,
+          "route": "/wizard/implementation/start",
+          "isStartPage": true
+        },
+        {
+          "id": "testing",
+          "name": "Testing",
+          "index": 1,
+          "route": "/wizard/implementation",
+          "tab": "testing"
+        },
+        {
+          "id": "system",
+          "name": "System",
+          "index": 2,
+          "route": "/wizard/implementation",
+          "tab": "system"
+        },
+        {
+          "id": "ai-principles",
+          "name": "AI Principles",
+          "index": 3,
+          "route": "/wizard/implementation",
+          "tab": "ai-principles"
+        },
+        {
+          "id": "code",
+          "name": "Code",
+          "index": 4,
+          "route": "/wizard/implementation",
+          "tab": "code"
+        },
+        {
+          "id": "run",
+          "name": "Run",
+          "index": 5,
+          "route": "/wizard/implementation",
+          "tab": "run"
+        }
+      ],
+      "navigation": {
+        "previous": {
+          "stepId": "control-loop",
+          "subpageId": "control-loop-approval",
+          "route": "/wizard/control-loop"
+        },
+        "next": null
+      }
+    }
+  ],
+  "metadata": {
+    "version": "1.0.0",
+    "totalSteps": 6,
+    "estimatedDuration": "2-4 hours"
+  }
+}

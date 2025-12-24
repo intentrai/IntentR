@@ -16,7 +16,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/jareynolds/ubecode/pkg/models"
+	"github.com/jareynolds/intentr/pkg/models"
 )
 
 const (

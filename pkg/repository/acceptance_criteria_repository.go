@@ -12,7 +12,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/jareynolds/ubecode/pkg/models"
+	"github.com/jareynolds/intentr/pkg/models"
 )
 
 // AcceptanceCriteriaRepository handles database operations for acceptance criteria

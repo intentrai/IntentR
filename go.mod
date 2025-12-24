@@ -1,4 +1,4 @@
-module github.com/jareynolds/ubecode
+module github.com/jareynolds/intentr
 
 go 1.24.0
 

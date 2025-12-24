@@ -461,7 +461,7 @@ intentr/
 │   ├── capability-service/ # Capability & approval service
 │   ├── integration-service/ # Figma & AI integration
 │   ├── claude-proxy/     # Claude CLI proxy service
-│   └── ubecli/           # IntentR CLI tool
+│   └── intentrcli/           # IntentR CLI tool
 ├── internal/              # Private application code
 │   ├── auth/             # Auth handlers & logic
 │   ├── design/           # Design handlers
