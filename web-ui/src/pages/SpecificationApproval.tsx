@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, Alert, Button, PageLayout } from '../components';
 import { useWorkspace } from '../context/WorkspaceContext';
-import { useEntityState } from '../context/EntityStateContext';
+import { useEntityState, usePhaseApprovals } from '../context/EntityStateContext';
 import { INTEGRATION_URL } from '../api/client';
 import {
   type LifecycleState,
@@ -49,13 +49,22 @@ export const SpecificationApproval: React.FC = () => {
     syncEnabler,
     refreshWorkspaceState
   } = useEntityState();
+  const {
+    phaseApprovals,
+    approvePhase: approvePhaseDb,
+    revokePhase: revokePhaseDb,
+    isPhaseApproved,
+  } = usePhaseApprovals();
   const [loading, setLoading] = useState(false);
   const [phaseStatus, setPhaseStatus] = useState<PhaseStatus>({
     capabilities: { total: 0, approved: 0, rejected: 0, items: [] },
     enablers: { total: 0, approved: 0, rejected: 0, items: [] },
   });
-  const [specificationApproved, setSpecificationApproved] = useState(false);
-  const [approvalDate, setApprovalDate] = useState<string | null>(null);
+
+  // Get phase approval state from database
+  const specificationApproved = isPhaseApproved('specification');
+  const specificationPhaseApproval = phaseApprovals.get('specification');
+  const approvalDate = specificationPhaseApproval?.approved_at || null;
 
   // Item approval tracking
   const [itemApprovals, setItemApprovals] = useState<ItemApprovalStatus>({});
@@ -76,104 +85,26 @@ export const SpecificationApproval: React.FC = () => {
   }, [currentWorkspace?.projectFolder]);
 
   const loadItemApprovals = async () => {
-    if (!currentWorkspace?.id || !currentWorkspace?.projectFolder) return;
+    if (!currentWorkspace?.id) return;
 
-    // Try to load from file first (for shared/imported workspaces)
-    try {
-      const response = await fetch(`${INTEGRATION_URL}/read-file`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          filePath: `${currentWorkspace.projectFolder}/approvals/specification-approvals.json`
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.content) {
-          const fileApprovals = JSON.parse(data.content);
-          setItemApprovals(fileApprovals.itemApprovals || {});
-          localStorage.setItem(`specification-item-approvals-${currentWorkspace.id}`, JSON.stringify(fileApprovals.itemApprovals || {}));
-
-          if (fileApprovals.phaseApproved) {
-            setSpecificationApproved(true);
-            setApprovalDate(fileApprovals.phaseApprovedDate || null);
-            localStorage.setItem(`specification-approved-${currentWorkspace.id}`, JSON.stringify({
-              approved: true,
-              date: fileApprovals.phaseApprovedDate
-            }));
-          }
-          return;
-        }
-      }
-    } catch (err) {
-      console.log('No approval file found, checking localStorage');
-    }
-
+    // Load item approvals from localStorage only
+    // Phase approval now comes from database via usePhaseApprovals hook
     const stored = localStorage.getItem(`specification-item-approvals-${currentWorkspace.id}`);
     if (stored) {
       setItemApprovals(JSON.parse(stored));
     }
   };
 
-  const saveItemApprovals = async (approvals: ItemApprovalStatus) => {
-    if (!currentWorkspace?.id || !currentWorkspace?.projectFolder) return;
+  const saveItemApprovals = (approvals: ItemApprovalStatus) => {
+    if (!currentWorkspace?.id) return;
 
+    // Save to localStorage only - entity state is in database
+    // JSON file writing removed - database is single source of truth
     localStorage.setItem(`specification-item-approvals-${currentWorkspace.id}`, JSON.stringify(approvals));
     setItemApprovals(approvals);
-
-    try {
-      const fileContent = JSON.stringify({
-        phase: 'specification',
-        itemApprovals: approvals,
-        phaseApproved: specificationApproved,
-        phaseApprovedDate: approvalDate,
-        lastUpdated: new Date().toISOString(),
-      }, null, 2);
-
-      await fetch(`${INTEGRATION_URL}/save-specifications`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          workspacePath: currentWorkspace.projectFolder,
-          specifications: [{
-            filename: 'approvals/specification-approvals.json',
-            content: fileContent,
-          }],
-        }),
-      });
-    } catch (err) {
-      console.error('Failed to save approvals to file:', err);
-    }
   };
 
-  const savePhaseApprovalToFile = async (approved: boolean, date: string | null) => {
-    if (!currentWorkspace?.projectFolder) return;
-
-    try {
-      const fileContent = JSON.stringify({
-        phase: 'specification',
-        itemApprovals: itemApprovals,
-        phaseApproved: approved,
-        phaseApprovedDate: date,
-        lastUpdated: new Date().toISOString(),
-      }, null, 2);
-
-      await fetch(`${INTEGRATION_URL}/save-specifications`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          workspacePath: currentWorkspace.projectFolder,
-          specifications: [{
-            filename: 'approvals/specification-approvals.json',
-            content: fileContent,
-          }],
-        }),
-      });
-    } catch (err) {
-      console.error('Failed to save phase approval to file:', err);
-    }
-  };
+  // savePhaseApprovalToFile removed - phase approval now managed via database
 
   const loadSpecificationItems = async () => {
     if (!currentWorkspace?.projectFolder) return;
@@ -254,13 +185,9 @@ export const SpecificationApproval: React.FC = () => {
         },
       });
 
-      // Check if specification phase is already approved
-      const stored = localStorage.getItem(`specification-approved-${currentWorkspace.id}`);
-      if (stored) {
-        const data = JSON.parse(stored);
-        setSpecificationApproved(data.approved);
-        setApprovalDate(data.date);
-      }
+      // Phase approval now comes from database via usePhaseApprovals hook
+      // No need to check localStorage - specificationApproved and approvalDate
+      // are derived from phaseApprovals Map
     } catch (err) {
       console.error('Failed to load specification items:', err);
     } finally {
@@ -268,79 +195,8 @@ export const SpecificationApproval: React.FC = () => {
     }
   };
 
-  // Update the source markdown file with new approval status
-  const updateSourceFile = async (item: SpecificationItem, approvalStatus: 'approved' | 'rejected' | 'pending') => {
-    if (!currentWorkspace?.projectFolder || !item.path) return;
-
-    try {
-      // Read the current file content
-      const readResponse = await fetch(`${INTEGRATION_URL}/read-file`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ filePath: item.path }),
-      });
-
-      if (!readResponse.ok) {
-        console.error('Failed to read source file:', item.path);
-        return;
-      }
-
-      const data = await readResponse.json();
-      let content = data.content || '';
-
-      // Determine new stage_status based on approval_status
-      const newStageStatus = approvalStatus === 'approved' ? 'approved' :
-                             approvalStatus === 'rejected' ? 'blocked' : 'in_progress';
-
-      // Update or add Approval Status in metadata
-      if (content.includes('**Approval Status**:')) {
-        content = content.replace(
-          /\*\*Approval Status\*\*:\s*\S+/,
-          `**Approval Status**: ${approvalStatus}`
-        );
-      } else if (content.includes('## Metadata')) {
-        // Add after metadata section header
-        content = content.replace(
-          /(## Metadata\n)/,
-          `$1- **Approval Status**: ${approvalStatus}\n`
-        );
-      }
-
-      // Update or add Stage Status in metadata
-      if (content.includes('**Stage Status**:')) {
-        content = content.replace(
-          /\*\*Stage Status\*\*:\s*\S+/,
-          `**Stage Status**: ${newStageStatus}`
-        );
-      } else if (content.includes('## Metadata')) {
-        content = content.replace(
-          /(## Metadata\n)/,
-          `$1- **Stage Status**: ${newStageStatus}\n`
-        );
-      }
-
-      // Get the filename from the path
-      const fileName = item.path.split('/').pop() || item.id;
-      const subfolder = item.type === 'capability' ? 'specifications' : 'specifications';
-
-      // Save the updated content
-      await fetch(`${INTEGRATION_URL}/save-specifications`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          workspacePath: currentWorkspace.projectFolder,
-          files: [{
-            fileName: `${subfolder}/${fileName}`,
-            content: content,
-          }],
-        }),
-      });
-
-      console.log(`Updated source file ${item.path} with approval_status: ${approvalStatus}, stage_status: ${newStageStatus}`);
-    } catch (err) {
-      console.error('Failed to update source file:', err);
-    }
-  };
+  // updateSourceFile removed - database is single source of truth for state
+  // State changes now only go to database via syncCapability/syncEnabler
 
   const handleApproveItem = async (item: SpecificationItem) => {
     const newApprovals = {
@@ -353,10 +209,8 @@ export const SpecificationApproval: React.FC = () => {
     saveItemApprovals(newApprovals);
     updateItemStatus(item, 'approved');
 
-    // Also update the source file
-    await updateSourceFile(item, 'approved');
-
     // Sync approval status to database (single source of truth)
+    // updateSourceFile removed - database is single source of truth
     // BUSINESS RULE (see STATE_MODEL.md "Automatic State Transitions on Approval"):
     // On APPROVE: Set all 4 dimensions - lifecycle_state, workflow_stage, stage_status, approval_status
     // These transitions are atomic and mandatory.
@@ -434,10 +288,8 @@ export const SpecificationApproval: React.FC = () => {
     saveItemApprovals(newApprovals);
     updateItemStatus(item, 'rejected', rejectionComment);
 
-    // Also update the source file
-    await updateSourceFile(item, 'rejected');
-
     // Sync rejection status to database (single source of truth)
+    // updateSourceFile removed - database is single source of truth
     // BUSINESS RULE (see STATE_MODEL.md "Automatic State Transitions on Approval"):
     // On REJECT: Set all 4 dimensions - lifecycle_state, workflow_stage, stage_status, approval_status
     // These transitions are atomic and mandatory.
@@ -521,10 +373,8 @@ export const SpecificationApproval: React.FC = () => {
     delete newApprovals[item.id];
     saveItemApprovals(newApprovals);
 
-    // Also update the source file back to pending
-    await updateSourceFile(item, 'pending');
-
     // Sync reset status to database (single source of truth)
+    // updateSourceFile removed - database is single source of truth
     // BUSINESS RULE (see STATE_MODEL.md "Automatic State Transitions on Approval"):
     // On RESET: Only stage_status changes to 'in_progress'
     // lifecycle_state and workflow_stage remain unchanged.
@@ -628,27 +478,25 @@ export const SpecificationApproval: React.FC = () => {
   };
 
   const handleApproveSpecification = async () => {
-    if (!currentWorkspace?.id) return;
-
-    const approvalData = {
-      approved: true,
-      date: new Date().toISOString(),
-    };
-    localStorage.setItem(`specification-approved-${currentWorkspace.id}`, JSON.stringify(approvalData));
-    setSpecificationApproved(true);
-    setApprovalDate(approvalData.date);
-
-    await savePhaseApprovalToFile(true, approvalData.date);
+    // Use database phase approval API
+    // specificationApproved and approvalDate are derived from phaseApprovals Map
+    try {
+      await approvePhaseDb('specification');
+      console.log('Specification phase approved via database');
+    } catch (err) {
+      console.error('Failed to approve specification phase:', err);
+    }
   };
 
   const handleRevokeApproval = async () => {
-    if (!currentWorkspace?.id) return;
-
-    localStorage.removeItem(`specification-approved-${currentWorkspace.id}`);
-    setSpecificationApproved(false);
-    setApprovalDate(null);
-
-    await savePhaseApprovalToFile(false, null);
+    // Use database phase revoke API
+    // specificationApproved and approvalDate are derived from phaseApprovals Map
+    try {
+      await revokePhaseDb('specification');
+      console.log('Specification phase approval revoked via database');
+    } catch (err) {
+      console.error('Failed to revoke specification phase approval:', err);
+    }
   };
 
   const getStatusBadge = (status: string) => {

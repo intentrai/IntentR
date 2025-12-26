@@ -290,6 +290,24 @@ func main() {
 		w.WriteHeader(http.StatusOK)
 	}))
 
+	// Phase approval endpoints
+	mux.HandleFunc("GET /state/phase/{workspaceId}/{phase}", corsMiddleware(server.handleGetPhaseApproval))
+	mux.HandleFunc("OPTIONS /state/phase/{workspaceId}/{phase}", corsMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	mux.HandleFunc("POST /state/phase/{workspaceId}/{phase}/approve", corsMiddleware(server.handleApprovePhase))
+	mux.HandleFunc("OPTIONS /state/phase/{workspaceId}/{phase}/approve", corsMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	mux.HandleFunc("POST /state/phase/{workspaceId}/{phase}/revoke", corsMiddleware(server.handleRevokePhaseApproval))
+	mux.HandleFunc("OPTIONS /state/phase/{workspaceId}/{phase}/revoke", corsMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	mux.HandleFunc("GET /state/phases/{workspaceId}", corsMiddleware(server.handleGetAllPhaseApprovals))
+	mux.HandleFunc("OPTIONS /state/phases/{workspaceId}", corsMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+
 	httpServer := &http.Server{
 		Addr:         fmt.Sprintf(":%s", port),
 		Handler:      mux,
@@ -1310,11 +1328,17 @@ func (s *Server) handleGetStoryCardState(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	log.Printf("[handleGetStoryCardState] Fetching state for card_id=%s", cardID)
+
 	state, err := s.entityStateRepo.GetStoryCardState(cardID)
 	if err != nil {
+		log.Printf("[handleGetStoryCardState] FAILED to get card %s: %v", cardID, err)
 		http.Error(w, fmt.Sprintf("Failed to get story card state: %v", err), http.StatusNotFound)
 		return
 	}
+
+	log.Printf("[handleGetStoryCardState] SUCCESS - Found card %s with lifecycle_state=%s, workflow_stage=%s",
+		state.CardID, state.LifecycleState, state.WorkflowStage)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(state)
@@ -1441,17 +1465,25 @@ func (s *Server) handleSyncEnablerFromFile(w http.ResponseWriter, r *http.Reques
 func (s *Server) handleSyncStoryCardFromFile(w http.ResponseWriter, r *http.Request) {
 	var storyCard models.StoryCard
 	if err := json.NewDecoder(r.Body).Decode(&storyCard); err != nil {
+		log.Printf("[handleSyncStoryCardFromFile] FAILED to decode request body: %v", err)
 		http.Error(w, fmt.Sprintf("Invalid request body: %v", err), http.StatusBadRequest)
 		return
 	}
+
+	log.Printf("[handleSyncStoryCardFromFile] Received request for card_id=%s, lifecycle_state=%s, workflow_stage=%s, stage_status=%s, approval_status=%s",
+		storyCard.CardID, storyCard.LifecycleState, storyCard.WorkflowStage, storyCard.StageStatus, storyCard.ApprovalStatus)
 
 	userID := 1 // Default user ID
 
 	result, err := s.entityStateRepo.UpsertStoryCard(storyCard, &userID)
 	if err != nil {
+		log.Printf("[handleSyncStoryCardFromFile] FAILED to upsert card %s: %v", storyCard.CardID, err)
 		http.Error(w, fmt.Sprintf("Failed to sync story card: %v", err), http.StatusInternalServerError)
 		return
 	}
+
+	log.Printf("[handleSyncStoryCardFromFile] SUCCESS - Upserted card %s with id=%d, lifecycle_state=%s",
+		result.CardID, result.ID, result.LifecycleState)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(result)
@@ -1572,4 +1604,100 @@ func (s *Server) handleImportWorkspaceState(w http.ResponseWriter, r *http.Reque
 		},
 		"workspace_id": workspaceID,
 	})
+}
+
+// ============================================================================
+// Phase Approval Handlers
+// ============================================================================
+
+func (s *Server) handleGetPhaseApproval(w http.ResponseWriter, r *http.Request) {
+	workspaceID := r.PathValue("workspaceId")
+	phase := r.PathValue("phase")
+
+	if workspaceID == "" || phase == "" {
+		http.Error(w, "Workspace ID and phase are required", http.StatusBadRequest)
+		return
+	}
+
+	approval, err := s.entityStateRepo.GetPhaseApproval(workspaceID, phase)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to get phase approval: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(approval)
+}
+
+func (s *Server) handleGetAllPhaseApprovals(w http.ResponseWriter, r *http.Request) {
+	workspaceID := r.PathValue("workspaceId")
+
+	if workspaceID == "" {
+		http.Error(w, "Workspace ID is required", http.StatusBadRequest)
+		return
+	}
+
+	approvals, err := s.entityStateRepo.GetAllPhaseApprovals(workspaceID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to get phase approvals: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(approvals)
+}
+
+func (s *Server) handleApprovePhase(w http.ResponseWriter, r *http.Request) {
+	workspaceID := r.PathValue("workspaceId")
+	phase := r.PathValue("phase")
+
+	if workspaceID == "" || phase == "" {
+		http.Error(w, "Workspace ID and phase are required", http.StatusBadRequest)
+		return
+	}
+
+	// Validate phase
+	validPhases := map[string]bool{
+		"intent":        true,
+		"specification": true,
+		"ui_design":     true,
+		"implementation": true,
+		"control_loop":  true,
+	}
+	if !validPhases[phase] {
+		http.Error(w, fmt.Sprintf("Invalid phase: %s", phase), http.StatusBadRequest)
+		return
+	}
+
+	userID := 1 // Default user ID
+
+	approval, err := s.entityStateRepo.ApprovePhase(workspaceID, phase, &userID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to approve phase: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(approval)
+}
+
+func (s *Server) handleRevokePhaseApproval(w http.ResponseWriter, r *http.Request) {
+	workspaceID := r.PathValue("workspaceId")
+	phase := r.PathValue("phase")
+
+	if workspaceID == "" || phase == "" {
+		http.Error(w, "Workspace ID and phase are required", http.StatusBadRequest)
+		return
+	}
+
+	userID := 1 // Default user ID
+
+	approval, err := s.entityStateRepo.RevokePhaseApproval(workspaceID, phase, &userID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to revoke phase approval: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(approval)
 }

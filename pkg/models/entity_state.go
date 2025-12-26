@@ -80,10 +80,11 @@ type StoryCard struct {
 	IsActive    bool      `json:"is_active"`
 
 	// INTENT State Model - 4 dimensions
-	LifecycleState string `json:"lifecycle_state"`
-	WorkflowStage  string `json:"workflow_stage"`
-	StageStatus    string `json:"stage_status"`
-	ApprovalStatus string `json:"approval_status"`
+	LifecycleState   string `json:"lifecycle_state"`
+	WorkflowStage    string `json:"workflow_stage"`
+	StageStatus      string `json:"stage_status"`
+	ApprovalStatus   string `json:"approval_status"`
+	RejectionComment string `json:"rejection_comment"` // Comment when rejected
 
 	// Concurrency control
 	Version int `json:"version"`
@@ -91,6 +92,20 @@ type StoryCard struct {
 	// Workspace tracking
 	WorkspaceID string `json:"workspace_id"`
 	FilePath    string `json:"file_path,omitempty"`
+}
+
+// PhaseApproval represents phase-level approval status for INTENT workflow stages
+type PhaseApproval struct {
+	ID          int        `json:"id"`
+	WorkspaceID string     `json:"workspace_id"`
+	Phase       string     `json:"phase"` // intent, specification, ui_design, implementation, control_loop
+	IsApproved  bool       `json:"is_approved"`
+	ApprovedAt  *time.Time `json:"approved_at,omitempty"`
+	ApprovedBy  *int       `json:"approved_by,omitempty"`
+	RevokedAt   *time.Time `json:"revoked_at,omitempty"`
+	RevokedBy   *int       `json:"revoked_by,omitempty"`
+	CreatedAt   time.Time  `json:"created_at"`
+	UpdatedAt   time.Time  `json:"updated_at"`
 }
 
 // StoryCardConnection represents a connection between story cards

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Button } from '../components/Button';
 import { useWorkspace, type StoryCard, type Connection, type StoryCardLifecycleState, type StoryCardWorkflowStage, type StoryCardStageStatus, type StoryCardApprovalStatus } from '../context/WorkspaceContext';
@@ -90,6 +90,19 @@ export const Storyboard: React.FC = () => {
 
   // Track loaded file hashes to detect changes
   const [loadedFileHashes, setLoadedFileHashes] = useState<Record<string, string>>({});
+
+  // Deduplicate cards to prevent React key warnings
+  const uniqueCards = useMemo(() => {
+    const seenIds = new Set<string>();
+    const result: StoryCard[] = [];
+    for (const card of cards) {
+      if (!seenIds.has(card.id)) {
+        seenIds.add(card.id);
+        result.push(card);
+      }
+    }
+    return result;
+  }, [cards]);
 
   // Auto-save refs
   const initialLoadComplete = useRef(false);
@@ -186,14 +199,12 @@ export const Storyboard: React.FC = () => {
       let markdown = `# ${card.title}\n\n`;
 
       // Metadata section - includes grid position for restoration
+      // NOTE: State fields (lifecycle_state, workflow_stage, stage_status, approval_status)
+      // are stored in the database as single source of truth, not in markdown files
       markdown += `## Metadata\n`;
       markdown += `- **Type**: Story Card\n`;
       markdown += `- **Storyboard**: ${workspaceName}\n`;
       markdown += `- **Card ID**: ${card.id}\n`;
-      markdown += `- **Lifecycle State**: ${getStatusLabel(card)}\n`;
-      markdown += `- **Workflow Stage**: ${card.workflow_stage || 'intent'}\n`;
-      markdown += `- **Stage Status**: ${card.stage_status || 'in_progress'}\n`;
-      markdown += `- **Approval Status**: ${card.approval_status || 'pending'}\n`;
       markdown += `- **Grid Position X**: ${Math.round(card.x)}\n`;
       markdown += `- **Grid Position Y**: ${Math.round(card.y)}\n`;
       markdown += `- **Generated**: ${new Date().toLocaleString()}\n`;
@@ -309,11 +320,12 @@ export const Storyboard: React.FC = () => {
     indexMarkdown += '\n';
 
     // Card positions data (machine-readable for restoration)
+    // NOTE: State (lifecycle_state, workflow_stage, etc.) is stored in database, not markdown
     indexMarkdown += `## Card Positions Data\n\n`;
-    indexMarkdown += `| Card ID | Title | X | Y | Lifecycle |\n`;
-    indexMarkdown += `|---------|-------|---|---|----------|\n`;
+    indexMarkdown += `| Card ID | Title | X | Y |\n`;
+    indexMarkdown += `|---------|-------|---|---|\n`;
     cardsToSave.forEach(card => {
-      indexMarkdown += `| ${card.id} | ${card.title} | ${Math.round(card.x)} | ${Math.round(card.y)} | ${card.lifecycle_state || 'draft'} |\n`;
+      indexMarkdown += `| ${card.id} | ${card.title} | ${Math.round(card.x)} | ${Math.round(card.y)} |\n`;
     });
 
     files.push({ fileName: indexFileName, content: indexMarkdown });
@@ -331,10 +343,9 @@ export const Storyboard: React.FC = () => {
           subfolder: 'conception'
         }),
       });
-      console.log(`[Auto-save] Saved ${files.length} files to conception folder`);
 
       // Sync each story card state to database via EntityStateContext
-      if (currentWorkspace?.id) {
+      if (currentWorkspace?.name) {
         for (const card of cardsToSave) {
           try {
             const fileName = generateFileName(card.title);
@@ -346,19 +357,17 @@ export const Storyboard: React.FC = () => {
               image_url: card.imageUrl,
               position_x: Math.round(card.x),
               position_y: Math.round(card.y),
-              workspace_id: currentWorkspace.id,
+              workspace_id: currentWorkspace.name, // Must use .name to match EntityStateContext queries
               file_path: `${currentWorkspace.projectFolder}/conception/${fileName}`,
               lifecycle_state: (card.lifecycle_state || 'draft') as 'draft' | 'active' | 'implemented' | 'maintained' | 'retired',
               workflow_stage: (card.workflow_stage || 'intent') as 'intent' | 'specification' | 'ui_design' | 'implementation' | 'control_loop',
               stage_status: (card.stage_status || 'in_progress') as 'in_progress' | 'ready_for_approval' | 'approved' | 'blocked',
               approval_status: (card.approval_status || 'pending') as 'pending' | 'approved' | 'rejected',
             });
-          } catch (syncErr) {
-            console.warn(`[Auto-save] Failed to sync story card ${card.id} to database:`, syncErr);
+          } catch {
             // Don't fail the overall save if sync fails - files are already saved
           }
         }
-        console.log(`[Auto-save] Synced ${cardsToSave.length} story cards to database`);
       }
     } catch (error) {
       console.warn('[Auto-save] Failed to save storyboard:', error);
@@ -378,7 +387,6 @@ export const Storyboard: React.FC = () => {
 
     // Debounce auto-save by 1 second
     autoSaveTimeoutRef.current = setTimeout(async () => {
-      console.log('[Auto-save] Saving storyboard to conception folder...');
       await autoSaveToIdeation(cards, connections);
     }, 1000);
 
@@ -393,7 +401,6 @@ export const Storyboard: React.FC = () => {
   const setWrapperRef = (element: HTMLDivElement | null) => {
     wrapperRef.current = element;
     if (element) {
-      console.log('Wrapper element mounted');
       setWrapperElement(element);
     }
   };
@@ -401,7 +408,8 @@ export const Storyboard: React.FC = () => {
   // Load storyboard data from current workspace
   useEffect(() => {
     if (currentWorkspace?.storyboard) {
-      setCards(currentWorkspace.storyboard.cards);
+      // Load cards from workspace - database state is fetched when editing
+      setCards(currentWorkspace.storyboard.cards || []);
 
       // Deduplicate connections when loading
       const loadedConnections = currentWorkspace.storyboard.connections || [];
@@ -435,7 +443,6 @@ export const Storyboard: React.FC = () => {
       // Enable auto-save after initial load completes
       setTimeout(() => {
         initialLoadComplete.current = true;
-        console.log('[Storyboard] Initial load complete, auto-save enabled');
       }, 500);
     } else {
       // Start with blank storyboard for new workspaces
@@ -444,7 +451,6 @@ export const Storyboard: React.FC = () => {
       // Enable auto-save for new workspaces too
       setTimeout(() => {
         initialLoadComplete.current = true;
-        console.log('[Storyboard] New workspace, auto-save enabled');
       }, 500);
     }
   }, [currentWorkspace?.id]);
@@ -514,14 +520,12 @@ export const Storyboard: React.FC = () => {
       });
 
       if (!response.ok) {
-        console.log('No storyboard files found or endpoint not available');
         return;
       }
 
       const data = await response.json();
 
       if (!data.files || data.files.length === 0) {
-        console.log('No STORY-*.md files found');
         return;
       }
 
@@ -585,8 +589,21 @@ export const Storyboard: React.FC = () => {
         }
 
         // Create new card - use saved coordinates if available
+        const cardId = savedCardId || `card-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+        // Try to get state from database (single source of truth)
+        let dbState: any = null;
+        try {
+          dbState = dbStoryCards.get(cardId);
+          if (!dbState) {
+            dbState = await fetchStoryCardState(cardId);
+          }
+        } catch {
+          // Card not in database yet, use defaults
+        }
+
         const newCard: StoryCard = {
-          id: savedCardId || `card-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          id: cardId,
           title,
           description: description || 'No description provided.',
           imageUrl: '',
@@ -595,6 +612,11 @@ export const Storyboard: React.FC = () => {
           status,
           ideationTags: [],
           sourceFileName: fileName,
+          // INTENT State Model - 4 dimensions from DATABASE (single source of truth)
+          lifecycle_state: (dbState?.lifecycle_state || 'draft') as StoryCardLifecycleState,
+          workflow_stage: (dbState?.workflow_stage || 'intent') as StoryCardWorkflowStage,
+          stage_status: (dbState?.stage_status || 'in_progress') as StoryCardStageStatus,
+          approval_status: (dbState?.approval_status || 'pending') as StoryCardApprovalStatus,
         };
 
         newCardsToAdd.push(newCard);
@@ -660,7 +682,6 @@ export const Storyboard: React.FC = () => {
           });
 
           if (uniqueNewCards.length === 0) {
-            console.log('[Load] All cards already exist, no new cards to add');
             return prevCards;
           }
 
@@ -687,7 +708,6 @@ export const Storyboard: React.FC = () => {
             }));
           }
 
-          console.log(`[Load] Added ${cardsWithPositions.length} new cards from files`);
           return [...prevCards, ...cardsWithPositions];
         });
       }
@@ -705,16 +725,13 @@ export const Storyboard: React.FC = () => {
           });
 
           if (newConns.length > 0) {
-            console.log(`Added ${newConns.length} new connections from index file`);
             return [...prevConns, ...newConns];
           }
           return prevConns;
         });
       }
 
-      if (newCardsToAdd.length === 0 && loadedConnections.length === 0) {
-        console.log('No new or changed storyboard files to load');
-      }
+      // No action needed if no new cards or connections
 
     } catch (err) {
       console.error('Failed to auto-load storyboard files:', err);
@@ -739,6 +756,42 @@ export const Storyboard: React.FC = () => {
       }
     }
   }, [currentWorkspace?.projectFolder, currentWorkspace?.id]);
+
+  // Sync card states from database when dbStoryCards changes
+  // This ensures that changes made on other pages (like IntentApproval) are reflected
+  useEffect(() => {
+    if (cards.length > 0 && dbStoryCards.size > 0) {
+      setCards(prevCards => {
+        let hasChanges = false;
+        const updatedCards = prevCards.map(card => {
+          const dbState = dbStoryCards.get(card.id);
+          if (dbState) {
+            // Check if any state field is different
+            const needsUpdate =
+              card.lifecycle_state !== dbState.lifecycle_state ||
+              card.workflow_stage !== dbState.workflow_stage ||
+              card.stage_status !== dbState.stage_status ||
+              card.approval_status !== dbState.approval_status;
+
+            if (needsUpdate) {
+              hasChanges = true;
+              return {
+                ...card,
+                lifecycle_state: (dbState.lifecycle_state || card.lifecycle_state) as StoryCardLifecycleState,
+                workflow_stage: (dbState.workflow_stage || card.workflow_stage) as StoryCardWorkflowStage,
+                stage_status: (dbState.stage_status || card.stage_status) as StoryCardStageStatus,
+                approval_status: (dbState.approval_status || card.approval_status) as StoryCardApprovalStatus,
+              };
+            }
+          }
+          return card;
+        });
+
+        // Only return new array if there were actual changes
+        return hasChanges ? updatedCards : prevCards;
+      });
+    }
+  }, [dbStoryCards]);
 
   // Analyze storyboard with AI - adds cards directly to grid, skipping unchanged ones
   const handleAnalyzeStoryboard = async () => {
@@ -920,8 +973,6 @@ export const Storyboard: React.FC = () => {
   useEffect(() => {
     const unsubscribe = onGridUpdate((update) => {
       if (update.page === 'storyboard') {
-        console.log('Received storyboard update:', update);
-
         // Mark as remote update to prevent re-broadcasting
         isRemoteUpdate.current = true;
 
@@ -975,11 +1026,8 @@ export const Storyboard: React.FC = () => {
   // Attach native wheel event listener to handle zoom while allowing scroll
   useEffect(() => {
     if (!wrapperElement) {
-      console.log('Zoom useEffect: wrapperElement is null, skipping');
       return;
     }
-
-    console.log('Zoom useEffect: Attaching wheel event listener, current zoom:', zoom);
 
     const handleNativeWheel = (e: WheelEvent) => {
       const canvas = canvasRef.current;
@@ -989,8 +1037,6 @@ export const Storyboard: React.FC = () => {
       const isZoomGesture = e.ctrlKey || e.metaKey;
 
       if (isZoomGesture) {
-        console.log('Zoom gesture detected, current zoom:', zoom, 'deltaY:', e.deltaY);
-
         // ZOOM: Prevent page zoom and zoom only the grid
         e.preventDefault();
         e.stopPropagation();
@@ -1004,8 +1050,6 @@ export const Storyboard: React.FC = () => {
         // Calculate zoom delta (slowed down by 4x from original)
         const delta = e.deltaY * -0.0025;
         const newZoom = Math.min(Math.max(0.1, zoom + delta), 3);
-
-        console.log('Calculated newZoom:', newZoom);
 
         // Calculate the point in canvas coordinates before zoom
         const pointBeforeZoomX = mouseX / zoom;
@@ -1028,11 +1072,9 @@ export const Storyboard: React.FC = () => {
 
     // Add listener with passive: false to allow preventDefault for zoom
     wrapperElement.addEventListener('wheel', handleNativeWheel, { passive: false });
-    console.log('Zoom useEffect: Wheel event listener attached');
 
     return () => {
       wrapperElement.removeEventListener('wheel', handleNativeWheel);
-      console.log('Zoom useEffect: Wheel event listener removed');
     };
   }, [wrapperElement, zoom]);
 
@@ -1342,6 +1384,7 @@ export const Storyboard: React.FC = () => {
 
     // Try to get state from cached dbStoryCards first, then fetch from database
     let dbState = dbStoryCards.get(cardId);
+
     if (!dbState) {
       dbState = await fetchStoryCardState(cardId) || undefined;
     }
@@ -1368,7 +1411,7 @@ export const Storyboard: React.FC = () => {
     setShowCardDialog(true);
   };
 
-  const handleCreateCard = () => {
+  const handleCreateCard = async () => {
     if (!cardFormData.title.trim()) return;
 
     // Calculate the center of the visible viewport
@@ -1393,8 +1436,11 @@ export const Storyboard: React.FC = () => {
       centerY = Math.max(100, centerY - 200);
     }
 
+    // Generate unique ID using timestamp + random suffix to avoid duplicates
+    const cardId = 'card-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+
     const newCard: StoryCard = {
-      id: 'card-' + Date.now(),
+      id: cardId,
       title: cardFormData.title,
       description: cardFormData.description,
       imageUrl: cardFormData.imageUrl,
@@ -1410,19 +1456,70 @@ export const Storyboard: React.FC = () => {
     };
 
     setCards(prevCards => [...prevCards, newCard]);
+
+    // CRITICAL: Sync new card to DATABASE (single source of truth)
+    if (currentWorkspace?.name) {
+      try {
+        await syncStoryCard({
+          card_id: cardId,
+          title: cardFormData.title,
+          description: cardFormData.description || '',
+          card_type: 'storyboard',
+          position_x: newCard.x,
+          position_y: newCard.y,
+          workspace_id: currentWorkspace.name,
+          lifecycle_state: cardFormData.lifecycle_state,
+          workflow_stage: cardFormData.workflow_stage,
+          stage_status: cardFormData.stage_status,
+          approval_status: cardFormData.approval_status,
+        });
+      } catch {
+        // Silent failure for card sync
+      }
+    }
+
     setShowCardDialog(false);
     setEditingCardId(null);
     setCardFormData({ title: '', description: '', imageUrl: '', lifecycle_state: 'draft', workflow_stage: 'intent', stage_status: 'in_progress', approval_status: 'pending', ideationTags: [], ideationCardId: '' });
   };
 
-  const handleUpdateCard = () => {
+  const handleUpdateCard = async () => {
     if (!editingCardId || !cardFormData.title.trim()) return;
 
+    // Get the existing card to preserve position
+    const existingCard = cards.find(c => c.id === editingCardId);
+    if (!existingCard) return;
+
+    // Update local state
     setCards(prevCards => prevCards.map(card =>
       card.id === editingCardId
         ? { ...card, ...cardFormData, ideationCardId: cardFormData.ideationCardId || undefined }
         : card
     ));
+
+    // CRITICAL: Sync state changes to DATABASE (single source of truth)
+    if (currentWorkspace?.name) {
+      const syncPayload = {
+        card_id: editingCardId,
+        title: cardFormData.title,
+        description: cardFormData.description || '',
+        card_type: 'storyboard',
+        position_x: existingCard.x,
+        position_y: existingCard.y,
+        workspace_id: currentWorkspace.name,
+        file_path: existingCard.sourceFileName,
+        lifecycle_state: cardFormData.lifecycle_state,
+        workflow_stage: cardFormData.workflow_stage,
+        stage_status: cardFormData.stage_status,
+        approval_status: cardFormData.approval_status,
+      };
+      try {
+        await syncStoryCard(syncPayload);
+      } catch {
+        // Sync failed - state will be out of sync
+      }
+    }
+
     setShowCardDialog(false);
     setEditingCardId(null);
     setCardFormData({ title: '', description: '', imageUrl: '', lifecycle_state: 'draft', workflow_stage: 'intent', stage_status: 'in_progress', approval_status: 'pending', ideationTags: [], ideationCardId: '' });
@@ -1924,8 +2021,8 @@ Cards can be linked to ideation content and later analyzed to generate capabilit
           })()}
         </svg>
 
-            {/* Story Cards */}
-            {cards.map((card) => (
+            {/* Story Cards - use uniqueCards to prevent duplicate key warnings */}
+            {uniqueCards.map((card) => (
               <div
                 key={card.id}
                 data-card-id={card.id}

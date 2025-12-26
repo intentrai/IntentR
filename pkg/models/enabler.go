@@ -34,10 +34,11 @@ type Enabler struct {
 	IsActive               bool            `json:"is_active"`
 
 	// INTENT State Model - 4 dimensions
-	LifecycleState string `json:"lifecycle_state"`
-	WorkflowStage  string `json:"workflow_stage"`
-	StageStatus    string `json:"stage_status"`
-	ApprovalStatus string `json:"approval_status"`
+	LifecycleState   string `json:"lifecycle_state"`
+	WorkflowStage    string `json:"workflow_stage"`
+	StageStatus      string `json:"stage_status"`
+	ApprovalStatus   string `json:"approval_status"`
+	RejectionComment string `json:"rejection_comment"` // Comment when rejected
 
 	// Concurrency control
 	Version int `json:"version"`

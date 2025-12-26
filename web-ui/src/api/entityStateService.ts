@@ -28,9 +28,23 @@ export interface EntityStateFields {
   workflow_stage: WorkflowStage;
   stage_status: StageStatus;
   approval_status: ApprovalStatus;
+  rejection_comment?: string;
   version: number;
   workspace_id: string;
   file_path?: string;
+}
+
+export interface PhaseApproval {
+  id?: number;
+  workspace_id: string;
+  phase: WorkflowStage;
+  is_approved: boolean;
+  approved_at?: string;
+  approved_by?: number;
+  revoked_at?: string;
+  revoked_by?: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface CapabilityState extends EntityStateFields {
@@ -496,3 +510,47 @@ export const STATE_LABELS = {
     rejected: 'Rejected',
   },
 };
+
+// ============================================================================
+// Phase Approval Operations
+// ============================================================================
+
+/**
+ * Get phase approval status for a specific phase
+ */
+export async function getPhaseApproval(workspaceId: string, phase: WorkflowStage): Promise<PhaseApproval> {
+  return apiRequest<PhaseApproval>(capabilityClient, {
+    method: 'GET',
+    url: `/state/phase/${encodeURIComponent(workspaceId)}/${encodeURIComponent(phase)}`,
+  });
+}
+
+/**
+ * Get all phase approvals for a workspace
+ */
+export async function getAllPhaseApprovals(workspaceId: string): Promise<PhaseApproval[]> {
+  return apiRequest<PhaseApproval[]>(capabilityClient, {
+    method: 'GET',
+    url: `/state/phases/${encodeURIComponent(workspaceId)}`,
+  });
+}
+
+/**
+ * Approve a phase
+ */
+export async function approvePhase(workspaceId: string, phase: WorkflowStage): Promise<PhaseApproval> {
+  return apiRequest<PhaseApproval>(capabilityClient, {
+    method: 'POST',
+    url: `/state/phase/${encodeURIComponent(workspaceId)}/${encodeURIComponent(phase)}/approve`,
+  });
+}
+
+/**
+ * Revoke phase approval
+ */
+export async function revokePhaseApproval(workspaceId: string, phase: WorkflowStage): Promise<PhaseApproval> {
+  return apiRequest<PhaseApproval>(capabilityClient, {
+    method: 'POST',
+    url: `/state/phase/${encodeURIComponent(workspaceId)}/${encodeURIComponent(phase)}/revoke`,
+  });
+}

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, Alert, Button, PageLayout } from '../components';
 import { useWorkspace } from '../context/WorkspaceContext';
-import { useEntityState } from '../context/EntityStateContext';
+import { useEntityState, usePhaseApprovals } from '../context/EntityStateContext';
 import { INTEGRATION_URL } from '../api/client';
 import {
   type LifecycleState,
@@ -31,29 +31,31 @@ interface PhaseStatus {
   storyboard: { total: number; approved: number; rejected: number; items: IntentItem[] };
 }
 
-interface ItemApprovalStatus {
-  [itemId: string]: {
-    status: 'approved' | 'rejected' | 'draft';
-    comment?: string;
-    reviewedAt?: string;
-  };
-}
+// ItemApprovalStatus interface removed - approval status now comes from database only
 
 export const IntentApproval: React.FC = () => {
   const navigate = useNavigate();
   const { currentWorkspace } = useWorkspace();
-  const { storyCards: dbStoryCards, syncStoryCard, refreshWorkspaceState } = useEntityState();
+  const { storyCards: dbStoryCards, syncStoryCard, updateStoryCard, refreshWorkspaceState } = useEntityState();
+  const {
+    phaseApprovals,
+    approvePhase: approvePhaseDb,
+    revokePhase: revokePhaseDb,
+    isPhaseApproved,
+  } = usePhaseApprovals();
   const [loading, setLoading] = useState(false);
   const [phaseStatus, setPhaseStatus] = useState<PhaseStatus>({
     vision: { total: 0, approved: 0, rejected: 0, items: [] },
     ideation: { total: 0, approved: 0, rejected: 0, items: [] },
     storyboard: { total: 0, approved: 0, rejected: 0, items: [] },
   });
-  const [intentApproved, setIntentApproved] = useState(false);
-  const [approvalDate, setApprovalDate] = useState<string | null>(null);
 
-  // Item approval tracking
-  const [itemApprovals, setItemApprovals] = useState<ItemApprovalStatus>({});
+  // Get phase approval state from database
+  const intentApproved = isPhaseApproved('intent');
+  const intentPhaseApproval = phaseApprovals.get('intent');
+  const approvalDate = intentPhaseApproval?.approved_at || null;
+
+  // Item approval tracking - no longer needed, approval status comes from database
 
   // Rejection modal state
   const [rejectionModal, setRejectionModal] = useState<{
@@ -62,137 +64,30 @@ export const IntentApproval: React.FC = () => {
   }>({ isOpen: false, item: null });
   const [rejectionComment, setRejectionComment] = useState('');
 
-  // Load intent phase items
+  // Load intent phase items - approval status comes from database via dbStoryCards
   useEffect(() => {
     if (currentWorkspace?.projectFolder) {
       loadIntentItems();
-      loadItemApprovals();
     }
-  }, [currentWorkspace?.projectFolder]);
+  }, [currentWorkspace?.projectFolder, dbStoryCards]);
 
-  const loadItemApprovals = async () => {
-    if (!currentWorkspace?.id || !currentWorkspace?.projectFolder) return;
-
-    // Try to load from file first (for shared/imported workspaces)
-    try {
-      const response = await fetch(`${INTEGRATION_URL}/read-file`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          filePath: `${currentWorkspace.projectFolder}/approvals/intent-approvals.json`
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.content) {
-          const fileApprovals = JSON.parse(data.content);
-          setItemApprovals(fileApprovals.itemApprovals || {});
-          // Also update localStorage as cache
-          localStorage.setItem(`intent-item-approvals-${currentWorkspace.id}`, JSON.stringify(fileApprovals.itemApprovals || {}));
-
-          // Load phase approval status
-          if (fileApprovals.phaseApproved) {
-            setIntentApproved(true);
-            setApprovalDate(fileApprovals.phaseApprovedDate || null);
-            localStorage.setItem(`intent-approved-${currentWorkspace.id}`, JSON.stringify({
-              approved: true,
-              date: fileApprovals.phaseApprovedDate
-            }));
-          }
-          return;
-        }
-      }
-    } catch (err) {
-      console.log('No approval file found, checking localStorage');
-    }
-
-    // Fallback to localStorage
-    const stored = localStorage.getItem(`intent-item-approvals-${currentWorkspace.id}`);
-    if (stored) {
-      setItemApprovals(JSON.parse(stored));
-    }
-  };
-
-  const saveItemApprovals = async (approvals: ItemApprovalStatus) => {
-    if (!currentWorkspace?.id || !currentWorkspace?.projectFolder) return;
-
-    // Update state and localStorage immediately
-    localStorage.setItem(`intent-item-approvals-${currentWorkspace.id}`, JSON.stringify(approvals));
-    setItemApprovals(approvals);
-
-    // Save to file for sharing/import
-    try {
-      const fileContent = JSON.stringify({
-        phase: 'intent',
-        itemApprovals: approvals,
-        phaseApproved: intentApproved,
-        phaseApprovedDate: approvalDate,
-        lastUpdated: new Date().toISOString(),
-      }, null, 2);
-
-      await fetch(`${INTEGRATION_URL}/save-specifications`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          workspacePath: currentWorkspace.projectFolder,
-          specifications: [{
-            filename: 'approvals/intent-approvals.json',
-            content: fileContent,
-          }],
-        }),
-      });
-    } catch (err) {
-      console.error('Failed to save approvals to file:', err);
-    }
-  };
-
-  const savePhaseApprovalToFile = async (approved: boolean, date: string | null) => {
-    if (!currentWorkspace?.projectFolder) return;
-
-    try {
-      const fileContent = JSON.stringify({
-        phase: 'intent',
-        itemApprovals: itemApprovals,
-        phaseApproved: approved,
-        phaseApprovedDate: date,
-        lastUpdated: new Date().toISOString(),
-      }, null, 2);
-
-      await fetch(`${INTEGRATION_URL}/save-specifications`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          workspacePath: currentWorkspace.projectFolder,
-          specifications: [{
-            filename: 'approvals/intent-approvals.json',
-            content: fileContent,
-          }],
-        }),
-      });
-    } catch (err) {
-      console.error('Failed to save phase approval to file:', err);
-    }
-  };
+  // All approval state is now managed in the database via syncStoryCard
+  // localStorage and JSON files are no longer used
 
   const loadIntentItems = async () => {
-    console.log('loadIntentItems called, projectFolder:', currentWorkspace?.projectFolder);
     if (!currentWorkspace?.projectFolder) {
-      console.log('No projectFolder set, returning early');
       return;
     }
 
     setLoading(true);
     try {
       // Load vision items (using theme-files endpoint which handles VIS-*, VISION-*, THEME-* files)
-      console.log('Fetching theme-files with workspacePath:', currentWorkspace.projectFolder);
       const visionResponse = await fetch(`${INTEGRATION_URL}/theme-files`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ workspacePath: currentWorkspace.projectFolder }),
       });
       const visionData = await visionResponse.json();
-      console.log('Vision data received:', visionData);
       const visionItems: IntentItem[] = (visionData.themes || []).map((v: any) => ({
         id: v.filename,
         name: v.name || v.filename,
@@ -211,7 +106,6 @@ export const IntentApproval: React.FC = () => {
         body: JSON.stringify({ workspacePath: currentWorkspace.projectFolder }),
       });
       const ideationData = await ideationResponse.json();
-      console.log('Ideation data received:', ideationData);
       const ideationItems: IntentItem[] = (ideationData.ideas || []).map((i: any) => ({
         id: i.filename,
         name: i.name || i.filename,
@@ -230,7 +124,6 @@ export const IntentApproval: React.FC = () => {
         body: JSON.stringify({ workspacePath: currentWorkspace.projectFolder }),
       });
       const storyboardData = await storyboardResponse.json();
-      console.log('Storyboard data received:', storyboardData);
       const storyboardItems: IntentItem[] = (storyboardData.stories || []).map((s: any) => ({
         id: s.filename,
         name: s.title || s.name || s.filename,
@@ -239,22 +132,35 @@ export const IntentApproval: React.FC = () => {
         description: s.description,
         lastModified: s.lastModified,
         path: s.path,
-        entityId: s.storyId || s.fields?.['ID'] || s.filename?.replace(/\.md$/, ''),
+        // Use Card ID (same as Storyboard page) for database sync - this is the single source of truth
+        entityId: s.fields?.['Card ID'] || s.storyId || s.fields?.['ID'] || s.filename?.replace(/\.md$/, ''),
       }));
 
-      // Apply saved approval statuses
-      const storedApprovals = localStorage.getItem(`intent-item-approvals-${currentWorkspace.id}`);
-      const approvals: ItemApprovalStatus = storedApprovals ? JSON.parse(storedApprovals) : {};
+      // NOTE: We do NOT sync items here because UpsertStoryCard overwrites ALL fields
+      // including approval_status. Items are synced when:
+      // 1. Created on Storyboard page
+      // 2. Approved/rejected on this page (IntentApproval)
+      // The database already has the correct state for items that exist.
 
+      // Apply approval statuses from DATABASE (single source of truth)
+      // No longer using localStorage - database is the only source of truth
       const applyApprovalStatus = (items: IntentItem[]) => {
         return items.map(item => {
-          const approval = approvals[item.id];
-          if (approval) {
+          // Get state from database via dbStoryCards cache
+          const dbState = item.entityId ? dbStoryCards.get(item.entityId) : null;
+          if (dbState) {
+            // Map database approval_status to IntentItem status
+            let status: 'approved' | 'rejected' | 'draft' = 'draft';
+            if (dbState.approval_status === 'approved') {
+              status = 'approved';
+            } else if (dbState.approval_status === 'rejected') {
+              status = 'rejected';
+            }
             return {
               ...item,
-              status: approval.status,
-              rejectionComment: approval.comment,
-              reviewedAt: approval.reviewedAt,
+              status,
+              rejectionComment: dbState.rejection_comment,
+              reviewedAt: dbState.updated_at,
             };
           }
           return item;
@@ -264,8 +170,6 @@ export const IntentApproval: React.FC = () => {
       const updatedVisionItems = applyApprovalStatus(visionItems);
       const updatedIdeationItems = applyApprovalStatus(ideationItems);
       const updatedStoryboardItems = applyApprovalStatus(storyboardItems);
-
-      console.log('Final counts - Vision:', updatedVisionItems.length, 'Ideation:', updatedIdeationItems.length, 'Storyboard:', updatedStoryboardItems.length);
 
       setPhaseStatus({
         vision: {
@@ -288,13 +192,9 @@ export const IntentApproval: React.FC = () => {
         },
       });
 
-      // Check if intent phase is already approved
-      const stored = localStorage.getItem(`intent-approved-${currentWorkspace.id}`);
-      if (stored) {
-        const data = JSON.parse(stored);
-        setIntentApproved(data.approved);
-        setApprovalDate(data.date);
-      }
+      // Phase approval now comes from database via usePhaseApprovals hook
+      // No need to check localStorage - intentApproved and approvalDate
+      // are derived from phaseApprovals Map
     } catch (err) {
       console.error('Failed to load intent items:', err);
     } finally {
@@ -303,16 +203,7 @@ export const IntentApproval: React.FC = () => {
   };
 
   const handleApproveItem = async (item: IntentItem) => {
-    const newApprovals = {
-      ...itemApprovals,
-      [item.id]: {
-        status: 'approved' as const,
-        reviewedAt: new Date().toISOString(),
-      },
-    };
-    saveItemApprovals(newApprovals);
-
-    // Update phase status
+    // Update local UI state immediately
     updateItemStatus(item, 'approved');
 
     // Sync approval status to database (single source of truth)
@@ -321,25 +212,39 @@ export const IntentApproval: React.FC = () => {
     // NOTE: Use currentWorkspace.name (not .id) for consistency with EntityStateContext.refreshWorkspaceState
     if (item.entityId && currentWorkspace?.name) {
       try {
-        const result = await syncStoryCard({
-          card_id: item.entityId,
-          title: item.name,
-          description: item.description || '',
-          card_type: item.type, // 'vision', 'ideation', or 'storyboard'
-          position_x: 0,
-          position_y: 0,
-          workspace_id: currentWorkspace.name,
-          file_path: item.path,
-          lifecycle_state: 'active' as LifecycleState,       // REQUIRED: entity is now active in workflow
-          workflow_stage: 'intent' as WorkflowStage,         // REQUIRED: this is the Intent phase
-          stage_status: 'approved' as StageStatus,           // REQUIRED: stage work complete
-          approval_status: 'approved' as ApprovalStatus,     // REQUIRED: authorization granted
-        });
-        console.log(`Synced ${item.type} ${item.entityId} approval to database:`, result);
+        // Check if item exists in database - if so, use updateStoryCard to preserve existing fields
+        const existingCard = dbStoryCards.get(item.entityId);
+
+        if (existingCard) {
+          // Item exists - use updateStoryCard which only updates state fields (preserves position, etc.)
+          await updateStoryCard(item.entityId, {
+            lifecycle_state: 'active' as LifecycleState,       // REQUIRED: entity is now active in workflow
+            workflow_stage: 'intent' as WorkflowStage,         // REQUIRED: this is the Intent phase
+            stage_status: 'approved' as StageStatus,           // REQUIRED: stage work complete
+            approval_status: 'approved' as ApprovalStatus,     // REQUIRED: authorization granted
+            version: existingCard.version,                     // Required for optimistic locking
+          });
+        } else {
+          // Item doesn't exist - use syncStoryCard to create it
+          await syncStoryCard({
+            card_id: item.entityId,
+            title: item.name,
+            description: item.description || '',
+            card_type: item.type, // 'vision', 'ideation', or 'storyboard'
+            position_x: 0,
+            position_y: 0,
+            workspace_id: currentWorkspace.name,
+            file_path: item.path,
+            lifecycle_state: 'active' as LifecycleState,
+            workflow_stage: 'intent' as WorkflowStage,
+            stage_status: 'approved' as StageStatus,
+            approval_status: 'approved' as ApprovalStatus,
+          });
+        }
         // Refresh the workspace state to get updated data
         await refreshWorkspaceState();
-      } catch (err) {
-        console.error('Failed to sync approval to database:', err);
+      } catch {
+        // Silent failure for approval sync
       }
     }
   };
@@ -354,17 +259,7 @@ export const IntentApproval: React.FC = () => {
 
     const item = rejectionModal.item;
 
-    const newApprovals = {
-      ...itemApprovals,
-      [item.id]: {
-        status: 'rejected' as const,
-        comment: rejectionComment,
-        reviewedAt: new Date().toISOString(),
-      },
-    };
-    saveItemApprovals(newApprovals);
-
-    // Update phase status
+    // Update local UI state immediately
     updateItemStatus(item, 'rejected', rejectionComment);
 
     // Sync rejection status to database (single source of truth)
@@ -373,25 +268,41 @@ export const IntentApproval: React.FC = () => {
     // NOTE: Use currentWorkspace.name (not .id) for consistency with EntityStateContext.refreshWorkspaceState
     if (item.entityId && currentWorkspace?.name) {
       try {
-        const result = await syncStoryCard({
-          card_id: item.entityId,
-          title: item.name,
-          description: item.description || '',
-          card_type: item.type, // 'vision', 'ideation', or 'storyboard'
-          position_x: 0,
-          position_y: 0,
-          workspace_id: currentWorkspace.name,
-          file_path: item.path,
-          lifecycle_state: 'active' as LifecycleState,       // REQUIRED: entity remains in workflow but blocked
-          workflow_stage: 'intent' as WorkflowStage,         // REQUIRED: this is the Intent phase
-          stage_status: 'blocked' as StageStatus,            // REQUIRED: cannot proceed until resolved
-          approval_status: 'rejected' as ApprovalStatus,     // REQUIRED: authorization denied
-        });
-        console.log(`Synced ${item.type} ${item.entityId} rejection to database:`, result);
+        // Check if item exists in database - if so, use updateStoryCard to preserve existing fields
+        const existingCard = dbStoryCards.get(item.entityId);
+
+        if (existingCard) {
+          // Item exists - use updateStoryCard which only updates state fields (preserves position, etc.)
+          await updateStoryCard(item.entityId, {
+            lifecycle_state: 'active' as LifecycleState,       // REQUIRED: entity remains in workflow but blocked
+            workflow_stage: 'intent' as WorkflowStage,         // REQUIRED: this is the Intent phase
+            stage_status: 'blocked' as StageStatus,            // REQUIRED: cannot proceed until resolved
+            approval_status: 'rejected' as ApprovalStatus,     // REQUIRED: authorization denied
+            version: existingCard.version,                     // Required for optimistic locking
+            change_reason: rejectionComment,                   // Store rejection reason in change_reason
+          });
+        } else {
+          // Item doesn't exist - use syncStoryCard to create it
+          await syncStoryCard({
+            card_id: item.entityId,
+            title: item.name,
+            description: item.description || '',
+            card_type: item.type, // 'vision', 'ideation', or 'storyboard'
+            position_x: 0,
+            position_y: 0,
+            workspace_id: currentWorkspace.name,
+            file_path: item.path,
+            lifecycle_state: 'active' as LifecycleState,
+            workflow_stage: 'intent' as WorkflowStage,
+            stage_status: 'blocked' as StageStatus,
+            approval_status: 'rejected' as ApprovalStatus,
+            rejection_comment: rejectionComment,
+          });
+        }
         // Refresh the workspace state to get updated data
         await refreshWorkspaceState();
-      } catch (err) {
-        console.error('Failed to sync rejection to database:', err);
+      } catch {
+        // Silent failure for rejection sync
       }
     }
 
@@ -423,10 +334,6 @@ export const IntentApproval: React.FC = () => {
   };
 
   const handleResetItemStatus = async (item: IntentItem) => {
-    const newApprovals = { ...itemApprovals };
-    delete newApprovals[item.id];
-    saveItemApprovals(newApprovals);
-
     // Sync reset status to database (single source of truth)
     // BUSINESS RULE (see STATE_MODEL.md "Automatic State Transitions on Approval"):
     // On RESET: Only stage_status and approval_status change
@@ -450,11 +357,10 @@ export const IntentApproval: React.FC = () => {
           stage_status: 'in_progress' as StageStatus,  // REQUIRED: stage_status reset
           approval_status: 'pending' as ApprovalStatus, // REQUIRED: approval_status reset
         });
-        console.log(`Synced ${item.type} ${item.entityId} reset to database:`, result);
         // Refresh the workspace state to get updated data
         await refreshWorkspaceState();
-      } catch (err) {
-        console.error('Failed to sync reset to database:', err);
+      } catch {
+        // Silent failure for reset sync
       }
     }
 
@@ -507,29 +413,23 @@ export const IntentApproval: React.FC = () => {
   };
 
   const handleApproveIntent = async () => {
-    if (!currentWorkspace?.id) return;
-
-    const approvalData = {
-      approved: true,
-      date: new Date().toISOString(),
-    };
-    localStorage.setItem(`intent-approved-${currentWorkspace.id}`, JSON.stringify(approvalData));
-    setIntentApproved(true);
-    setApprovalDate(approvalData.date);
-
-    // Save to file
-    await savePhaseApprovalToFile(true, approvalData.date);
+    // Use database phase approval API
+    // intentApproved and approvalDate are derived from phaseApprovals Map
+    try {
+      await approvePhaseDb('intent');
+    } catch {
+      // Silent failure for phase approval
+    }
   };
 
   const handleRevokeApproval = async () => {
-    if (!currentWorkspace?.id) return;
-
-    localStorage.removeItem(`intent-approved-${currentWorkspace.id}`);
-    setIntentApproved(false);
-    setApprovalDate(null);
-
-    // Save to file
-    await savePhaseApprovalToFile(false, null);
+    // Use database phase revoke API
+    // intentApproved and approvalDate are derived from phaseApprovals Map
+    try {
+      await revokePhaseDb('intent');
+    } catch {
+      // Silent failure for phase revocation
+    }
   };
 
   const getStatusBadge = (status: string) => {

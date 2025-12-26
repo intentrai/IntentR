@@ -3968,6 +3968,20 @@ func parseSingleStory(filename, path, content, title string) FileStory {
 			continue
 		}
 
+		// Parse Card ID field - this is the primary identifier used by Storyboard
+		// Handle various formats: "**Card ID**:", "Card ID:", "- **Card ID**:", etc.
+		if strings.Contains(trimmedLine, "**Card ID**:") || strings.Contains(trimmedLine, "Card ID:") {
+			cardID := trimmedLine
+			// Remove bullet point prefix if present
+			cardID = strings.TrimPrefix(cardID, "- ")
+			cardID = strings.TrimPrefix(cardID, "* ")
+			// Remove bold markers and field name
+			cardID = strings.TrimPrefix(cardID, "**Card ID**:")
+			cardID = strings.TrimPrefix(cardID, "Card ID:")
+			story.Fields["Card ID"] = strings.TrimSpace(cardID)
+			continue
+		}
+
 		// Add line to current section content
 		if currentSection != "" {
 			sectionContent = append(sectionContent, line)

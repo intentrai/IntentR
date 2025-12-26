@@ -101,7 +101,7 @@ export const Enablers: React.FC = () => {
   } = useEnabler();
 
   const { currentWorkspace } = useWorkspace();
-  const { enablers: dbEnablers, syncEnabler, fetchEnablerState, capabilities: dbCapabilities, syncCapability } = useEntityState();
+  const { enablers: dbEnablers, syncEnabler, fetchEnablerState, capabilities: dbCapabilities, syncCapability, refreshWorkspaceState } = useEntityState();
   const [searchParams, setSearchParams] = useSearchParams();
   const [capabilities, setCapabilities] = useState<FileCapability[]>([]);
   const [loadingCapabilities, setLoadingCapabilities] = useState(false);
@@ -702,49 +702,44 @@ Respond with ONLY the capability ID (e.g., "CAP-123456") and nothing else. If no
   };
 
   const handleBulkStatusChange = async (newStatus: string) => {
-    if (!currentWorkspace?.projectFolder || selectedEnablerIds.size === 0) return;
+    if (!currentWorkspace?.name || selectedEnablerIds.size === 0) return;
 
     try {
-      // Update each selected enabler's status in their markdown files
+      // Update each selected enabler's status in the DATABASE (single source of truth)
+      // Markdown file updates removed - database is authoritative for state
       for (const enablerId of selectedEnablerIds) {
         const enabler = fileEnablers.find(e => e.enablerId === enablerId);
-        if (!enabler || !enabler.filename) continue;
+        if (!enabler) continue;
 
-        // Fetch the current file content - include definition/ subfolder in path
-        const filePath = `definition/${enabler.filename}`;
-        const response = await fetch(`http://localhost:4001/specifications/${encodeURIComponent(currentWorkspace.projectFolder)}/${encodeURIComponent(filePath)}`);
-        if (!response.ok) {
-          console.error(`Failed to fetch ${filePath}: ${response.status}`);
-          continue;
+        // Map old status values to INTENT State Model stage_status
+        // Old statuses: draft, ready_for_analysis, in_analysis, ready_for_design, in_design, etc.
+        // New stage_status: in_progress, ready_for_approval, approved, blocked
+        let stageStatus: 'in_progress' | 'ready_for_approval' | 'approved' | 'blocked' = 'in_progress';
+        if (newStatus.includes('ready')) {
+          stageStatus = 'ready_for_approval';
+        } else if (newStatus === 'implemented') {
+          stageStatus = 'approved';
+        } else if (newStatus === 'deprecated' || newStatus === 'blocked') {
+          stageStatus = 'blocked';
         }
 
-        const data = await response.json();
-        let content = data.content;
-
-        // Update the status in the markdown content
-        // Match "- **Status**: <value>" pattern
-        const statusRegex = /^- \*\*Status\*\*:\s*.+$/m;
-        if (statusRegex.test(content)) {
-          content = content.replace(statusRegex, `- **Status**: ${newStatus}`);
-        } else {
-          console.warn(`No status field found in ${enabler.filename}`);
-          continue;
-        }
-
-        // Save the updated content
-        const saveResponse = await fetch(`http://localhost:4001/specifications/${encodeURIComponent(currentWorkspace.projectFolder)}/${encodeURIComponent(filePath)}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ content }),
-        });
-
-        if (!saveResponse.ok) {
-          console.error(`Failed to save ${filePath}: ${saveResponse.status}`);
+        // Sync to database
+        try {
+          await syncEnabler({
+            enabler_id: enablerId,
+            name: enabler.name,
+            workspace_id: currentWorkspace.name,
+            stage_status: stageStatus,
+          });
+          console.log(`Updated enabler ${enablerId} stage_status to ${stageStatus} in database`);
+        } catch (syncErr) {
+          console.error(`Failed to sync enabler ${enablerId} to database:`, syncErr);
         }
       }
 
       // Reload file enablers to reflect changes
       await loadFileEnablers();
+      await refreshWorkspaceState();
 
       // Exit select mode after successful update
       exitSelectMode();
@@ -884,7 +879,7 @@ Respond with ONLY the capability ID (e.g., "CAP-123456") and nothing else. If no
                 description: capability?.description || '',
                 purpose: capability?.purpose || '',
                 storyboard_reference: capability?.storyboardReference || '',
-                workspace_id: currentWorkspace.id,
+                workspace_id: currentWorkspace.name, // Must use .name to match EntityStateContext queries
                 file_path: capability?.path || '',
                 lifecycle_state: 'draft',
                 workflow_stage: 'intent',
@@ -914,7 +909,7 @@ Respond with ONLY the capability ID (e.g., "CAP-123456") and nothing else. If no
               purpose: enablerFormData.purpose || '',
               owner: enablerFormData.owner || '',
               priority: enablerFormData.priority || 'medium',
-              workspace_id: currentWorkspace.id,
+              workspace_id: currentWorkspace.name, // Must use .name to match EntityStateContext queries
               file_path: editingFileEnabler?.path || `${currentWorkspace.projectFolder}/definition/${fileName}`,
               // INTENT State Model - saved to DATABASE only
               lifecycle_state: (enablerFormData.lifecycle_state || 'draft') as 'draft' | 'active' | 'implemented' | 'maintained' | 'retired',

@@ -512,7 +512,7 @@ Respond with ONLY the exact storyboard card title (e.g., "User Login Flow") and 
       if (response.ok) {
         // Save state to DATABASE via EntityStateContext (single source of truth for state)
         const capabilityId = selectedFileCapability.capabilityId || selectedFileCapability.fields?.['ID'] || '';
-        if (capabilityId && currentWorkspace?.id) {
+        if (capabilityId && currentWorkspace?.name) {
           try {
             await syncCapability({
               capability_id: capabilityId,
@@ -520,7 +520,7 @@ Respond with ONLY the exact storyboard card title (e.g., "User Login Flow") and 
               description: editFormData.description,
               purpose: selectedFileCapability.fields?.['Purpose'] || '',
               storyboard_reference: editFormData.storyboardReference,
-              workspace_id: currentWorkspace.id,
+              workspace_id: currentWorkspace.name, // Must use .name to match EntityStateContext queries
               file_path: selectedFileCapability.path,
               // INTENT State Model - saved to DATABASE only
               lifecycle_state: editFormData.lifecycle_state as 'draft' | 'active' | 'implemented' | 'maintained' | 'retired',

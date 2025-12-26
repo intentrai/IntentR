@@ -4,13 +4,9 @@
 - **Type**: Story Card
 - **Storyboard**: HelloWorldWeather
 - **Card ID**: card-1765937824816
-- **Lifecycle State**: Active
-- **Workflow Stage**: intent
-- **Stage Status**: approved
-- **Approval Status**: pending
 - **Grid Position X**: 139
 - **Grid Position Y**: 10
-- **Generated**: 12/25/2025, 5:16:56 PM
+- **Generated**: 12/25/2025, 9:11:23 PM
 - **File**: STORY-ENVIRONMENT.md
 
 ## Description

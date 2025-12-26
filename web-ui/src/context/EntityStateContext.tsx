@@ -17,6 +17,8 @@ import type {
   CreateStoryCardRequest,
   WorkspaceStateExport,
   ImportResult,
+  PhaseApproval,
+  WorkflowStage,
 } from '../api/entityStateService';
 import {
   getWorkspaceState,
@@ -35,6 +37,10 @@ import {
   exportWorkspaceState,
   importWorkspaceState,
   downloadWorkspaceStateAsFile,
+  getPhaseApproval,
+  getAllPhaseApprovals,
+  approvePhase as approvePhaseApi,
+  revokePhaseApproval as revokePhaseApprovalApi,
 } from '../api/entityStateService';
 
 // ============================================================================
@@ -46,6 +52,7 @@ interface EntityStateContextValue {
   capabilities: Map<string, CapabilityState>;
   enablers: Map<string, EnablerState>;
   storyCards: Map<string, StoryCardState>;
+  phaseApprovals: Map<WorkflowStage, PhaseApproval>;
 
   // Loading states
   isLoading: boolean;
@@ -66,6 +73,13 @@ interface EntityStateContextValue {
   updateStoryCard: (cardId: string, update: UpdateStateRequest) => Promise<StoryCardState | null>;
   createNewStoryCard: (request: CreateStoryCardRequest) => Promise<StoryCardState | null>;
   syncStoryCard: (storyCard: CreateStoryCardRequest) => Promise<StoryCardState | null>;
+
+  // Phase approval operations
+  fetchPhaseApproval: (phase: WorkflowStage) => Promise<PhaseApproval | null>;
+  fetchAllPhaseApprovals: () => Promise<PhaseApproval[]>;
+  approvePhase: (phase: WorkflowStage) => Promise<PhaseApproval | null>;
+  revokePhase: (phase: WorkflowStage) => Promise<PhaseApproval | null>;
+  isPhaseApproved: (phase: WorkflowStage) => boolean;
 
   // Bulk operations
   refreshWorkspaceState: () => Promise<void>;
@@ -99,6 +113,7 @@ export function EntityStateProvider({ children }: EntityStateProviderProps) {
   const [capabilities, setCapabilities] = useState<Map<string, CapabilityState>>(new Map());
   const [enablers, setEnablers] = useState<Map<string, EnablerState>>(new Map());
   const [storyCards, setStoryCards] = useState<Map<string, StoryCardState>>(new Map());
+  const [phaseApprovals, setPhaseApprovals] = useState<Map<WorkflowStage, PhaseApproval>>(new Map());
 
   // UI state
   const [isLoading, setIsLoading] = useState(false);
@@ -152,6 +167,19 @@ export function EntityStateProvider({ children }: EntityStateProviderProps) {
         });
         setStoryCards(cardMap);
       }
+
+      // Fetch phase approvals
+      try {
+        const approvals = await getAllPhaseApprovals(currentWorkspace.name);
+        const phaseMap = new Map<WorkflowStage, PhaseApproval>();
+        approvals.forEach((approval) => {
+          phaseMap.set(approval.phase as WorkflowStage, approval);
+        });
+        setPhaseApprovals(phaseMap);
+      } catch (phaseErr) {
+        // Phase approvals are optional - don't fail the whole refresh
+        console.warn('Failed to fetch phase approvals:', phaseErr);
+      }
     } catch (err) {
       console.error('Failed to fetch workspace state:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch workspace state');
@@ -174,6 +202,7 @@ export function EntityStateProvider({ children }: EntityStateProviderProps) {
     setCapabilities(new Map());
     setEnablers(new Map());
     setStoryCards(new Map());
+    setPhaseApprovals(new Map());
   }, [currentWorkspace?.name]);
 
   // ============================================================================
@@ -182,8 +211,6 @@ export function EntityStateProvider({ children }: EntityStateProviderProps) {
 
   useEffect(() => {
     const handleEntityStateUpdate = (update: EntityStateUpdate) => {
-      console.log('Received entity state update from another user:', update);
-
       // Refresh the entity from the database to get the latest state
       // This ensures we have the authoritative state including the new version
       if (update.entityType === 'capability') {
@@ -443,12 +470,112 @@ export function EntityStateProvider({ children }: EntityStateProviderProps) {
         });
         return state;
       } catch (err) {
-        console.error('Failed to sync story card:', err);
         setError(err instanceof Error ? err.message : 'Failed to sync story card');
         return null;
       }
     },
     []
+  );
+
+  // ============================================================================
+  // Phase Approval Operations
+  // ============================================================================
+
+  const fetchPhaseApproval = useCallback(
+    async (phase: WorkflowStage): Promise<PhaseApproval | null> => {
+      if (!currentWorkspace?.name) return null;
+
+      try {
+        const approval = await getPhaseApproval(currentWorkspace.name, phase);
+        setPhaseApprovals((prev) => {
+          const next = new Map(prev);
+          next.set(phase, approval);
+          return next;
+        });
+        return approval;
+      } catch (err) {
+        // 404 means phase hasn't been approved yet - this is normal
+        if (isNotFoundError(err)) {
+          return null;
+        }
+        console.error(`Failed to fetch phase approval for ${phase}:`, err);
+        return null;
+      }
+    },
+    [currentWorkspace?.name]
+  );
+
+  const fetchAllPhaseApprovals = useCallback(async (): Promise<PhaseApproval[]> => {
+    if (!currentWorkspace?.name) return [];
+
+    try {
+      const approvals = await getAllPhaseApprovals(currentWorkspace.name);
+      const phaseMap = new Map<WorkflowStage, PhaseApproval>();
+      approvals.forEach((approval) => {
+        phaseMap.set(approval.phase as WorkflowStage, approval);
+      });
+      setPhaseApprovals(phaseMap);
+      return approvals;
+    } catch (err) {
+      console.error('Failed to fetch all phase approvals:', err);
+      return [];
+    }
+  }, [currentWorkspace?.name]);
+
+  const approvePhase = useCallback(
+    async (phase: WorkflowStage): Promise<PhaseApproval | null> => {
+      if (!currentWorkspace?.name) {
+        setError('No workspace selected');
+        return null;
+      }
+
+      try {
+        const approval = await approvePhaseApi(currentWorkspace.name, phase);
+        setPhaseApprovals((prev) => {
+          const next = new Map(prev);
+          next.set(phase, approval);
+          return next;
+        });
+        return approval;
+      } catch (err) {
+        console.error(`Failed to approve phase ${phase}:`, err);
+        setError(err instanceof Error ? err.message : `Failed to approve phase ${phase}`);
+        return null;
+      }
+    },
+    [currentWorkspace?.name]
+  );
+
+  const revokePhase = useCallback(
+    async (phase: WorkflowStage): Promise<PhaseApproval | null> => {
+      if (!currentWorkspace?.name) {
+        setError('No workspace selected');
+        return null;
+      }
+
+      try {
+        const approval = await revokePhaseApprovalApi(currentWorkspace.name, phase);
+        setPhaseApprovals((prev) => {
+          const next = new Map(prev);
+          next.set(phase, approval);
+          return next;
+        });
+        return approval;
+      } catch (err) {
+        console.error(`Failed to revoke phase ${phase}:`, err);
+        setError(err instanceof Error ? err.message : `Failed to revoke phase ${phase}`);
+        return null;
+      }
+    },
+    [currentWorkspace?.name]
+  );
+
+  const isPhaseApproved = useCallback(
+    (phase: WorkflowStage): boolean => {
+      const approval = phaseApprovals.get(phase);
+      return approval?.is_approved ?? false;
+    },
+    [phaseApprovals]
   );
 
   // ============================================================================
@@ -529,6 +656,7 @@ export function EntityStateProvider({ children }: EntityStateProviderProps) {
     capabilities,
     enablers,
     storyCards,
+    phaseApprovals,
     isLoading,
     error,
     fetchCapabilityState,
@@ -541,6 +669,11 @@ export function EntityStateProvider({ children }: EntityStateProviderProps) {
     updateStoryCard,
     createNewStoryCard,
     syncStoryCard,
+    fetchPhaseApproval,
+    fetchAllPhaseApprovals,
+    approvePhase,
+    revokePhase,
+    isPhaseApproved,
     refreshWorkspaceState,
     exportState,
     importState,
@@ -623,5 +756,33 @@ export function useStoryCardState(cardId: string | undefined) {
     state: cardId ? storyCards.get(cardId) : undefined,
     update: updateStoryCard,
     refresh: () => cardId && fetchStoryCardState(cardId),
+  };
+}
+
+/**
+ * Hook to get phase approval state and operations
+ */
+export function usePhaseApprovals() {
+  const {
+    phaseApprovals,
+    fetchPhaseApproval,
+    fetchAllPhaseApprovals,
+    approvePhase,
+    revokePhase,
+    isPhaseApproved,
+  } = useEntityState();
+
+  useEffect(() => {
+    // Load all phase approvals on mount
+    fetchAllPhaseApprovals();
+  }, [fetchAllPhaseApprovals]);
+
+  return {
+    phaseApprovals,
+    fetchPhaseApproval,
+    fetchAllPhaseApprovals,
+    approvePhase,
+    revokePhase,
+    isPhaseApproved,
   };
 }

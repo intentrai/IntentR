@@ -778,3 +778,137 @@ func (r *EntityStateRepository) GetStateChangeHistory(entityType, entityID strin
 
 	return changes, nil
 }
+
+// ============================================================================
+// PHASE APPROVAL OPERATIONS
+// ============================================================================
+
+// GetPhaseApproval retrieves the phase approval status for a workspace and phase
+func (r *EntityStateRepository) GetPhaseApproval(workspaceID, phase string) (*models.PhaseApproval, error) {
+	var approval models.PhaseApproval
+	err := r.db.QueryRow(`
+		SELECT id, workspace_id, phase, is_approved, approved_at, approved_by,
+		       revoked_at, revoked_by, created_at, updated_at
+		FROM phase_approvals
+		WHERE workspace_id = $1 AND phase = $2
+	`, workspaceID, phase).Scan(
+		&approval.ID, &approval.WorkspaceID, &approval.Phase, &approval.IsApproved,
+		&approval.ApprovedAt, &approval.ApprovedBy, &approval.RevokedAt, &approval.RevokedBy,
+		&approval.CreatedAt, &approval.UpdatedAt,
+	)
+	if err == sql.ErrNoRows {
+		// Return a default unapproved status
+		return &models.PhaseApproval{
+			WorkspaceID: workspaceID,
+			Phase:       phase,
+			IsApproved:  false,
+		}, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to get phase approval: %w", err)
+	}
+	return &approval, nil
+}
+
+// GetAllPhaseApprovals retrieves all phase approvals for a workspace
+func (r *EntityStateRepository) GetAllPhaseApprovals(workspaceID string) ([]models.PhaseApproval, error) {
+	// Return default entries for all phases, merged with any existing approvals
+	phases := []string{"intent", "specification", "ui_design", "implementation", "control_loop"}
+	approvalMap := make(map[string]*models.PhaseApproval)
+
+	// Initialize with defaults
+	for _, phase := range phases {
+		approvalMap[phase] = &models.PhaseApproval{
+			WorkspaceID: workspaceID,
+			Phase:       phase,
+			IsApproved:  false,
+		}
+	}
+
+	// Query existing approvals
+	rows, err := r.db.Query(`
+		SELECT id, workspace_id, phase, is_approved, approved_at, approved_by,
+		       revoked_at, revoked_by, created_at, updated_at
+		FROM phase_approvals
+		WHERE workspace_id = $1
+	`, workspaceID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query phase approvals: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var approval models.PhaseApproval
+		err := rows.Scan(
+			&approval.ID, &approval.WorkspaceID, &approval.Phase, &approval.IsApproved,
+			&approval.ApprovedAt, &approval.ApprovedBy, &approval.RevokedAt, &approval.RevokedBy,
+			&approval.CreatedAt, &approval.UpdatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan phase approval: %w", err)
+		}
+		approvalMap[approval.Phase] = &approval
+	}
+
+	// Convert map to slice in order
+	result := make([]models.PhaseApproval, 0, len(phases))
+	for _, phase := range phases {
+		result = append(result, *approvalMap[phase])
+	}
+
+	return result, nil
+}
+
+// ApprovePhase marks a phase as approved
+func (r *EntityStateRepository) ApprovePhase(workspaceID, phase string, userID *int) (*models.PhaseApproval, error) {
+	var approval models.PhaseApproval
+
+	err := r.db.QueryRow(`
+		INSERT INTO phase_approvals (workspace_id, phase, is_approved, approved_at, approved_by)
+		VALUES ($1, $2, true, CURRENT_TIMESTAMP, $3)
+		ON CONFLICT (workspace_id, phase)
+		DO UPDATE SET is_approved = true, approved_at = CURRENT_TIMESTAMP, approved_by = $3,
+		              revoked_at = NULL, revoked_by = NULL, updated_at = CURRENT_TIMESTAMP
+		RETURNING id, workspace_id, phase, is_approved, approved_at, approved_by,
+		          revoked_at, revoked_by, created_at, updated_at
+	`, workspaceID, phase, userID).Scan(
+		&approval.ID, &approval.WorkspaceID, &approval.Phase, &approval.IsApproved,
+		&approval.ApprovedAt, &approval.ApprovedBy, &approval.RevokedAt, &approval.RevokedBy,
+		&approval.CreatedAt, &approval.UpdatedAt,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to approve phase: %w", err)
+	}
+
+	return &approval, nil
+}
+
+// RevokePhaseApproval revokes approval for a phase
+func (r *EntityStateRepository) RevokePhaseApproval(workspaceID, phase string, userID *int) (*models.PhaseApproval, error) {
+	var approval models.PhaseApproval
+
+	err := r.db.QueryRow(`
+		UPDATE phase_approvals
+		SET is_approved = false, revoked_at = CURRENT_TIMESTAMP, revoked_by = $3, updated_at = CURRENT_TIMESTAMP
+		WHERE workspace_id = $1 AND phase = $2
+		RETURNING id, workspace_id, phase, is_approved, approved_at, approved_by,
+		          revoked_at, revoked_by, created_at, updated_at
+	`, workspaceID, phase, userID).Scan(
+		&approval.ID, &approval.WorkspaceID, &approval.Phase, &approval.IsApproved,
+		&approval.ApprovedAt, &approval.ApprovedBy, &approval.RevokedAt, &approval.RevokedBy,
+		&approval.CreatedAt, &approval.UpdatedAt,
+	)
+	if err == sql.ErrNoRows {
+		// Nothing to revoke
+		return &models.PhaseApproval{
+			WorkspaceID: workspaceID,
+			Phase:       phase,
+			IsApproved:  false,
+		}, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to revoke phase approval: %w", err)
+	}
+
+	return &approval, nil
+}

@@ -26,10 +26,11 @@ type Capability struct {
 	IsActive            bool      `json:"is_active"`
 
 	// INTENT State Model - 4 dimensions
-	LifecycleState string `json:"lifecycle_state"` // draft, active, implemented, maintained, retired
-	WorkflowStage  string `json:"workflow_stage"`  // intent, specification, ui_design, implementation, control_loop
-	StageStatus    string `json:"stage_status"`    // in_progress, ready_for_approval, approved, blocked
-	ApprovalStatus string `json:"approval_status"` // pending, approved, rejected
+	LifecycleState   string `json:"lifecycle_state"`   // draft, active, implemented, maintained, retired
+	WorkflowStage    string `json:"workflow_stage"`    // intent, specification, ui_design, implementation, control_loop
+	StageStatus      string `json:"stage_status"`      // in_progress, ready_for_approval, approved, blocked
+	ApprovalStatus   string `json:"approval_status"`   // pending, approved, rejected
+	RejectionComment string `json:"rejection_comment"` // Comment when rejected
 
 	// Concurrency control
 	Version int `json:"version"`
