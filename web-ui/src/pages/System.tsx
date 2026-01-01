@@ -2856,168 +2856,176 @@ Navigate between different views: Capability Map, State Diagrams, Sequence Diagr
 
       {activeTab === 'state-diagram' && (
         <div className="diagram-tab-content">
-          <div className="diagram-generate-bar">
-            <Button
-              variant="primary"
-              onClick={generateStateDiagram}
-              disabled={stateDiagramLoading || !currentWorkspace}
-            >
-              {stateDiagramLoading ? 'Generating...' : 'Generate'}
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={exportStateDiagram}
-              disabled={!stateDiagramContent}
-            >
-              📄 Export
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={importStateDiagram}
-              disabled={!currentWorkspace}
-            >
-              📥 Import
-            </Button>
-            <span className="generate-description">Reads capabilities & enablers from definition folder</span>
-          </div>
-          <div className="diagram-content-area">
-            {stateDiagramContent ? (
-              <div className="diagram-output">
-                <MermaidDiagram content={stateDiagramContent} id="state" />
-              </div>
-            ) : (
-              <div className="placeholder-content">
-                <h2>State Diagram</h2>
-                <p>Creates a state diagram based on the logic understood from the capabilities and enablers.</p>
-                <p className="placeholder-note">Click "Generate" to analyze capabilities & enablers from the definition folder</p>
-              </div>
-            )}
+          <div className="diagram-tab-inner">
+            <div className="diagram-generate-bar">
+              <Button
+                variant="primary"
+                onClick={generateStateDiagram}
+                disabled={stateDiagramLoading || !currentWorkspace}
+              >
+                {stateDiagramLoading ? 'Generating...' : 'Generate'}
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={exportStateDiagram}
+                disabled={!stateDiagramContent}
+              >
+                📄 Export
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={importStateDiagram}
+                disabled={!currentWorkspace}
+              >
+                📥 Import
+              </Button>
+              <span className="generate-description">Reads capabilities & enablers from definition folder</span>
+            </div>
+            <div className="diagram-content-area">
+              {stateDiagramContent ? (
+                <div className="diagram-output">
+                  <MermaidDiagram content={stateDiagramContent} id="state" />
+                </div>
+              ) : (
+                <div className="placeholder-content">
+                  <h2>State Diagram</h2>
+                  <p>Creates a state diagram based on the logic understood from the capabilities and enablers.</p>
+                  <p className="placeholder-note">Click "Generate" to analyze capabilities & enablers from the definition folder</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
 
       {activeTab === 'sequence-diagram' && (
         <div className="diagram-tab-content">
-          <div className="diagram-generate-bar">
-            <Button
-              variant="primary"
-              onClick={generateSequenceDiagram}
-              disabled={sequenceDiagramLoading || !currentWorkspace}
-            >
-              {sequenceDiagramLoading ? 'Generating...' : 'Generate'}
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={exportSequenceDiagram}
-              disabled={!sequenceDiagramContent}
-            >
-              📄 Export
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={importSequenceDiagram}
-              disabled={!currentWorkspace}
-            >
-              📥 Import
-            </Button>
-            <span className="generate-description">Reads capabilities & enablers from definition folder</span>
-          </div>
-          <div className="diagram-content-area">
-            {sequenceDiagramContent ? (
-              <div className="diagram-output">
-                <MermaidDiagram content={sequenceDiagramContent} id="sequence" />
-              </div>
-            ) : (
-              <div className="placeholder-content">
-                <h2>Sequence Diagram</h2>
-                <p>Creates a sequence diagram from the capabilities and enabler details.</p>
-                <p className="placeholder-note">Click "Generate" to analyze capabilities & enablers from the definition folder</p>
-              </div>
-            )}
+          <div className="diagram-tab-inner">
+            <div className="diagram-generate-bar">
+              <Button
+                variant="primary"
+                onClick={generateSequenceDiagram}
+                disabled={sequenceDiagramLoading || !currentWorkspace}
+              >
+                {sequenceDiagramLoading ? 'Generating...' : 'Generate'}
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={exportSequenceDiagram}
+                disabled={!sequenceDiagramContent}
+              >
+                📄 Export
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={importSequenceDiagram}
+                disabled={!currentWorkspace}
+              >
+                📥 Import
+              </Button>
+              <span className="generate-description">Reads capabilities & enablers from definition folder</span>
+            </div>
+            <div className="diagram-content-area">
+              {sequenceDiagramContent ? (
+                <div className="diagram-output">
+                  <MermaidDiagram content={sequenceDiagramContent} id="sequence" />
+                </div>
+              ) : (
+                <div className="placeholder-content">
+                  <h2>Sequence Diagram</h2>
+                  <p>Creates a sequence diagram from the capabilities and enabler details.</p>
+                  <p className="placeholder-note">Click "Generate" to analyze capabilities & enablers from the definition folder</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
 
       {activeTab === 'data-models' && (
         <div className="diagram-tab-content">
-          <div className="diagram-generate-bar">
-            <Button
-              variant="primary"
-              onClick={generateDataModels}
-              disabled={dataModelsLoading || !currentWorkspace}
-            >
-              {dataModelsLoading ? 'Generating...' : 'Generate'}
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={exportDataModelDiagram}
-              disabled={!dataModelsContent}
-            >
-              📄 Export
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={importDataModelDiagram}
-              disabled={!currentWorkspace}
-            >
-              📥 Import
-            </Button>
-            <span className="generate-description">Reads capabilities & enablers from definition folder</span>
-          </div>
-          <div className="diagram-content-area">
-            {dataModelsContent ? (
-              <div className="diagram-output">
-                <MermaidDiagram content={dataModelsContent} id="data-models" />
-              </div>
-            ) : (
-              <div className="placeholder-content">
-                <h2>Data Models</h2>
-                <p>Creates a data model based on the database schema or XML/JSON data.</p>
-                <p className="placeholder-note">Click "Generate" to analyze capabilities & enablers from the definition folder</p>
-              </div>
-            )}
+          <div className="diagram-tab-inner">
+            <div className="diagram-generate-bar">
+              <Button
+                variant="primary"
+                onClick={generateDataModels}
+                disabled={dataModelsLoading || !currentWorkspace}
+              >
+                {dataModelsLoading ? 'Generating...' : 'Generate'}
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={exportDataModelDiagram}
+                disabled={!dataModelsContent}
+              >
+                📄 Export
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={importDataModelDiagram}
+                disabled={!currentWorkspace}
+              >
+                📥 Import
+              </Button>
+              <span className="generate-description">Reads capabilities & enablers from definition folder</span>
+            </div>
+            <div className="diagram-content-area">
+              {dataModelsContent ? (
+                <div className="diagram-output">
+                  <MermaidDiagram content={dataModelsContent} id="data-models" />
+                </div>
+              ) : (
+                <div className="placeholder-content">
+                  <h2>Data Models</h2>
+                  <p>Creates a data model based on the database schema or XML/JSON data.</p>
+                  <p className="placeholder-note">Click "Generate" to analyze capabilities & enablers from the definition folder</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
 
       {activeTab === 'class-diagrams' && (
         <div className="diagram-tab-content">
-          <div className="diagram-generate-bar">
-            <Button
-              variant="primary"
-              onClick={generateClassDiagrams}
-              disabled={classDiagramsLoading || !currentWorkspace}
-            >
-              {classDiagramsLoading ? 'Generating...' : 'Generate'}
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={exportClassDiagram}
-              disabled={!classDiagramsContent}
-            >
-              📄 Export
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={importClassDiagram}
-              disabled={!currentWorkspace}
-            >
-              📥 Import
-            </Button>
-            <span className="generate-description">Reads capabilities & enablers from definition folder</span>
-          </div>
-          <div className="diagram-content-area">
-            {classDiagramsContent ? (
-              <div className="diagram-output">
-                <MermaidDiagram content={classDiagramsContent} id="class" />
-              </div>
-            ) : (
-              <div className="placeholder-content">
-                <h2>Class Diagrams</h2>
-                <p>Creates class diagrams based on information from capabilities, enablers, and code.</p>
-                <p className="placeholder-note">Click "Generate" to analyze capabilities & enablers from the definition folder</p>
-              </div>
-            )}
+          <div className="diagram-tab-inner">
+            <div className="diagram-generate-bar">
+              <Button
+                variant="primary"
+                onClick={generateClassDiagrams}
+                disabled={classDiagramsLoading || !currentWorkspace}
+              >
+                {classDiagramsLoading ? 'Generating...' : 'Generate'}
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={exportClassDiagram}
+                disabled={!classDiagramsContent}
+              >
+                📄 Export
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={importClassDiagram}
+                disabled={!currentWorkspace}
+              >
+                📥 Import
+              </Button>
+              <span className="generate-description">Reads capabilities & enablers from definition folder</span>
+            </div>
+            <div className="diagram-content-area">
+              {classDiagramsContent ? (
+                <div className="diagram-output">
+                  <MermaidDiagram content={classDiagramsContent} id="class" />
+                </div>
+              ) : (
+                <div className="placeholder-content">
+                  <h2>Class Diagrams</h2>
+                  <p>Creates class diagrams based on information from capabilities, enablers, and code.</p>
+                  <p className="placeholder-note">Click "Generate" to analyze capabilities & enablers from the definition folder</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -3148,6 +3156,18 @@ Navigate between different views: Capability Map, State Diagrams, Sequence Diagr
           background: var(--color-systemBackground);
           width: 100%;
           min-width: 0;
+          overflow: auto;
+          padding: 24px;
+          background: var(--color-systemGray6);
+        }
+
+        .diagram-tab-inner {
+          max-width: 1600px;
+          margin: 0 auto;
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+          flex: 1;
         }
 
         .diagram-generate-bar {
@@ -3155,8 +3175,10 @@ Navigate between different views: Capability Map, State Diagrams, Sequence Diagr
           align-items: center;
           gap: 16px;
           padding: 16px 24px;
-          background: var(--color-systemGray6);
-          border-bottom: 1px solid var(--color-systemGray5);
+          background: var(--color-systemBackground);
+          border-radius: 12px 12px 0 0;
+          border: 1px solid var(--color-systemGray5);
+          border-bottom: none;
         }
 
         .generate-description {
@@ -3171,6 +3193,10 @@ Navigate between different views: Capability Map, State Diagrams, Sequence Diagr
           justify-content: center;
           padding: 24px;
           overflow: auto;
+          background: var(--color-systemBackground);
+          border-radius: 0 0 12px 12px;
+          border: 1px solid var(--color-systemGray5);
+          border-top: 1px solid var(--color-systemGray5);
         }
 
         .diagram-output {

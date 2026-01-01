@@ -21,11 +21,44 @@ import (
 
 const defaultPort = "9085"
 
-// Nginx workspace app configuration
-const nginxWorkspaceAppConf = "/home/ec2-user/IntentR/nginx/conf.d/workspace-app.conf"
+// projectRoot is determined at startup based on executable location
+var projectRoot string
 
-// Deployment configuration file path
-const deploymentConfigPath = "/home/ec2-user/IntentR/config/deployment.json"
+// Nginx workspace app configuration (relative to project root)
+var nginxWorkspaceAppConf string
+
+// Deployment configuration file path (relative to project root)
+var deploymentConfigPath string
+
+// initPaths determines the project root from the executable location
+// and sets up all path variables. The binary is at cmd/claude-proxy/claude-proxy,
+// so project root is 3 directory levels up.
+func initPaths() {
+	// Try to get path from executable location
+	execPath, err := os.Executable()
+	if err != nil {
+		log.Printf("Warning: could not determine executable path, using current directory: %v", err)
+		projectRoot = "."
+	} else {
+		// Resolve any symlinks to get the real path
+		execPath, err = filepath.EvalSymlinks(execPath)
+		if err != nil {
+			log.Printf("Warning: could not resolve symlinks, using current directory: %v", err)
+			projectRoot = "."
+		} else {
+			// Binary is at cmd/claude-proxy/claude-proxy, so go up 3 levels
+			projectRoot = filepath.Dir(filepath.Dir(filepath.Dir(execPath)))
+		}
+	}
+
+	// Set derived paths
+	nginxWorkspaceAppConf = filepath.Join(projectRoot, "nginx", "conf.d", "workspace-app.conf")
+	deploymentConfigPath = filepath.Join(projectRoot, "config", "deployment.json")
+
+	log.Printf("Project root: %s", projectRoot)
+	log.Printf("Nginx config path: %s", nginxWorkspaceAppConf)
+	log.Printf("Deployment config path: %s", deploymentConfigPath)
+}
 
 // DeploymentConfig represents the deployment configuration
 type DeploymentConfig struct {
@@ -161,6 +194,9 @@ type Response struct {
 }
 
 func main() {
+	// Initialize paths based on executable location
+	initPaths()
+
 	port := os.Getenv("CLAUDE_PROXY_PORT")
 	if port == "" {
 		port = defaultPort
