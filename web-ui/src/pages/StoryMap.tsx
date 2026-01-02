@@ -1199,6 +1199,44 @@ Only include capabilities that have a clear relationship to a storyboard. If a c
       quickDescription="Visualize relationships between storyboards, capabilities, and enablers"
       detailedDescription="The Story Map provides a visual representation of your project's structure, showing how storyboards connect to capabilities and how capabilities are realized through enablers. Use this view to understand dependencies and manage relationships."
       fullWidth
+      actions={
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <div className="zoom-controls">
+            <span className="zoom-label">Zoom:</span>
+            <Button
+              variant="secondary"
+              size="small"
+              onClick={() => setZoom(z => Math.max(0.5, z - 0.1))}
+            >
+              -
+            </Button>
+            <span>{Math.round(zoom * 100)}%</span>
+            <Button
+              variant="secondary"
+              size="small"
+              onClick={() => setZoom(z => Math.min(2, z + 0.1))}
+            >
+              +
+            </Button>
+          </div>
+          <Button
+            variant="primary"
+            onClick={handleAnalyzeRelationships}
+            disabled={isAnalyzing || storyCards.length === 0 || capabilities.length === 0}
+          >
+            {isAnalyzing ? 'Analyzing...' : 'Analyze with AI'}
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              loadCapabilities();
+              loadEnablers();
+            }}
+          >
+            Refresh
+          </Button>
+        </div>
+      }
     >
       <style>{`
         .story-map-page {
@@ -1494,46 +1532,6 @@ Only include capabilities that have a clear relationship to a storyboard. If a c
           color: white;
         }
       `}</style>
-
-      <div className="page-header" style={{ marginTop: 0, paddingTop: '16px' }}>
-        <div></div>
-        <div className="controls">
-          <div className="zoom-controls">
-            <span className="zoom-label">Zoom:</span>
-            <Button
-              variant="secondary"
-              size="small"
-              onClick={() => setZoom(z => Math.max(0.5, z - 0.1))}
-            >
-              -
-            </Button>
-            <span>{Math.round(zoom * 100)}%</span>
-            <Button
-              variant="secondary"
-              size="small"
-              onClick={() => setZoom(z => Math.min(2, z + 0.1))}
-            >
-              +
-            </Button>
-          </div>
-          <Button
-            variant="primary"
-            onClick={handleAnalyzeRelationships}
-            disabled={isAnalyzing || storyCards.length === 0 || capabilities.length === 0}
-          >
-            {isAnalyzing ? 'Analyzing...' : 'Analyze with AI'}
-          </Button>
-          <Button
-            variant="secondary"
-            onClick={() => {
-              loadCapabilities();
-              loadEnablers();
-            }}
-          >
-            Refresh
-          </Button>
-        </div>
-      </div>
 
       {error && (
         <Alert variant="error" onDismiss={() => setError(null)}>

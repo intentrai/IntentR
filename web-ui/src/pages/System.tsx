@@ -2656,6 +2656,7 @@ export const System: React.FC = () => {
 
   return (
     <PageLayout
+      fullWidth
       title="System Architecture"
       quickDescription="Visualize and manage your system's capabilities, enablers, and relationships."
       detailedDescription="The System Architecture page provides a visual map of your application's capabilities and their enabling components.
@@ -3157,13 +3158,10 @@ Navigate between different views: Capability Map, State Diagrams, Sequence Diagr
           width: 100%;
           min-width: 0;
           overflow: auto;
-          padding: 24px;
           background: var(--color-systemGray6);
         }
 
         .diagram-tab-inner {
-          max-width: 1600px;
-          margin: 0 auto;
           width: 100%;
           display: flex;
           flex-direction: column;
@@ -3191,7 +3189,6 @@ Navigate between different views: Capability Map, State Diagrams, Sequence Diagr
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 24px;
           overflow: auto;
           background: var(--color-systemBackground);
           border-radius: 0 0 12px 12px;

@@ -262,12 +262,13 @@ func (h *Handler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 	user, err := h.service.GetUserByEmail(userInfo.Email)
 	if err == ErrUserNotFound {
 		// Create new user from Google info
+		// Default OAuth users to product_owner role for full access
 		createReq := &CreateUserRequest{
 			Email: userInfo.Email,
 			Name:  userInfo.Name,
 			// For OAuth users, we don't store a password
 			Password: "",
-			Role:     "user",
+			Role:     "product_owner",
 		}
 		user, err = h.service.CreateOAuthUser(createReq, "google", userInfo.ID)
 		if err != nil {

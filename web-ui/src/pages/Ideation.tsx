@@ -2116,44 +2116,41 @@ export const Ideation: React.FC = () => {
       quickDescription="Freeform whiteboard for your ideas"
       detailedDescription="In Intent-Centered Engineering, ideation is the creative exploration phase where raw ideas are captured, organized, and refined before formal specification. This freeform canvas allows you to brainstorm features, sketch user flows, and collaborate on concepts without constraints. The ideas captured here feed directly into your storyboards and capabilities, ensuring that innovation drives your development process from the very beginning."
       fullWidth
+      actions={
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <Button variant="primary" onClick={handleAddTextBlock}>
+            ⊞ Add Card
+          </Button>
+          <Button variant="primary" onClick={handleAddTextBlock}>
+            ✎ Add Text
+          </Button>
+          <Button
+            variant="primary"
+            onClick={() => {
+              const input = document.createElement('input');
+              input.type = 'file';
+              input.accept = 'image/*';
+              input.onchange = (e) => handleImageUpload(e as any);
+              input.click();
+            }}
+          >
+            ⊕ Add Image
+          </Button>
+          <Button variant="primary" onClick={() => setShowAssetsPane(!showAssetsPane)}>
+            📁 Add UI Assets
+          </Button>
+        </div>
+      }
     >
       <div className="ideation-container">
-        {/* Header */}
-        <div className="ideation-header">
-          <div style={{ width: '100%' }}>
-            <div className="ideation-controls">
-            <Button variant="primary" onClick={handleAddTextBlock}>
-              ⊞ Add Card
+        {/* Conditional Cancel Connection button */}
+        {connecting && (
+          <div className="ideation-header">
+            <Button variant="outline" onClick={() => setConnecting(null)}>
+              ✕ Cancel Connection
             </Button>
-            <Button variant="primary" onClick={handleAddTextBlock}>
-              ✎ Add Text
-            </Button>
-            <Button
-              variant="primary"
-              onClick={() => {
-                const input = document.createElement('input');
-                input.type = 'file';
-                input.accept = 'image/*';
-                input.onchange = (e) => handleImageUpload(e as any);
-                input.click();
-              }}
-            >
-              ⊕ Add Image
-            </Button>
-            <Button variant="primary" onClick={() => setShowAssetsPane(!showAssetsPane)}>
-              📁 Add UI Assets
-            </Button>
-            <Button variant="secondary" onClick={handleExportToMarkdown}>
-              📤 Export to Markdown
-            </Button>
-            {connecting && (
-              <Button variant="outline" onClick={() => setConnecting(null)}>
-                ✕ Cancel Connection
-              </Button>
-            )}
-            </div>
           </div>
-        </div>
+        )}
 
         {/* Text Helper Toolbar */}
         <div className="helper-toolbar">

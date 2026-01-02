@@ -367,12 +367,13 @@ export const WorkspaceProvider: React.FC<{ children: ReactNode }> = ({ children 
         localStorage.setItem(`workspaces_${userEmail}`, JSON.stringify(workspaces));
       }
     } else {
-      const safeFolderName = 'Default-Workspace';
+      // Default new users to HelloWorldWeather workspace
       const defaultWorkspace: Workspace = {
-        id: 'default-' + Date.now(),
-        name: 'Default Workspace',
-        description: 'Your first workspace',
-        projectFolder: `workspaces/${safeFolderName}`,
+        id: 'workspace-' + Date.now(),
+        name: 'HelloWorldWeather',
+        description: 'A sample weather application workspace to help you get started with IntentR',
+        workspaceType: 'new',
+        projectFolder: 'workspaces/HelloWorldWeather',
         createdAt: new Date(),
         updatedAt: new Date(),
         ownerId: user?.email || 'unknown',

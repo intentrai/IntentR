@@ -7,25 +7,69 @@ import type { AccessLevel, RoleType, PageAccess, RoleDefinition } from '../conte
 // Re-export types for convenience
 export type { AccessLevel, RoleType, PageAccess, RoleDefinition };
 
-// Define all pages and subpages in the application
+// Define all pages and subpages in the application (mirrors sidebar structure)
 const DEFAULT_PAGES: Omit<PageAccess, 'accessLevel'>[] = [
-  { pageName: 'Dashboard', path: '/' },
+  { pageName: 'Welcome', path: '/' },
+  { pageName: 'Dashboard', path: '/dashboard' },
+  { pageName: 'Workspaces', path: '/workspaces' },
   {
-    pageName: 'Workspaces',
-    path: '/workspaces-parent',
+    pageName: 'Intent',
+    path: '/intent-parent',
     subPages: [
-      { pageName: 'Workspace Settings', path: '/workspaces' },
-      { pageName: 'Designs', path: '/designs' },
+      { pageName: 'Product Vision', path: '/vision' },
       { pageName: 'Ideation', path: '/ideation' },
       { pageName: 'Storyboard', path: '/storyboard' },
-      { pageName: 'UI Design', path: '/system' },
-      { pageName: 'Capabilities', path: '/capabilities' },
-      { pageName: 'AI Principles', path: '/ai-principles' },
-      { pageName: 'UI Framework', path: '/ui-framework' },
-      { pageName: 'UI Styles', path: '/ui-styles' },
-      { pageName: 'AI Assistant', path: '/ai-chat' },
+      { pageName: 'Intent Approval', path: '/intent-approval' },
     ]
   },
+  {
+    pageName: 'Specification',
+    path: '/specification-parent',
+    subPages: [
+      { pageName: 'Capabilities', path: '/capabilities' },
+      { pageName: 'Enablers', path: '/enablers' },
+      { pageName: 'Dependencies', path: '/story-map' },
+      { pageName: 'Specification Approval', path: '/specification-approval' },
+    ]
+  },
+  {
+    pageName: 'Design',
+    path: '/design-parent',
+    subPages: [
+      { pageName: 'System Architecture', path: '/system' },
+      { pageName: 'UI Assets', path: '/designs' },
+      { pageName: 'UI Framework', path: '/ui-framework' },
+      { pageName: 'UI Styles', path: '/ui-styles' },
+      { pageName: 'UI Designer', path: '/ui-designer' },
+      { pageName: 'Design Approval', path: '/design-approval' },
+    ]
+  },
+  {
+    pageName: 'Control Loop',
+    path: '/control-loop-parent',
+    subPages: [
+      { pageName: 'Test Scenarios', path: '/testing' },
+      { pageName: 'Control Loop Approval', path: '/control-loop-approval' },
+    ]
+  },
+  {
+    pageName: 'Implementation',
+    path: '/implementation-parent',
+    subPages: [
+      { pageName: 'AI Principles', path: '/ai-principles' },
+      { pageName: 'Code', path: '/code' },
+      { pageName: 'Run', path: '/run' },
+    ]
+  },
+  {
+    pageName: 'Discovery',
+    path: '/discovery-parent',
+    subPages: [
+      { pageName: 'Discovery Analysis', path: '/analyze' },
+    ]
+  },
+  { pageName: 'AI Assistant', path: '/ai-chat' },
+  { pageName: 'Sync Code to Spec', path: '/sync-code-to-spec' },
   { pageName: 'Integrations', path: '/integrations' },
   { pageName: 'Settings', path: '/settings' },
   { pageName: 'Admin Panel', path: '/admin' },
@@ -56,10 +100,11 @@ const DEFAULT_ROLE_DEFINITIONS: RoleDefinition[] = [
     description: 'Implements features and maintains code quality',
     pages: DEFAULT_PAGES.map(page => ({
       ...page,
-      accessLevel: page.pageName === 'Admin Panel' ? 'hidden' : 'view' as AccessLevel,
+      accessLevel: page.pageName === 'Admin Panel' ? 'hidden' :
+                   ['Implementation', 'Control Loop'].includes(page.pageName) ? 'edit' : 'view' as AccessLevel,
       subPages: page.subPages?.map(sub => ({
         ...sub,
-        accessLevel: ['Capabilities', 'UI Design'].includes(sub.pageName) ? 'edit' : 'view' as AccessLevel
+        accessLevel: ['Capabilities', 'Enablers', 'System Architecture', 'Code', 'Run', 'Test Scenarios'].includes(sub.pageName) ? 'edit' : 'view' as AccessLevel
       }))
     }))
   },
@@ -69,10 +114,10 @@ const DEFAULT_ROLE_DEFINITIONS: RoleDefinition[] = [
     pages: DEFAULT_PAGES.map(page => ({
       ...page,
       accessLevel: page.pageName === 'Admin Panel' ? 'view' :
-                   ['Integrations', 'Settings'].includes(page.pageName) ? 'edit' : 'view' as AccessLevel,
+                   ['Integrations', 'Settings', 'Implementation'].includes(page.pageName) ? 'edit' : 'view' as AccessLevel,
       subPages: page.subPages?.map(sub => ({
         ...sub,
-        accessLevel: ['UI Design', 'Integrations'].includes(sub.pageName) ? 'edit' : 'view' as AccessLevel
+        accessLevel: ['System Architecture', 'Code', 'Run'].includes(sub.pageName) ? 'edit' : 'view' as AccessLevel
       }))
     }))
   },
@@ -153,13 +198,14 @@ export const RoleManagement: React.FC = () => {
   };
 
   const handleReset = () => {
-    if (confirm('Are you sure you want to reset all roles to default settings? This cannot be undone.')) {
-      setRoles(DEFAULT_ROLE_DEFINITIONS);
-      localStorage.removeItem('roleDefinitions');
-      setHasChanges(false);
-      setSuccess('Roles reset to default settings');
-      setTimeout(() => setSuccess(null), 3000);
-    }
+    // Reset roles to defaults
+    setRoles(DEFAULT_ROLE_DEFINITIONS);
+    localStorage.removeItem('roleDefinitions');
+    // Also save the new defaults immediately
+    localStorage.setItem('roleDefinitions', JSON.stringify(DEFAULT_ROLE_DEFINITIONS));
+    setHasChanges(false);
+    setSuccess('Roles reset to default settings');
+    setTimeout(() => setSuccess(null), 3000);
   };
 
   const getAccessLevelColor = (level: AccessLevel) => {

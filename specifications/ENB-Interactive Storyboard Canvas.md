@@ -50,7 +50,18 @@ Create an interactive canvas with drag-and-drop flow boxes and connecting lines 
 
 **External Downstream Impact**: None identified.
 
-## Technical Specifications (Template)
+## Technical Specifications
+
+### UI Layout
+
+The Storyboard Canvas follows the application-wide UI consistency pattern:
+- Action buttons (Analyze & Generate, Add Card, UI Assets) are positioned in the page header row via PageLayout's `actions` prop
+- Buttons are right-justified on the same line as the title
+- Responsive behavior: buttons wrap to next line on narrow screens rather than being clipped
+
+### Responsive Button Visibility
+
+**Implementation Note**: The PageHeader component was updated to remove `overflow: hidden` from `.page-header__title-row`, ensuring that action buttons remain visible when the browser window is resized. Buttons will wrap to the next line on narrow screens via `flex-wrap: wrap` rather than disappearing.
 
 ### Enabler Dependency Flow Diagram
 ```mermaid

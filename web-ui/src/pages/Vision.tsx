@@ -548,11 +548,8 @@ export const Vision: React.FC = () => {
         {/* File-based Themes Section */}
         {currentWorkspace?.projectFolder && (
           <div style={{ marginBottom: '32px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <div style={{ marginBottom: '16px' }}>
               <h3 className="text-title2">Themes from Specifications</h3>
-              <Button variant="secondary" onClick={fetchThemes} disabled={loading}>
-                {loading ? 'Loading...' : 'Refresh'}
-              </Button>
             </div>
 
             {loading ? (

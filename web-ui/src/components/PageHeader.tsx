@@ -136,7 +136,6 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
           width: 100%;
           max-width: 100%;
           box-sizing: border-box;
-          overflow: hidden;
         }
 
         .page-header__title-row h1 {
