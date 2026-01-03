@@ -93,6 +93,13 @@ func main() {
 	mux.Handle("PUT /api/users/{id}", authMiddleware(adminOnly(http.HandlerFunc(authHandler.UpdateUser))))
 	mux.Handle("DELETE /api/users/{id}", authMiddleware(adminOnly(http.HandlerFunc(authHandler.DeleteUser))))
 
+	// Workspace sharing endpoints (authenticated users)
+	mux.Handle("GET /api/users/shareable", authMiddleware(http.HandlerFunc(authHandler.ListShareableUsers)))
+	mux.Handle("GET /api/workspaces/{workspaceId}/shares", authMiddleware(http.HandlerFunc(authHandler.GetWorkspaceShares)))
+	mux.Handle("POST /api/workspaces/{workspaceId}/shares", authMiddleware(http.HandlerFunc(authHandler.UpdateWorkspaceShares)))
+	mux.Handle("DELETE /api/workspaces/{workspaceId}/shares/{userId}", authMiddleware(http.HandlerFunc(authHandler.RemoveWorkspaceShare)))
+	mux.Handle("GET /api/workspaces/shared-with-me", authMiddleware(http.HandlerFunc(authHandler.GetMySharedWorkspaces)))
+
 	// Apply CORS middleware
 	handler := middleware.CORS(mux)
 

@@ -14,6 +14,7 @@ export const Settings: React.FC = () => {
   const [apiKeySaved, setApiKeySaved] = useState(false);
   const [apiKeyError, setApiKeyError] = useState<string | null>(null);
   const [wizardModeEnabled, setWizardModeEnabled] = useState(false);
+  const [showDiscoveredFolders, setShowDiscoveredFolders] = useState(false);
 
   useEffect(() => {
     // Load saved API key on mount
@@ -26,12 +27,22 @@ export const Settings: React.FC = () => {
     // Load wizard mode preference
     const wizardMode = localStorage.getItem('wizard_mode_enabled');
     setWizardModeEnabled(wizardMode === 'true');
+
+    // Load discovered folders visibility preference
+    const discoveredFolders = localStorage.getItem('show_discovered_folders');
+    setShowDiscoveredFolders(discoveredFolders === 'true'); // Default to false (hidden)
   }, []);
 
   const handleWizardModeToggle = () => {
     const newValue = !wizardModeEnabled;
     setWizardModeEnabled(newValue);
     localStorage.setItem('wizard_mode_enabled', String(newValue));
+  };
+
+  const handleDiscoveredFoldersToggle = () => {
+    const newValue = !showDiscoveredFolders;
+    setShowDiscoveredFolders(newValue);
+    localStorage.setItem('show_discovered_folders', String(newValue));
   };
 
   const handleSaveApiKey = () => {
@@ -298,6 +309,60 @@ export const Settings: React.FC = () => {
                 </div>
               </div>
             )}
+          </div>
+        </Card>
+
+        {/* Workspace Settings */}
+        <Card>
+          <h3 className="mb-2">Workspace Settings</h3>
+          <p className="text-sm text-grey-600 mb-6">
+            Configure how workspaces are displayed and managed.
+          </p>
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-4 bg-grey-50 border border-grey-200 rounded-lg">
+              <div className="flex-1">
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-lg ${showDiscoveredFolders ? 'bg-blue-100' : 'bg-grey-200'}`}>
+                    <svg
+                      className={`w-6 h-6 ${showDiscoveredFolders ? 'text-blue-600' : 'text-grey-500'}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+                      />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-semibold text-grey-900">Show Discovered Folders</h4>
+                    <p className="text-xs text-grey-600 mt-0.5">
+                      Display unlinked workspace folders found in ./workspaces on the Workspaces page
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={handleDiscoveredFoldersToggle}
+                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                  showDiscoveredFolders ? 'bg-blue-600' : 'bg-grey-300'
+                }`}
+                role="switch"
+                aria-checked={showDiscoveredFolders}
+                aria-label="Toggle discovered folders visibility"
+              >
+                <span
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                    showDiscoveredFolders ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
           </div>
         </Card>
 

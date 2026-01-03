@@ -40,6 +40,7 @@ This capability is supported by the following enablers:
 | ENB-931849 | Workspace Folder Discovery | Implemented |
 | ENB-931850 | Workspace Sharing | Implemented |
 | ENB-931851 | Workspace Context Management | Implemented |
+| ENB-260201 | Share Workspace User Selection | Ready for Analysis |
 
 ---
 
@@ -110,6 +111,7 @@ flowchart TD
 | FR-931004 | Switch Workspace | User can switch between workspaces | Implemented | High | Approved |
 | FR-931005 | Share Workspace | User can share/unshare workspaces for collaboration | Implemented | Medium | Approved |
 | FR-931006 | Join Workspace | User can join shared workspaces | Implemented | Medium | Approved |
+| FR-931011 | Granular User Sharing | User can share workspace with specific users via selection modal | Ready for Design | High | Pending |
 | FR-931007 | Save Config File | System saves .intentrworkspace file on create/update | Implemented | High | Approved |
 | FR-931008 | Scan Folders | System scans workspaces folder for .intentrworkspace files | Implemented | High | Approved |
 | FR-931009 | Import Workspace | User can import discovered workspaces | Implemented | High | Approved |

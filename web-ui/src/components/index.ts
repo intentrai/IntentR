@@ -71,3 +71,5 @@ export { JiraImportModal } from './JiraImportModal';
 
 export { PageLayout, DEFAULT_LAYOUTS } from './PageLayout';
 export type { PageLayoutConfig } from './PageLayout';
+
+export { ShareWorkspaceModal } from './ShareWorkspaceModal';

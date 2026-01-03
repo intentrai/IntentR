@@ -847,7 +847,7 @@ location / {
     proxy_http_version 1.1;
     proxy_set_header Upgrade $http_upgrade;
     proxy_set_header Connection "upgrade";
-    proxy_set_header Host $host;
+    proxy_set_header Host localhost;
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header X-Forwarded-Proto $scheme;
@@ -872,6 +872,10 @@ location / {
 func clearNginxWorkspaceConfig() error {
 	config := `# Workspace app not running
 # This file is updated automatically when apps start/stop
+location / {
+    default_type text/html;
+    return 503 '<!DOCTYPE html><html><head><title>No App Running</title><style>body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#1a1a2e;color:#fff;}.container{text-align:center;}.status{font-size:48px;margin-bottom:20px;}.message{font-size:18px;color:#888;}</style></head><body><div class="container"><div class="status">⏸️</div><h1>No Application Running</h1><p class="message">Start an application from the IntentR Run page to see it here.</p></div></body></html>';
+}
 `
 	err := os.WriteFile(nginxWorkspaceAppConf, []byte(config), 0644)
 	if err != nil {

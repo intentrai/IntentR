@@ -170,8 +170,7 @@ export interface Workspace {
 
 interface WorkspaceState {
   workspaces: Workspace[];
-  sharedWorkspaces: Workspace[];
-  joinedWorkspaces: Workspace[];
+  sharedWithMeWorkspaces: Workspace[]; // Workspaces shared with current user (automatic access)
   currentWorkspace: Workspace | null;
   isLoading: boolean;
 }
@@ -180,12 +179,10 @@ interface WorkspaceContextType extends WorkspaceState {
   createWorkspace: (name: string, description?: string, figmaTeamUrl?: string, workspaceType?: WorkspaceType) => Promise<void>;
   updateWorkspace: (id: string, updates: Partial<Workspace>) => Promise<void>;
   deleteWorkspace: (id: string) => Promise<void>;
-  switchWorkspace: (id: string, isShared?: boolean) => void;
+  switchWorkspace: (id: string, isSharedWithMe?: boolean) => void;
   updateStoryboard: (storyboardData: StoryboardData) => void;
   toggleSharing: (id: string) => Promise<void>;
-  joinSharedWorkspace: (workspace: Workspace) => Promise<void>;
-  leaveSharedWorkspace: (id: string) => Promise<void>;
-  refreshSharedWorkspaces: () => Promise<void>;
+  refreshSharedWithMeWorkspaces: () => Promise<void>;
   setActiveAIPreset: (presetNumber: number) => Promise<void>;
 }
 
@@ -195,8 +192,7 @@ export const WorkspaceProvider: React.FC<{ children: ReactNode }> = ({ children 
   const { user } = useAuth();
   const [state, setState] = useState<WorkspaceState>({
     workspaces: [],
-    sharedWorkspaces: [],
-    joinedWorkspaces: [],
+    sharedWithMeWorkspaces: [],
     currentWorkspace: null,
     isLoading: true,
   });
@@ -206,57 +202,31 @@ export const WorkspaceProvider: React.FC<{ children: ReactNode }> = ({ children 
       // Migrate old shared_workspaces to global_shared_workspaces (one-time migration)
       migrateSharedWorkspaces();
       loadWorkspaces();
-      refreshSharedWorkspaces();
+      refreshSharedWithMeWorkspaces();
     }
   }, [user]);
 
-  // Auto-refresh current workspace if it's a joined/shared workspace (for collaboration)
+  // Auto-refresh current workspace if it's a shared-with-me workspace (for collaboration)
   useEffect(() => {
     if (!state.currentWorkspace) return;
 
-    // Check if current workspace is a joined workspace
-    const isJoinedWorkspace = state.joinedWorkspaces.some(w => w.id === state.currentWorkspace?.id);
+    // Check if current workspace is a shared-with-me workspace
+    const isSharedWithMeWorkspace = state.sharedWithMeWorkspaces.some(w => w.id === state.currentWorkspace?.id);
 
-    if (!isJoinedWorkspace) return;
+    if (!isSharedWithMeWorkspace) return;
 
-    // Poll every 3 seconds for updates from global_shared_workspaces
-    const intervalId = setInterval(() => {
+    // Poll every 5 seconds for updates
+    const intervalId = setInterval(async () => {
       try {
-        const globalSharedWorkspaces = JSON.parse(localStorage.getItem('global_shared_workspaces') || '[]');
-        const latestWorkspace = globalSharedWorkspaces.find((w: Workspace) => w.id === state.currentWorkspace?.id);
-
-        if (latestWorkspace) {
-          const updatedWorkspace = {
-            ...latestWorkspace,
-            createdAt: new Date(latestWorkspace.createdAt),
-            updatedAt: new Date(latestWorkspace.updatedAt),
-          };
-
-          // Only update if the updatedAt timestamp is newer
-          if (new Date(updatedWorkspace.updatedAt) > new Date(state.currentWorkspace!.updatedAt)) {
-            console.log('Syncing workspace updates from shared storage...');
-
-            // Update joined workspaces
-            const updatedJoinedWorkspaces = state.joinedWorkspaces.map(w =>
-              w.id === state.currentWorkspace?.id ? updatedWorkspace : w
-            );
-
-            saveJoinedWorkspaces(updatedJoinedWorkspaces);
-
-            setState(prev => ({
-              ...prev,
-              joinedWorkspaces: updatedJoinedWorkspaces,
-              currentWorkspace: updatedWorkspace,
-            }));
-          }
-        }
+        // Refresh shared-with-me workspaces to get latest data
+        await refreshSharedWithMeWorkspaces();
       } catch (error) {
         console.error('Failed to sync workspace updates:', error);
       }
-    }, 3000); // Poll every 3 seconds
+    }, 5000); // Poll every 5 seconds
 
     return () => clearInterval(intervalId);
-  }, [state.currentWorkspace?.id, state.currentWorkspace?.updatedAt, state.joinedWorkspaces]);
+  }, [state.currentWorkspace?.id, state.sharedWithMeWorkspaces]);
 
   const migrateSharedWorkspaces = () => {
     const userEmail = user?.email || 'anonymous';
@@ -329,11 +299,9 @@ export const WorkspaceProvider: React.FC<{ children: ReactNode }> = ({ children 
     // Use user-specific keys to isolate workspaces per user
     const userEmail = user?.email || 'anonymous';
     const stored = localStorage.getItem(`workspaces_${userEmail}`);
-    const joinedStored = localStorage.getItem(`joinedWorkspaces_${userEmail}`);
     const currentId = localStorage.getItem(`currentWorkspaceId_${userEmail}`);
 
     let workspaces: Workspace[] = [];
-    let joinedWorkspaces: Workspace[] = [];
 
     if (stored) {
       let needsSave = false;
@@ -385,18 +353,10 @@ export const WorkspaceProvider: React.FC<{ children: ReactNode }> = ({ children 
       localStorage.setItem(`workspaces_${userEmail}`, JSON.stringify(workspaces));
     }
 
-    if (joinedStored) {
-      joinedWorkspaces = JSON.parse(joinedStored).map((w: Workspace) => ({
-        ...w,
-        createdAt: new Date(w.createdAt),
-        updatedAt: new Date(w.updatedAt),
-      }));
-    }
-
-    const allWorkspaces = [...workspaces, ...joinedWorkspaces];
+    // Current workspace can be from own workspaces or shared-with-me (will be loaded separately)
     const currentWorkspace = currentId
-      ? allWorkspaces.find(w => w.id === currentId) || allWorkspaces[0] || null
-      : allWorkspaces[0] || null;
+      ? workspaces.find(w => w.id === currentId) || workspaces[0] || null
+      : workspaces[0] || null;
 
     if (currentWorkspace) {
       localStorage.setItem(`currentWorkspaceId_${userEmail}`, currentWorkspace.id);
@@ -405,7 +365,6 @@ export const WorkspaceProvider: React.FC<{ children: ReactNode }> = ({ children 
     setState(prev => ({
       ...prev,
       workspaces,
-      joinedWorkspaces,
       currentWorkspace,
       isLoading: false,
     }));
@@ -414,11 +373,6 @@ export const WorkspaceProvider: React.FC<{ children: ReactNode }> = ({ children 
   const saveWorkspaces = (workspaces: Workspace[]) => {
     const userEmail = user?.email || 'anonymous';
     localStorage.setItem(`workspaces_${userEmail}`, JSON.stringify(workspaces));
-  };
-
-  const saveJoinedWorkspaces = (workspaces: Workspace[]) => {
-    const userEmail = user?.email || 'anonymous';
-    localStorage.setItem(`joinedWorkspaces_${userEmail}`, JSON.stringify(workspaces));
   };
 
   const createWorkspace = async (
@@ -478,6 +432,10 @@ export const WorkspaceProvider: React.FC<{ children: ReactNode }> = ({ children 
             createdAt: newWorkspace.createdAt.toISOString(),
             updatedAt: newWorkspace.updatedAt.toISOString(),
             version: '1.0',
+            // Include canvas data for shared workspaces
+            storyboard: null,
+            ideation: null,
+            systemDiagram: null,
           },
         }),
       });
@@ -541,6 +499,10 @@ export const WorkspaceProvider: React.FC<{ children: ReactNode }> = ({ children 
                 ? updatedWorkspace.updatedAt.toISOString()
                 : updatedWorkspace.updatedAt,
               version: '1.0',
+              // Include canvas data for shared workspaces
+              storyboard: updatedWorkspace.storyboard || null,
+              ideation: updatedWorkspace.ideation || null,
+              systemDiagram: updatedWorkspace.systemDiagram || null,
             },
           }),
         });
@@ -586,40 +548,16 @@ export const WorkspaceProvider: React.FC<{ children: ReactNode }> = ({ children 
       }
     }
 
-    // Also update joined workspaces if this is a joined workspace
-    const isJoinedWorkspace = state.joinedWorkspaces.some(w => w.id === id);
-    if (isJoinedWorkspace) {
-      const updatedJoinedWorkspaces = state.joinedWorkspaces.map(w =>
-        w.id === id
-          ? { ...w, ...updates, updatedAt: new Date() }
-          : w
-      );
-
-      saveJoinedWorkspaces(updatedJoinedWorkspaces);
-
+    // For shared-with-me workspaces, update the current workspace in memory
+    // The actual data is stored in the workspace folder's .intentrworkspace file
+    const isSharedWithMeWorkspace = state.sharedWithMeWorkspaces.some(w => w.id === id);
+    if (isSharedWithMeWorkspace) {
       setState(prev => ({
         ...prev,
-        joinedWorkspaces: updatedJoinedWorkspaces,
         currentWorkspace: prev.currentWorkspace?.id === id
-          ? updatedJoinedWorkspaces.find(w => w.id === id) || prev.currentWorkspace
+          ? { ...prev.currentWorkspace, ...updates, updatedAt: new Date() }
           : prev.currentWorkspace,
       }));
-
-      // Sync joined workspace changes to global shared workspaces as well
-      const joinedWorkspace = updatedJoinedWorkspaces.find(w => w.id === id);
-      if (joinedWorkspace) {
-        try {
-          const globalSharedWorkspaces = JSON.parse(localStorage.getItem('global_shared_workspaces') || '[]');
-          const sharedIndex = globalSharedWorkspaces.findIndex((w: Workspace) => w.id === id);
-
-          if (sharedIndex >= 0) {
-            globalSharedWorkspaces[sharedIndex] = joinedWorkspace;
-            localStorage.setItem('global_shared_workspaces', JSON.stringify(globalSharedWorkspaces));
-          }
-        } catch (error) {
-          console.error('Failed to sync joined workspace to shared storage:', error);
-        }
-      }
     }
   };
 
@@ -654,7 +592,7 @@ export const WorkspaceProvider: React.FC<{ children: ReactNode }> = ({ children 
     saveWorkspaces(updatedWorkspaces);
 
     setState(prev => {
-      const allWorkspaces = [...updatedWorkspaces, ...prev.joinedWorkspaces];
+      const allWorkspaces = [...updatedWorkspaces, ...prev.sharedWithMeWorkspaces];
       const newCurrent = prev.currentWorkspace?.id === id
         ? allWorkspaces[0] || null
         : prev.currentWorkspace;
@@ -672,15 +610,16 @@ export const WorkspaceProvider: React.FC<{ children: ReactNode }> = ({ children 
     });
   };
 
-  const switchWorkspace = async (id: string, isShared: boolean = false): Promise<void> => {
-    let workspace = isShared
-      ? state.joinedWorkspaces.find(w => w.id === id)
+  const switchWorkspace = async (id: string, isSharedWithMe: boolean = false): Promise<void> => {
+    // Find workspace in owned workspaces or shared-with-me workspaces
+    let workspace = isSharedWithMe
+      ? state.sharedWithMeWorkspaces.find(w => w.id === id)
       : state.workspaces.find(w => w.id === id);
 
     const userEmail = user?.email || 'anonymous';
 
     // Initialize workspace files (copy CLAUDE.md and MAIN_SWDEV_PLAN.md from CODE_RULES if needed)
-    const workspaceToInit = workspace || [...state.workspaces, ...state.joinedWorkspaces].find(w => w.id === id);
+    const workspaceToInit = workspace || [...state.workspaces, ...state.sharedWithMeWorkspaces].find(w => w.id === id);
     if (workspaceToInit?.projectFolder) {
       try {
         await fetch(`${INTEGRATION_URL}/workspace/init-files`, {
@@ -695,39 +634,8 @@ export const WorkspaceProvider: React.FC<{ children: ReactNode }> = ({ children 
       }
     }
 
-    // If switching to a joined workspace, reload the latest data from global_shared_workspaces
-    if (isShared && workspace) {
-      try {
-        const globalSharedWorkspaces = JSON.parse(localStorage.getItem('global_shared_workspaces') || '[]');
-        const latestWorkspace = globalSharedWorkspaces.find((w: Workspace) => w.id === id);
-
-        if (latestWorkspace) {
-          // Update the joined workspace with latest data
-          workspace = {
-            ...latestWorkspace,
-            createdAt: new Date(latestWorkspace.createdAt),
-            updatedAt: new Date(latestWorkspace.updatedAt),
-          };
-
-          // Update the joinedWorkspaces array with latest data
-          const updatedJoinedWorkspaces = state.joinedWorkspaces.map(w =>
-            w.id === id ? workspace! : w
-          );
-
-          saveJoinedWorkspaces(updatedJoinedWorkspaces);
-
-          setState(prev => ({
-            ...prev,
-            joinedWorkspaces: updatedJoinedWorkspaces,
-          }));
-        }
-      } catch (error) {
-        console.error('Failed to reload workspace from shared storage:', error);
-      }
-    }
-
     if (!workspace) {
-      const found = [...state.workspaces, ...state.joinedWorkspaces].find(w => w.id === id);
+      const found = [...state.workspaces, ...state.sharedWithMeWorkspaces].find(w => w.id === id);
       if (found) {
         localStorage.setItem(`currentWorkspaceId_${userEmail}`, id);
         setState(prev => ({
@@ -751,6 +659,7 @@ export const WorkspaceProvider: React.FC<{ children: ReactNode }> = ({ children 
     const isOwnWorkspace = state.workspaces.some(w => w.id === workspaceId);
 
     if (isOwnWorkspace) {
+      // Update owned workspace
       const updatedWorkspaces = state.workspaces.map(w =>
         w.id === workspaceId
           ? { ...w, storyboard: storyboardData, updatedAt: new Date() }
@@ -767,62 +676,50 @@ export const WorkspaceProvider: React.FC<{ children: ReactNode }> = ({ children 
         currentWorkspace: updatedWorkspace || prev.currentWorkspace,
       }));
 
-      // Sync to global_shared_workspaces if this workspace is shared
-      if (updatedWorkspace?.isShared) {
-        try {
-          const globalSharedWorkspaces = JSON.parse(localStorage.getItem('global_shared_workspaces') || '[]');
-          const sharedIndex = globalSharedWorkspaces.findIndex((w: Workspace) => w.id === workspaceId);
-
-          if (sharedIndex >= 0) {
-            globalSharedWorkspaces[sharedIndex] = updatedWorkspace;
-          } else {
-            globalSharedWorkspaces.push(updatedWorkspace);
-          }
-
-          localStorage.setItem('global_shared_workspaces', JSON.stringify(globalSharedWorkspaces));
-          console.log('Synced storyboard to shared storage');
-        } catch (error) {
-          console.error('Failed to sync storyboard to shared storage:', error);
-        }
-
-        // When backend workspace service is implemented, uncomment this:
-        // axios.put(`${SHARED_WORKSPACE_API}/shared-workspaces/${workspaceId}`, {
-        //   workspace: updatedWorkspace
-        // }).catch(error => console.error('Failed to sync workspace:', error));
+      // Also save to .intentrworkspace config file for sharing (async, fire-and-forget)
+      if (updatedWorkspace?.projectFolder) {
+        fetch(`${INTEGRATION_URL}/workspace-config/save`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            config: {
+              id: updatedWorkspace.id,
+              name: updatedWorkspace.name,
+              description: updatedWorkspace.description || '',
+              workspaceType: updatedWorkspace.workspaceType || 'new',
+              figmaTeamUrl: updatedWorkspace.figmaTeamUrl || '',
+              projectFolder: updatedWorkspace.projectFolder,
+              activeAIPreset: updatedWorkspace.activeAIPreset || 0,
+              selectedUIFramework: updatedWorkspace.selectedUIFramework || '',
+              selectedUILayout: updatedWorkspace.selectedUILayout || '',
+              ownerId: updatedWorkspace.ownerId,
+              ownerName: updatedWorkspace.ownerName || '',
+              isShared: updatedWorkspace.isShared,
+              createdAt: updatedWorkspace.createdAt instanceof Date
+                ? updatedWorkspace.createdAt.toISOString()
+                : updatedWorkspace.createdAt,
+              updatedAt: new Date().toISOString(),
+              version: '1.0',
+              storyboard: storyboardData,
+              ideation: updatedWorkspace.ideation || null,
+              systemDiagram: updatedWorkspace.systemDiagram || null,
+            },
+          }),
+        }).catch(err => console.error('Error saving storyboard to config file:', err));
       }
     } else {
-      // This is a joined workspace - update it
-      const updatedJoinedWorkspaces = state.joinedWorkspaces.map(w =>
-        w.id === workspaceId
-          ? { ...w, storyboard: storyboardData, updatedAt: new Date() }
-          : w
-      );
-
-      saveJoinedWorkspaces(updatedJoinedWorkspaces);
-
-      const updatedJoinedWorkspace = updatedJoinedWorkspaces.find(w => w.id === workspaceId);
+      // This is a shared-with-me workspace - update in memory only
+      // The actual data is stored in the workspace's .intentrworkspace file
+      const updatedWorkspace = {
+        ...state.currentWorkspace,
+        storyboard: storyboardData,
+        updatedAt: new Date(),
+      };
 
       setState(prev => ({
         ...prev,
-        joinedWorkspaces: updatedJoinedWorkspaces,
-        currentWorkspace: updatedJoinedWorkspace || prev.currentWorkspace,
+        currentWorkspace: updatedWorkspace,
       }));
-
-      // Sync joined workspace changes to global_shared_workspaces as well
-      if (updatedJoinedWorkspace) {
-        try {
-          const globalSharedWorkspaces = JSON.parse(localStorage.getItem('global_shared_workspaces') || '[]');
-          const sharedIndex = globalSharedWorkspaces.findIndex((w: Workspace) => w.id === workspaceId);
-
-          if (sharedIndex >= 0) {
-            globalSharedWorkspaces[sharedIndex] = updatedJoinedWorkspace;
-            localStorage.setItem('global_shared_workspaces', JSON.stringify(globalSharedWorkspaces));
-            console.log('Synced storyboard from joined workspace to shared storage');
-          }
-        } catch (error) {
-          console.error('Failed to sync joined workspace storyboard to shared storage:', error);
-        }
-      }
     }
   };
 
@@ -835,14 +732,6 @@ export const WorkspaceProvider: React.FC<{ children: ReactNode }> = ({ children 
     const newIsShared = !workspace.isShared;
 
     try {
-      // For now, workspace sharing is handled locally via localStorage
-      // When backend workspace service is implemented, uncomment the API calls below:
-      // if (newIsShared) {
-      //   await axios.post(`${SHARED_WORKSPACE_API}/shared-workspaces`, { workspace: { ...workspace, isShared: true } });
-      // } else {
-      //   await axios.delete(`${SHARED_WORKSPACE_API}/shared-workspaces/${id}?userEmail=${user?.email}`);
-      // }
-
       const updatedWorkspaces = state.workspaces.map(w =>
         w.id === id
           ? { ...w, isShared: newIsShared, updatedAt: new Date() }
@@ -850,48 +739,6 @@ export const WorkspaceProvider: React.FC<{ children: ReactNode }> = ({ children 
       );
 
       saveWorkspaces(updatedWorkspaces);
-
-      // Save shared workspaces to GLOBAL localStorage for local simulation (shared across all users on this browser)
-      if (newIsShared) {
-        const globalSharedWorkspaces = JSON.parse(localStorage.getItem('global_shared_workspaces') || '[]');
-
-        // Add the workspace to global shared list if not already there
-        const existingIndex = globalSharedWorkspaces.findIndex((w: Workspace) => w.id === id);
-        const sharedWorkspace = {
-          ...workspace,
-          isShared: true,
-          updatedAt: new Date(),
-          ownerId: workspace.ownerId || user?.email || 'unknown',
-          ownerName: workspace.ownerName || user?.name || user?.email || 'Unknown'
-        };
-
-        if (existingIndex >= 0) {
-          globalSharedWorkspaces[existingIndex] = sharedWorkspace;
-        } else {
-          globalSharedWorkspaces.push(sharedWorkspace);
-        }
-
-        localStorage.setItem('global_shared_workspaces', JSON.stringify(globalSharedWorkspaces));
-
-        // Also share workspace-specific integration configurations
-        const workspaceIntegrations = JSON.parse(localStorage.getItem('workspace_integrations') || '{}');
-        if (workspaceIntegrations[id]) {
-          // Store the integration configs for this workspace in a shared location
-          const sharedIntegrations = JSON.parse(localStorage.getItem('shared_workspace_integrations') || '{}');
-          sharedIntegrations[id] = workspaceIntegrations[id];
-          localStorage.setItem('shared_workspace_integrations', JSON.stringify(sharedIntegrations));
-        }
-      } else {
-        // Remove from global shared workspaces
-        const globalSharedWorkspaces = JSON.parse(localStorage.getItem('global_shared_workspaces') || '[]');
-        const filtered = globalSharedWorkspaces.filter((w: Workspace) => w.id !== id);
-        localStorage.setItem('global_shared_workspaces', JSON.stringify(filtered));
-
-        // Remove shared integration configurations
-        const sharedIntegrations = JSON.parse(localStorage.getItem('shared_workspace_integrations') || '{}');
-        delete sharedIntegrations[id];
-        localStorage.setItem('shared_workspace_integrations', JSON.stringify(sharedIntegrations));
-      }
 
       setState(prev => ({
         ...prev,
@@ -906,87 +753,97 @@ export const WorkspaceProvider: React.FC<{ children: ReactNode }> = ({ children 
     }
   };
 
-  const refreshSharedWorkspaces = async (): Promise<void> => {
+  // Fetch workspaces shared with the current user from backend API
+  const refreshSharedWithMeWorkspaces = async (): Promise<void> => {
     if (!user?.email) return;
 
     try {
-      // For now, workspace sharing is handled locally via localStorage
-      // When backend workspace service is implemented, uncomment the API call below:
-      // const response = await axios.get(`${SHARED_WORKSPACE_API}/shared-workspaces?userEmail=${user.email}`);
-      // const sharedWorkspaces = response.data.workspaces.map((w: Workspace) => ({
-      //   ...w,
-      //   createdAt: new Date(w.createdAt),
-      //   updatedAt: new Date(w.updatedAt),
-      // }));
-
-      // Load ALL shared workspaces from global localStorage (shared across all users on this browser)
-      const allSharedWorkspacesData = JSON.parse(localStorage.getItem('global_shared_workspaces') || '[]');
-
-      // Filter to show only workspaces that:
-      // 1. Are NOT owned by the current user (don't show your own workspaces in "Available to Join")
-      // 2. Have NOT already been joined by the current user
-      const joinedWorkspaceIds = new Set(state.joinedWorkspaces.map(w => w.id));
-      const myWorkspaceIds = new Set(state.workspaces.map(w => w.id));
-
-      const sharedWorkspaces = allSharedWorkspacesData
-        .filter((w: any) => w.ownerId !== user.email && !joinedWorkspaceIds.has(w.id) && !myWorkspaceIds.has(w.id))
-        .map((w: any) => ({
-          ...w,
-          createdAt: new Date(w.createdAt),
-          updatedAt: new Date(w.updatedAt),
-        }));
-
-      setState(prev => ({
-        ...prev,
-        sharedWorkspaces,
-      }));
-    } catch (error) {
-      console.error('Failed to fetch shared workspaces:', error);
-    }
-  };
-
-  const joinSharedWorkspace = async (workspace: Workspace): Promise<void> => {
-    if (state.joinedWorkspaces.some(w => w.id === workspace.id)) {
-      return;
-    }
-
-    const updatedJoinedWorkspaces = [...state.joinedWorkspaces, workspace];
-    saveJoinedWorkspaces(updatedJoinedWorkspaces);
-
-    // Copy shared integration configurations to user's workspace integrations
-    const sharedIntegrations = JSON.parse(localStorage.getItem('shared_workspace_integrations') || '{}');
-    if (sharedIntegrations[workspace.id]) {
-      const workspaceIntegrations = JSON.parse(localStorage.getItem('workspace_integrations') || '{}');
-      workspaceIntegrations[workspace.id] = sharedIntegrations[workspace.id];
-      localStorage.setItem('workspace_integrations', JSON.stringify(workspaceIntegrations));
-    }
-
-    setState(prev => ({
-      ...prev,
-      joinedWorkspaces: updatedJoinedWorkspaces,
-    }));
-  };
-
-  const leaveSharedWorkspace = async (id: string): Promise<void> => {
-    const updatedJoinedWorkspaces = state.joinedWorkspaces.filter(w => w.id !== id);
-    saveJoinedWorkspaces(updatedJoinedWorkspaces);
-
-    setState(prev => {
-      const allWorkspaces = [...prev.workspaces, ...updatedJoinedWorkspaces];
-      const newCurrent = prev.currentWorkspace?.id === id
-        ? allWorkspaces[0] || null
-        : prev.currentWorkspace;
-
-      if (newCurrent) {
-        localStorage.setItem('currentWorkspaceId', newCurrent.id);
+      // Get auth token from sessionStorage (where AuthContext stores it)
+      const token = sessionStorage.getItem('auth_token');
+      if (!token) {
+        console.log('No auth token, skipping shared workspaces fetch');
+        return;
       }
 
-      return {
-        ...prev,
-        joinedWorkspaces: updatedJoinedWorkspaces,
-        currentWorkspace: newCurrent,
-      };
-    });
+      // Step 1: Get workspace IDs shared with current user from auth service
+      const sharedIdsResponse = await fetch('/api/workspaces/shared-with-me', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!sharedIdsResponse.ok) {
+        console.error('Failed to fetch shared workspace IDs:', sharedIdsResponse.status);
+        return;
+      }
+
+      const sharedWorkspaceIds: string[] = await sharedIdsResponse.json();
+
+      if (!sharedWorkspaceIds || sharedWorkspaceIds.length === 0) {
+        setState(prev => ({
+          ...prev,
+          sharedWithMeWorkspaces: [],
+        }));
+        return;
+      }
+
+      // Step 2: Scan workspace folders to get full workspace configs
+      const scanResponse = await fetch(`${INTEGRATION_URL}/workspace-config/scan`);
+      if (!scanResponse.ok) {
+        console.error('Failed to scan workspace configs:', scanResponse.status);
+        return;
+      }
+
+      const scanData = await scanResponse.json();
+      const allWorkspaceConfigs = scanData.workspaces || [];
+
+      // Step 3: Filter to only workspaces that are shared with current user
+      const sharedWorkspaceIdSet = new Set(sharedWorkspaceIds);
+      const myWorkspaceIds = new Set(state.workspaces.map(w => w.id));
+
+      const sharedWithMeWorkspaces: Workspace[] = allWorkspaceConfigs
+        .filter((sw: any) => sw.hasConfig && sw.config && sharedWorkspaceIdSet.has(sw.config.id))
+        .filter((sw: any) => !myWorkspaceIds.has(sw.config.id)) // Don't include own workspaces
+        .map((sw: any) => ({
+          id: sw.config.id,
+          name: sw.config.name,
+          description: sw.config.description || '',
+          workspaceType: sw.config.workspaceType || 'new',
+          figmaTeamUrl: sw.config.figmaTeamUrl || '',
+          projectFolder: sw.folderPath,
+          activeAIPreset: sw.config.activeAIPreset || 0,
+          selectedUIFramework: sw.config.selectedUIFramework || '',
+          selectedUILayout: sw.config.selectedUILayout || '',
+          ownerId: sw.config.ownerId || 'unknown',
+          ownerName: sw.config.ownerName || sw.config.ownerId || 'Unknown',
+          isShared: true,
+          createdAt: new Date(sw.config.createdAt),
+          updatedAt: new Date(sw.config.updatedAt),
+          // Include canvas data from shared workspace config
+          storyboard: sw.config.storyboard || undefined,
+          ideation: sw.config.ideation || undefined,
+          systemDiagram: sw.config.systemDiagram || undefined,
+        }));
+
+      setState(prev => {
+        // Also update current workspace if it's a shared workspace
+        let updatedCurrent = prev.currentWorkspace;
+        if (prev.currentWorkspace && sharedWorkspaceIdSet.has(prev.currentWorkspace.id)) {
+          const updated = sharedWithMeWorkspaces.find(w => w.id === prev.currentWorkspace?.id);
+          if (updated && new Date(updated.updatedAt) > new Date(prev.currentWorkspace.updatedAt)) {
+            updatedCurrent = updated;
+          }
+        }
+
+        return {
+          ...prev,
+          sharedWithMeWorkspaces,
+          currentWorkspace: updatedCurrent,
+        };
+      });
+    } catch (error) {
+      console.error('Failed to fetch shared-with-me workspaces:', error);
+    }
   };
 
   const setActiveAIPreset = async (presetNumber: number): Promise<void> => {
@@ -1009,9 +866,7 @@ export const WorkspaceProvider: React.FC<{ children: ReactNode }> = ({ children 
         switchWorkspace,
         updateStoryboard,
         toggleSharing,
-        joinSharedWorkspace,
-        leaveSharedWorkspace,
-        refreshSharedWorkspaces,
+        refreshSharedWithMeWorkspaces,
         setActiveAIPreset,
       }}
     >

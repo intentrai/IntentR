@@ -300,3 +300,105 @@ func (h *Handler) GoogleCallback(w http.ResponseWriter, r *http.Request) {
 		User:  *user,
 	})
 }
+
+// ListShareableUsers returns users that can be shared with (excludes current user)
+func (h *Handler) ListShareableUsers(w http.ResponseWriter, r *http.Request) {
+	claims := r.Context().Value("claims").(*Claims)
+
+	users, err := h.service.ListShareableUsers(claims.UserID)
+	if err != nil {
+		log.Printf("List shareable users error: %v", err)
+		respondError(w, http.StatusInternalServerError, "Internal server error")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, users)
+}
+
+// GetWorkspaceShares returns all shares for a workspace
+func (h *Handler) GetWorkspaceShares(w http.ResponseWriter, r *http.Request) {
+	workspaceID := r.PathValue("workspaceId")
+	if workspaceID == "" {
+		respondError(w, http.StatusBadRequest, "Workspace ID is required")
+		return
+	}
+
+	shares, err := h.service.GetWorkspaceShares(workspaceID)
+	if err != nil {
+		log.Printf("Get workspace shares error: %v", err)
+		respondError(w, http.StatusInternalServerError, "Internal server error")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, shares)
+}
+
+// GetMySharedWorkspaces returns workspace IDs shared with the current user
+func (h *Handler) GetMySharedWorkspaces(w http.ResponseWriter, r *http.Request) {
+	claims := r.Context().Value("claims").(*Claims)
+
+	workspaceIDs, err := h.service.GetWorkspacesSharedWithUser(claims.UserID)
+	if err != nil {
+		log.Printf("Get my shared workspaces error: %v", err)
+		respondError(w, http.StatusInternalServerError, "Internal server error")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, workspaceIDs)
+}
+
+// UpdateWorkspaceShares updates the list of users a workspace is shared with
+func (h *Handler) UpdateWorkspaceShares(w http.ResponseWriter, r *http.Request) {
+	claims := r.Context().Value("claims").(*Claims)
+
+	workspaceID := r.PathValue("workspaceId")
+	if workspaceID == "" {
+		respondError(w, http.StatusBadRequest, "Workspace ID is required")
+		return
+	}
+
+	var req UpdateWorkspaceSharesRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	shares, err := h.service.UpdateWorkspaceShares(workspaceID, req.UserIDs, claims.UserID)
+	if err != nil {
+		log.Printf("Update workspace shares error: %v", err)
+		respondError(w, http.StatusInternalServerError, "Internal server error")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, shares)
+}
+
+// RemoveWorkspaceShare removes a specific user's access to a workspace
+func (h *Handler) RemoveWorkspaceShare(w http.ResponseWriter, r *http.Request) {
+	workspaceID := r.PathValue("workspaceId")
+	userIDStr := r.PathValue("userId")
+
+	if workspaceID == "" || userIDStr == "" {
+		respondError(w, http.StatusBadRequest, "Workspace ID and user ID are required")
+		return
+	}
+
+	userID, err := strconv.Atoi(userIDStr)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "Invalid user ID")
+		return
+	}
+
+	err = h.service.RemoveWorkspaceShare(workspaceID, userID)
+	if err == ErrUserNotFound {
+		respondError(w, http.StatusNotFound, "Share not found")
+		return
+	}
+	if err != nil {
+		log.Printf("Remove workspace share error: %v", err)
+		respondError(w, http.StatusInternalServerError, "Internal server error")
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}

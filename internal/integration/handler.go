@@ -6812,22 +6812,26 @@ func (h *Handler) HandleDeleteFeature(w http.ResponseWriter, r *http.Request) {
 
 // WorkspaceConfig represents the configuration stored in .intentrworkspace file
 type WorkspaceConfig struct {
-	ID               string                 `json:"id"`
-	Name             string                 `json:"name"`
-	Description      string                 `json:"description,omitempty"`
-	WorkspaceType    string                 `json:"workspaceType,omitempty"`
-	FigmaTeamURL     string                 `json:"figmaTeamUrl,omitempty"`
-	ProjectFolder    string                 `json:"projectFolder,omitempty"`
-	ActiveAIPreset   int                    `json:"activeAIPreset,omitempty"`
-	SelectedUIFramework string             `json:"selectedUIFramework,omitempty"`
-	SelectedUILayout string                 `json:"selectedUILayout,omitempty"`
-	OwnerID          string                 `json:"ownerId,omitempty"`
-	OwnerName        string                 `json:"ownerName,omitempty"`
-	IsShared         bool                   `json:"isShared"`
-	CreatedAt        string                 `json:"createdAt"`
-	UpdatedAt        string                 `json:"updatedAt"`
-	Version          string                 `json:"version"`
-	CustomSettings   map[string]interface{} `json:"customSettings,omitempty"`
+	ID                  string                 `json:"id"`
+	Name                string                 `json:"name"`
+	Description         string                 `json:"description,omitempty"`
+	WorkspaceType       string                 `json:"workspaceType,omitempty"`
+	FigmaTeamURL        string                 `json:"figmaTeamUrl,omitempty"`
+	ProjectFolder       string                 `json:"projectFolder,omitempty"`
+	ActiveAIPreset      int                    `json:"activeAIPreset,omitempty"`
+	SelectedUIFramework string                 `json:"selectedUIFramework,omitempty"`
+	SelectedUILayout    string                 `json:"selectedUILayout,omitempty"`
+	OwnerID             string                 `json:"ownerId,omitempty"`
+	OwnerName           string                 `json:"ownerName,omitempty"`
+	IsShared            bool                   `json:"isShared"`
+	CreatedAt           string                 `json:"createdAt"`
+	UpdatedAt           string                 `json:"updatedAt"`
+	Version             string                 `json:"version"`
+	CustomSettings      map[string]interface{} `json:"customSettings,omitempty"`
+	// Canvas data fields for sharing workspaces
+	Storyboard    map[string]interface{} `json:"storyboard,omitempty"`
+	Ideation      map[string]interface{} `json:"ideation,omitempty"`
+	SystemDiagram map[string]interface{} `json:"systemDiagram,omitempty"`
 }
 
 // SaveWorkspaceConfigRequest represents the request to save workspace config

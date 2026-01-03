@@ -6,6 +6,7 @@ import { PageLayout } from '../components/PageLayout';
 import { WorkspaceIntegrations } from '../components/WorkspaceIntegrations';
 // WorkspaceVersionControl functionality has been merged into WorkspaceIntegrations (Integrations > GitHub)
 import { FolderBrowser } from '../components/FolderBrowser';
+import { ShareWorkspaceModal } from '../components/ShareWorkspaceModal';
 import { INTEGRATION_URL } from '../api/client';
 
 // Types for scanned workspaces
@@ -37,28 +38,31 @@ interface ScannedWorkspace {
 export const Workspaces: React.FC = () => {
   const {
     workspaces,
-    sharedWorkspaces,
-    joinedWorkspaces,
+    sharedWithMeWorkspaces,
     currentWorkspace,
     createWorkspace,
     updateWorkspace,
     deleteWorkspace,
     switchWorkspace,
     toggleSharing,
-    joinSharedWorkspace,
-    leaveSharedWorkspace,
-    refreshSharedWorkspaces,
+    refreshSharedWithMeWorkspaces,
   } = useWorkspace();
   
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showIntegrationsModal, setShowIntegrationsModal] = useState(false);
   const [showFolderBrowser, setShowFolderBrowser] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   const [editingWorkspace, setEditingWorkspace] = useState<string | null>(null);
   const [selectedWorkspaceForIntegrations, setSelectedWorkspaceForIntegrations] = useState<any>(null);
+  const [selectedWorkspaceForSharing, setSelectedWorkspaceForSharing] = useState<{ id: string; name: string } | null>(null);
   const [selectingFolderFor, setSelectingFolderFor] = useState<string | null>(null);
   const [scannedWorkspaces, setScannedWorkspaces] = useState<ScannedWorkspace[]>([]);
   const [isScanning, setIsScanning] = useState(false);
+  const [showDiscoveredFolders, setShowDiscoveredFolders] = useState(() => {
+    const saved = localStorage.getItem('show_discovered_folders');
+    return saved === 'true'; // Default to false (hidden)
+  });
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -68,8 +72,10 @@ export const Workspaces: React.FC = () => {
   });
 
   useEffect(() => {
-    refreshSharedWorkspaces();
-    scanWorkspaceFolders(); // Scan on initial load
+    refreshSharedWithMeWorkspaces();
+    if (showDiscoveredFolders) {
+      scanWorkspaceFolders(); // Scan on initial load only if setting is enabled
+    }
   }, []);
 
   // Normalize folder path to match how WorkspaceContext creates projectFolder
@@ -161,7 +167,7 @@ export const Workspaces: React.FC = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (workspaces.length === 1 && joinedWorkspaces.length === 0) {
+    if (workspaces.length === 1 && sharedWithMeWorkspaces.length === 0) {
       alert('Cannot delete the last workspace');
       return;
     }
@@ -171,32 +177,17 @@ export const Workspaces: React.FC = () => {
     }
   };
 
+  const openShareModal = (workspace: { id: string; name: string }) => {
+    setSelectedWorkspaceForSharing(workspace);
+    setShowShareModal(true);
+  };
+
   const handleToggleSharing = async (id: string) => {
     try {
       await toggleSharing(id);
-      await refreshSharedWorkspaces();
+      await refreshSharedWithMeWorkspaces();
     } catch (error) {
       alert('Failed to toggle sharing. Please try again.');
-    }
-  };
-
-  const handleJoinWorkspace = async (workspace: any) => {
-    try {
-      await joinSharedWorkspace(workspace);
-      await refreshSharedWorkspaces();
-    } catch (error) {
-      alert('Failed to join workspace. Please try again.');
-    }
-  };
-
-  const handleLeaveWorkspace = async (id: string) => {
-    if (confirm('Are you sure you want to leave this shared workspace?')) {
-      try {
-        await leaveSharedWorkspace(id);
-        await refreshSharedWorkspaces();
-      } catch (error) {
-        alert('Failed to leave workspace. Please try again.');
-      }
     }
   };
 
@@ -255,6 +246,14 @@ export const Workspaces: React.FC = () => {
     }
   };
 
+  // Filter out shared workspaces that already exist in "My Workspaces" (by ID or folder path)
+  const filteredSharedWorkspaces = sharedWithMeWorkspaces.filter(
+    shared => !workspaces.some(
+      my => my.id === shared.id ||
+            (my.projectFolder && shared.projectFolder && my.projectFolder === shared.projectFolder)
+    )
+  );
+
   return (
     <PageLayout
       title="Workspaces"
@@ -263,11 +262,13 @@ export const Workspaces: React.FC = () => {
       className="max-w-7xl mx-auto"
       actions={
         <div style={{ display: 'flex', gap: '12px' }}>
-          <Button variant="outline" onClick={scanWorkspaceFolders} disabled={isScanning}>
-            {isScanning ? 'Scanning...' : 'Scan Folders'}
-          </Button>
-          <Button variant="outline" onClick={refreshSharedWorkspaces}>
-            🔄 Refresh Shared
+          {showDiscoveredFolders && (
+            <Button variant="outline" onClick={scanWorkspaceFolders} disabled={isScanning}>
+              {isScanning ? 'Scanning...' : 'Scan Folders'}
+            </Button>
+          )}
+          <Button variant="outline" onClick={refreshSharedWithMeWorkspaces}>
+            Refresh Shared
           </Button>
           <Button variant="primary" onClick={() => setShowCreateModal(true)}>
             + Create Workspace
@@ -416,16 +417,16 @@ export const Workspaces: React.FC = () => {
                     🔗 Integrations
                   </Button>
                   <Button
-                    variant={workspace.isShared ? "secondary" : "outline"}
-                    onClick={() => handleToggleSharing(workspace.id)}
+                    variant="outline"
+                    onClick={() => openShareModal({ id: workspace.id, name: workspace.name })}
                     style={{ flex: '1 1 auto', fontSize: '15px', padding: '8px 12px' }}
                   >
-                    {workspace.isShared ? '🔓 Unshare' : '🔒 Share'}
+                    Share
                   </Button>
                   <Button
                     variant="outline"
                     onClick={() => handleDelete(workspace.id)}
-                    disabled={workspaces.length === 1 && joinedWorkspaces.length === 0}
+                    disabled={workspaces.length === 1 && sharedWithMeWorkspaces.length === 0}
                     style={{ flex: '1 1 auto', fontSize: '15px', padding: '8px 12px' }}
                   >
                     Delete
@@ -438,12 +439,15 @@ export const Workspaces: React.FC = () => {
         </div>
       </div>
 
-      {/* Joined Shared Workspaces */}
-      {joinedWorkspaces.length > 0 && (
+      {/* Shared With Me - Workspaces shared with current user (automatic access) */}
+      {filteredSharedWorkspaces.length > 0 && (
         <div style={{ marginBottom: '48px' }}>
-          <h2 className="text-title1" style={{ marginBottom: '16px' }}>Joined Workspaces</h2>
+          <h2 className="text-title1" style={{ marginBottom: '16px' }}>Shared With Me</h2>
+          <p className="text-footnote text-secondary" style={{ marginBottom: '16px' }}>
+            Workspaces that others have shared with you. You have automatic access to these.
+          </p>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3" style={{ gap: 'var(--spacing-4, 16px)' }}>
-            {joinedWorkspaces.sort((a, b) => {
+            {filteredSharedWorkspaces.sort((a, b) => {
               if (a.id === currentWorkspace?.id) return -1;
               if (b.id === currentWorkspace?.id) return 1;
               return 0;
@@ -460,7 +464,7 @@ export const Workspaces: React.FC = () => {
               >
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                   <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px', flexWrap: 'wrap' }}>
                       <h3 className="text-headline">{workspace.name}</h3>
                       {isActive && (
                         <span style={{
@@ -475,13 +479,28 @@ export const Workspaces: React.FC = () => {
                           ACTIVE
                         </span>
                       )}
+                      <span style={{
+                        display: 'inline-block',
+                        padding: '4px 12px',
+                        fontSize: '12px',
+                        fontWeight: 600,
+                        borderRadius: '20px',
+                        backgroundColor: 'rgba(52, 199, 89, 0.1)',
+                        color: 'var(--color-systemGreen)',
+                      }}>
+                        Shared
+                      </span>
                     </div>
                     <p className="text-caption1 text-secondary" style={{ marginBottom: '4px' }}>
-                      Owner: {workspace.ownerName || workspace.ownerId}
+                      👤 Owner: {workspace.ownerName || workspace.ownerId}
                     </p>
                     {workspace.description && (
                       <p className="text-footnote text-secondary">{workspace.description}</p>
                     )}
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', paddingTop: '12px', borderTop: '1px solid var(--color-systemGray4)' }}>
+                    <span className="text-caption1 text-tertiary">Updated: {new Date(workspace.updatedAt).toLocaleDateString()}</span>
                   </div>
 
                   <div style={{ display: 'flex', gap: '8px', paddingTop: '8px' }}>
@@ -494,13 +513,6 @@ export const Workspaces: React.FC = () => {
                         Activate
                       </Button>
                     )}
-                    <Button
-                      variant="outline"
-                      onClick={() => handleLeaveWorkspace(workspace.id)}
-                      style={{ flex: 1, fontSize: '15px', padding: '8px 12px' }}
-                    >
-                      Leave
-                    </Button>
                   </div>
                 </div>
               </Card>
@@ -510,170 +522,131 @@ export const Workspaces: React.FC = () => {
         </div>
       )}
 
-      {/* Available Shared Workspaces */}
-      {sharedWorkspaces.length > 0 && (
-        <div>
-          <h2 className="text-title1" style={{ marginBottom: '16px' }}>Available Shared Workspaces</h2>
-          <p className="text-footnote text-secondary" style={{ marginBottom: '16px' }}>
-            These workspaces are shared by other users. Join them to collaborate in real-time.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3" style={{ gap: 'var(--spacing-4, 16px)' }}>
-            {sharedWorkspaces
-              .filter(w => !joinedWorkspaces.some(j => j.id === w.id))
-              .map((workspace) => (
-                <Card key={workspace.id}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    <div>
-                      <h3 className="text-headline" style={{ marginBottom: '8px' }}>{workspace.name}</h3>
-                      <p className="text-caption1 text-secondary" style={{ marginBottom: '8px' }}>
-                        👤 Shared by: {workspace.ownerName || workspace.ownerId}
-                      </p>
-                      {workspace.description && (
-                        <p className="text-footnote text-secondary">{workspace.description}</p>
-                      )}
-                    </div>
-
-                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', paddingTop: '12px', borderTop: '1px solid var(--color-systemGray4)' }}>
-                      <span className="text-caption1 text-tertiary">Updated: {new Date(workspace.updatedAt).toLocaleDateString()}</span>
-                    </div>
-
-                    <Button
-                      variant="primary"
-                      onClick={() => handleJoinWorkspace(workspace)}
-                      style={{ width: '100%', fontSize: '15px', padding: '8px 12px' }}
-                    >
-                      ✓ Join Workspace
-                    </Button>
-                  </div>
-                </Card>
-              ))}
-          </div>
-        </div>
-      )}
-
-      {sharedWorkspaces.length === 0 && joinedWorkspaces.length === 0 && (
-        <div style={{ textAlign: 'center', padding: '48px 16px', backgroundColor: 'var(--color-systemBackground-secondary)', borderRadius: '10px' }}>
+      {filteredSharedWorkspaces.length === 0 && (
+        <div style={{ marginBottom: '48px', textAlign: 'center', padding: '48px 16px', backgroundColor: 'var(--color-systemBackground-secondary)', borderRadius: '10px' }}>
           <p className="text-body text-secondary">
-            No shared workspaces available. Share your workspaces using the Share button to collaborate with others.
+            No workspaces have been shared with you yet. When someone shares a workspace with you, it will appear here automatically.
           </p>
         </div>
       )}
 
       {/* Discovered Workspace Folders */}
-      <div style={{ marginTop: '48px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <div>
-            <h2 className="text-title1">Discovered Workspace Folders</h2>
-            <p className="text-footnote text-secondary" style={{ marginTop: '4px' }}>
-              Workspace folders found in ./workspaces that aren't linked to your account
-            </p>
+      {showDiscoveredFolders && (
+        <div style={{ marginTop: '48px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <div>
+              <h2 className="text-title1">Discovered Workspace Folders</h2>
+              <p className="text-footnote text-secondary" style={{ marginTop: '4px' }}>
+                Workspace folders found in ./workspaces that aren't linked to your account
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              onClick={scanWorkspaceFolders}
+              disabled={isScanning}
+            >
+              {isScanning ? 'Scanning...' : 'Scan Folders'}
+            </Button>
           </div>
-          <Button
-            variant="outline"
-            onClick={scanWorkspaceFolders}
-            disabled={isScanning}
-          >
-            {isScanning ? 'Scanning...' : 'Scan Folders'}
-          </Button>
-        </div>
 
-        {scannedWorkspaces.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3" style={{ gap: 'var(--spacing-4, 16px)' }}>
-            {scannedWorkspaces.map((scanned) => (
-              <Card key={scanned.folderPath}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                      <span style={{ fontSize: '24px' }}>📁</span>
-                      <h3 className="text-headline">
-                        {scanned.hasConfig && scanned.config ? scanned.config.name : scanned.folderName}
-                      </h3>
+          {scannedWorkspaces.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3" style={{ gap: 'var(--spacing-4, 16px)' }}>
+              {scannedWorkspaces.map((scanned) => (
+                <Card key={scanned.folderPath}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                        <span style={{ fontSize: '24px' }}>📁</span>
+                        <h3 className="text-headline">
+                          {scanned.hasConfig && scanned.config ? scanned.config.name : scanned.folderName}
+                        </h3>
+                      </div>
+                      {scanned.hasConfig && scanned.config?.description && (
+                        <p className="text-footnote text-secondary" style={{ marginBottom: '8px' }}>
+                          {scanned.config.description}
+                        </p>
+                      )}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        {scanned.hasConfig ? (
+                          <span style={{
+                            display: 'inline-block',
+                            padding: '4px 8px',
+                            fontSize: '11px',
+                            fontWeight: 600,
+                            borderRadius: '12px',
+                            backgroundColor: 'rgba(52, 199, 89, 0.1)',
+                            color: 'var(--color-systemGreen)',
+                          }}>
+                            Has .intentrworkspace
+                          </span>
+                        ) : (
+                          <span style={{
+                            display: 'inline-block',
+                            padding: '4px 8px',
+                            fontSize: '11px',
+                            fontWeight: 600,
+                            borderRadius: '12px',
+                            backgroundColor: 'rgba(255, 149, 0, 0.1)',
+                            color: 'var(--color-systemOrange)',
+                          }}>
+                            No config file
+                          </span>
+                        )}
+                        {scanned.hasConfig && scanned.config?.workspaceType && (
+                          <span style={{
+                            display: 'inline-block',
+                            padding: '4px 8px',
+                            fontSize: '11px',
+                            fontWeight: 500,
+                            borderRadius: '12px',
+                            backgroundColor: 'rgba(0, 122, 255, 0.1)',
+                            color: 'var(--color-systemBlue)',
+                          }}>
+                            {scanned.config.workspaceType}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    {scanned.hasConfig && scanned.config?.description && (
-                      <p className="text-footnote text-secondary" style={{ marginBottom: '8px' }}>
-                        {scanned.config.description}
+
+                    <div style={{ padding: '12px', backgroundColor: 'var(--color-systemBackground-secondary)', borderRadius: '8px' }}>
+                      <p className="text-caption2 text-tertiary" style={{ fontFamily: 'monospace' }}>
+                        {scanned.folderPath}
                       </p>
+                    </div>
+
+                    {scanned.hasConfig && scanned.config && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', paddingTop: '8px', borderTop: '1px solid var(--color-systemGray4)' }}>
+                        <span className="text-caption1 text-tertiary">
+                          Created: {new Date(scanned.config.createdAt).toLocaleDateString()}
+                        </span>
+                        <span className="text-caption1 text-tertiary">
+                          Updated: {new Date(scanned.config.updatedAt).toLocaleDateString()}
+                        </span>
+                      </div>
                     )}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      {scanned.hasConfig ? (
-                        <span style={{
-                          display: 'inline-block',
-                          padding: '4px 8px',
-                          fontSize: '11px',
-                          fontWeight: 600,
-                          borderRadius: '12px',
-                          backgroundColor: 'rgba(52, 199, 89, 0.1)',
-                          color: 'var(--color-systemGreen)',
-                        }}>
-                          Has .intentrworkspace
-                        </span>
-                      ) : (
-                        <span style={{
-                          display: 'inline-block',
-                          padding: '4px 8px',
-                          fontSize: '11px',
-                          fontWeight: 600,
-                          borderRadius: '12px',
-                          backgroundColor: 'rgba(255, 149, 0, 0.1)',
-                          color: 'var(--color-systemOrange)',
-                        }}>
-                          No config file
-                        </span>
-                      )}
-                      {scanned.hasConfig && scanned.config?.workspaceType && (
-                        <span style={{
-                          display: 'inline-block',
-                          padding: '4px 8px',
-                          fontSize: '11px',
-                          fontWeight: 500,
-                          borderRadius: '12px',
-                          backgroundColor: 'rgba(0, 122, 255, 0.1)',
-                          color: 'var(--color-systemBlue)',
-                        }}>
-                          {scanned.config.workspaceType}
-                        </span>
-                      )}
-                    </div>
+
+                    <Button
+                      variant="primary"
+                      onClick={() => importScannedWorkspace(scanned)}
+                      style={{ width: '100%', fontSize: '15px', padding: '8px 12px' }}
+                    >
+                      Import Workspace
+                    </Button>
                   </div>
-
-                  <div style={{ padding: '12px', backgroundColor: 'var(--color-systemBackground-secondary)', borderRadius: '8px' }}>
-                    <p className="text-caption2 text-tertiary" style={{ fontFamily: 'monospace' }}>
-                      {scanned.folderPath}
-                    </p>
-                  </div>
-
-                  {scanned.hasConfig && scanned.config && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', paddingTop: '8px', borderTop: '1px solid var(--color-systemGray4)' }}>
-                      <span className="text-caption1 text-tertiary">
-                        Created: {new Date(scanned.config.createdAt).toLocaleDateString()}
-                      </span>
-                      <span className="text-caption1 text-tertiary">
-                        Updated: {new Date(scanned.config.updatedAt).toLocaleDateString()}
-                      </span>
-                    </div>
-                  )}
-
-                  <Button
-                    variant="primary"
-                    onClick={() => importScannedWorkspace(scanned)}
-                    style={{ width: '100%', fontSize: '15px', padding: '8px 12px' }}
-                  >
-                    Import Workspace
-                  </Button>
-                </div>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <div style={{ textAlign: 'center', padding: '32px 16px', backgroundColor: 'var(--color-systemBackground-secondary)', borderRadius: '10px' }}>
-            <p className="text-body text-secondary">
-              {isScanning
-                ? 'Scanning workspace folders...'
-                : 'No unlinked workspace folders found. All folders in ./workspaces are already linked to workspaces.'}
-            </p>
-          </div>
-        )}
-      </div>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div style={{ textAlign: 'center', padding: '32px 16px', backgroundColor: 'var(--color-systemBackground-secondary)', borderRadius: '10px' }}>
+              <p className="text-body text-secondary">
+                {isScanning
+                  ? 'Scanning workspace folders...'
+                  : 'No unlinked workspace folders found. All folders in ./workspaces are already linked to workspaces.'}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Create Modal */}
       {showCreateModal && (
@@ -928,6 +901,22 @@ export const Workspaces: React.FC = () => {
           onClose={() => {
             setShowIntegrationsModal(false);
             setSelectedWorkspaceForIntegrations(null);
+          }}
+        />
+      )}
+
+      {/* Share Workspace Modal */}
+      {showShareModal && selectedWorkspaceForSharing && (
+        <ShareWorkspaceModal
+          isOpen={showShareModal}
+          workspaceId={selectedWorkspaceForSharing.id}
+          workspaceName={selectedWorkspaceForSharing.name}
+          onClose={() => {
+            setShowShareModal(false);
+            setSelectedWorkspaceForSharing(null);
+          }}
+          onSharesUpdated={() => {
+            refreshSharedWithMeWorkspaces();
           }}
         />
       )}

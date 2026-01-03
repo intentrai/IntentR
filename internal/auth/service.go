@@ -402,3 +402,145 @@ func (s *Service) GenerateTokenFromCredentials(userID int, email, role string) (
 	}
 	return s.GenerateToken(user)
 }
+
+// ListShareableUsers returns all active users that can be shared with (excluding the current user)
+func (s *Service) ListShareableUsers(excludeUserID int) ([]ShareableUser, error) {
+	rows, err := s.db.Query(`
+		SELECT id, email, name
+		FROM users
+		WHERE is_active = true AND id != $1
+		ORDER BY name ASC
+	`, excludeUserID)
+	if err != nil {
+		return nil, fmt.Errorf("database error: %w", err)
+	}
+	defer rows.Close()
+
+	var users []ShareableUser
+	for rows.Next() {
+		var user ShareableUser
+		err := rows.Scan(&user.ID, &user.Email, &user.Name)
+		if err != nil {
+			return nil, fmt.Errorf("scan error: %w", err)
+		}
+		users = append(users, user)
+	}
+
+	return users, nil
+}
+
+// GetWorkspaceShares returns all shares for a workspace
+func (s *Service) GetWorkspaceShares(workspaceID string) ([]WorkspaceShare, error) {
+	rows, err := s.db.Query(`
+		SELECT ws.id, ws.workspace_id, ws.shared_with_user_id, u.email, u.name,
+		       ws.shared_by_user_id, ws.created_at, ws.updated_at
+		FROM workspace_shares ws
+		JOIN users u ON ws.shared_with_user_id = u.id
+		WHERE ws.workspace_id = $1
+		ORDER BY ws.created_at DESC
+	`, workspaceID)
+	if err != nil {
+		return nil, fmt.Errorf("database error: %w", err)
+	}
+	defer rows.Close()
+
+	var shares []WorkspaceShare
+	for rows.Next() {
+		var share WorkspaceShare
+		err := rows.Scan(
+			&share.ID,
+			&share.WorkspaceID,
+			&share.SharedWithUserID,
+			&share.SharedWithUserEmail,
+			&share.SharedWithUserName,
+			&share.SharedByUserID,
+			&share.CreatedAt,
+			&share.UpdatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("scan error: %w", err)
+		}
+		shares = append(shares, share)
+	}
+
+	return shares, nil
+}
+
+// GetWorkspacesSharedWithUser returns all workspace IDs shared with a specific user
+func (s *Service) GetWorkspacesSharedWithUser(userID int) ([]string, error) {
+	rows, err := s.db.Query(`
+		SELECT DISTINCT workspace_id
+		FROM workspace_shares
+		WHERE shared_with_user_id = $1
+	`, userID)
+	if err != nil {
+		return nil, fmt.Errorf("database error: %w", err)
+	}
+	defer rows.Close()
+
+	var workspaceIDs []string
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, fmt.Errorf("scan error: %w", err)
+		}
+		workspaceIDs = append(workspaceIDs, id)
+	}
+
+	return workspaceIDs, nil
+}
+
+// UpdateWorkspaceShares updates the list of users a workspace is shared with
+func (s *Service) UpdateWorkspaceShares(workspaceID string, userIDs []int, sharedByUserID int) ([]WorkspaceShare, error) {
+	tx, err := s.db.Begin()
+	if err != nil {
+		return nil, fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer tx.Rollback()
+
+	// Delete existing shares for this workspace
+	_, err = tx.Exec("DELETE FROM workspace_shares WHERE workspace_id = $1", workspaceID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to delete existing shares: %w", err)
+	}
+
+	// Insert new shares
+	for _, userID := range userIDs {
+		_, err = tx.Exec(`
+			INSERT INTO workspace_shares (workspace_id, shared_with_user_id, shared_by_user_id)
+			VALUES ($1, $2, $3)
+		`, workspaceID, userID, sharedByUserID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to insert share for user %d: %w", userID, err)
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	// Return updated shares
+	return s.GetWorkspaceShares(workspaceID)
+}
+
+// RemoveWorkspaceShare removes a specific user's access to a workspace
+func (s *Service) RemoveWorkspaceShare(workspaceID string, userID int) error {
+	result, err := s.db.Exec(`
+		DELETE FROM workspace_shares
+		WHERE workspace_id = $1 AND shared_with_user_id = $2
+	`, workspaceID, userID)
+	if err != nil {
+		return fmt.Errorf("database error: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("error checking rows affected: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return ErrUserNotFound
+	}
+
+	return nil
+}

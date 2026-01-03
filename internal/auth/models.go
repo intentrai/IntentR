@@ -64,3 +64,27 @@ type VerifyTokenResponse struct {
 type ErrorResponse struct {
 	Error string `json:"error"`
 }
+
+// WorkspaceShare represents a workspace sharing record
+type WorkspaceShare struct {
+	ID                  int       `json:"id"`
+	WorkspaceID         string    `json:"workspaceId"`
+	SharedWithUserID    int       `json:"sharedWithUserId"`
+	SharedWithUserEmail string    `json:"sharedWithUserEmail"`
+	SharedWithUserName  string    `json:"sharedWithUserName"`
+	SharedByUserID      int       `json:"sharedByUserId"`
+	CreatedAt           time.Time `json:"createdAt"`
+	UpdatedAt           time.Time `json:"updatedAt"`
+}
+
+// ShareableUser represents a user that can be shared with (limited fields)
+type ShareableUser struct {
+	ID    int    `json:"id"`
+	Email string `json:"email"`
+	Name  string `json:"name"`
+}
+
+// UpdateWorkspaceSharesRequest represents a request to update workspace shares
+type UpdateWorkspaceSharesRequest struct {
+	UserIDs []int `json:"userIds"`
+}

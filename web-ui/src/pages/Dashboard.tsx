@@ -33,13 +33,13 @@ interface WorkspaceMetrics {
 
 export const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { workspaces, joinedWorkspaces, currentWorkspace, switchWorkspace } = useWorkspace();
+  const { workspaces, sharedWithMeWorkspaces, currentWorkspace, switchWorkspace } = useWorkspace();
   const { user } = useAuth();
   const [workspaceMetrics, setWorkspaceMetrics] = useState<Map<string, WorkspaceMetrics>>(new Map());
   const [loading, setLoading] = useState(false);
 
   // Sort workspaces to show current workspace first (top-left)
-  const allWorkspaces = [...workspaces, ...joinedWorkspaces].sort((a, b) => {
+  const allWorkspaces = [...workspaces, ...sharedWithMeWorkspaces].sort((a, b) => {
     if (a.id === currentWorkspace?.id) return -1;
     if (b.id === currentWorkspace?.id) return 1;
     return 0;
@@ -198,8 +198,8 @@ export const Dashboard: React.FC = () => {
   const crossWorkspaceActivities = getCrossWorkspaceActivity();
 
   const handleOpenWorkspace = (workspace: Workspace) => {
-    const isJoinedWorkspace = joinedWorkspaces.some(w => w.id === workspace.id);
-    switchWorkspace(workspace.id, isJoinedWorkspace);
+    const isSharedWorkspace = sharedWithMeWorkspaces.some(w => w.id === workspace.id);
+    switchWorkspace(workspace.id, isSharedWorkspace);
     navigate('/workspace-overview');
   };
 
@@ -278,7 +278,7 @@ export const Dashboard: React.FC = () => {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '16px' }}>
             {allWorkspaces.map(workspace => {
               const metrics = workspaceMetrics.get(workspace.id);
-              const isJoined = joinedWorkspaces.some(w => w.id === workspace.id);
+              const isJoined = sharedWithMeWorkspaces.some(w => w.id === workspace.id);
 
               const isActive = currentWorkspace?.id === workspace.id;
 
@@ -391,8 +391,8 @@ export const Dashboard: React.FC = () => {
                               variant="secondary"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                const isJoinedWorkspace = joinedWorkspaces.some(w => w.id === workspace.id);
-                                switchWorkspace(workspace.id, isJoinedWorkspace);
+                                const isSharedWorkspace = sharedWithMeWorkspaces.some(w => w.id === workspace.id);
+                                switchWorkspace(workspace.id, isSharedWorkspace);
                               }}
                               style={{ fontSize: '12px', padding: '4px 12px' }}
                             >
