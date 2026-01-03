@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { useWorkspace } from '../context/WorkspaceContext';
@@ -46,6 +46,42 @@ export const Code: React.FC = () => {
   });
   const abortControllerRef = useRef<AbortController | null>(null);
   const logEndRef = useRef<HTMLDivElement>(null);
+
+  // Compute top-level files and folders from all code files
+  const topLevelEntries = useMemo(() => {
+    if (codeFiles.length === 0) return [];
+
+    const entries: { name: string; isFolder: boolean; itemCount: number; totalSize: number }[] = [];
+    const folderMap = new Map<string, { count: number; size: number }>();
+
+    for (const file of codeFiles) {
+      // Get the first path segment (top-level entry)
+      const pathParts = file.path.split('/').filter(Boolean);
+      if (pathParts.length === 0) continue;
+
+      const topLevel = pathParts[0];
+
+      if (pathParts.length === 1) {
+        // This is a top-level file
+        entries.push({ name: topLevel, isFolder: false, itemCount: 1, totalSize: file.size });
+      } else {
+        // This file is inside a folder - track folder stats
+        const existing = folderMap.get(topLevel) || { count: 0, size: 0 };
+        folderMap.set(topLevel, { count: existing.count + 1, size: existing.size + file.size });
+      }
+    }
+
+    // Add folders to entries
+    for (const [name, stats] of folderMap) {
+      entries.push({ name, isFolder: true, itemCount: stats.count, totalSize: stats.size });
+    }
+
+    // Sort: folders first, then files, alphabetically within each group
+    return entries.sort((a, b) => {
+      if (a.isFolder !== b.isFolder) return a.isFolder ? -1 : 1;
+      return a.name.localeCompare(b.name);
+    });
+  }, [codeFiles]);
 
   const addLog = (type: LogEntry['type'], message: string) => {
     const timestamp = new Date().toLocaleTimeString();
@@ -337,39 +373,6 @@ All generated code respects the active UI Framework and AI Principles settings f
               </Button>
             )}
           </div>
-
-          {/* Code Files Grid */}
-          {codeFiles.length > 0 && (
-            <div className="mt-6">
-              <h4 className="font-medium mb-4">Generated Code Files</h4>
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-                  gap: '50px'
-                }}
-              >
-                {codeFiles.map((file, index) => (
-                  <Card key={index} className="p-4">
-                    <div className="flex items-center mb-2">
-                      <span className="text-2xl mr-2">📄</span>
-                      <span className="font-medium text-sm truncate" title={file.name}>
-                        {file.name}
-                      </span>
-                    </div>
-                    <p className="text-xs text-gray-500 truncate" title={file.path}>
-                      {file.path}
-                    </p>
-                    <p className="text-xs text-gray-400 mt-1">
-                      {file.size > 1024
-                        ? `${(file.size / 1024).toFixed(1)} KB`
-                        : `${file.size} B`}
-                    </p>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
         </Card>
       )}
 
@@ -468,6 +471,42 @@ All generated code respects the active UI Framework and AI Principles settings f
           <div ref={logEndRef} />
         </div>
       </Card>
+
+      {/* Generated Code Files - Top Level Only */}
+      {topLevelEntries.length > 0 && (
+        <Card className="mt-4">
+          <h3 className="font-semibold mb-4">Generated Files ({codeFiles.length} total)</h3>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
+              gap: '12px'
+            }}
+          >
+            {topLevelEntries.map((entry, index) => (
+              <div
+                key={index}
+                className="flex items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
+              >
+                <span className="text-xl mr-2">{entry.isFolder ? '📁' : '📄'}</span>
+                <div className="overflow-hidden">
+                  <span className="font-medium text-sm truncate block" title={entry.name}>
+                    {entry.name}
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    {entry.isFolder
+                      ? `${entry.itemCount} item${entry.itemCount !== 1 ? 's' : ''}`
+                      : entry.totalSize > 1024
+                        ? `${(entry.totalSize / 1024).toFixed(1)} KB`
+                        : `${entry.totalSize} B`
+                    }
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
     </PageLayout>
   );
 };
